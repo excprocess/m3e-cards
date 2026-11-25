@@ -179,6 +179,7 @@ export class M3EStatusCard extends LitElement {
       const watched = [
         this._config.entity,
         this._config.status_entity,
+        this._config.subtitle_entity,
         this._config.secondary_entity,
         this._config.outdoor_entity,
         ...this._getSiblingEntityIds(),
@@ -338,6 +339,34 @@ export class M3EStatusCard extends LitElement {
     const raw = entity.state;
     if (raw === 'unavailable' || raw === 'unknown') return 'Unavailable';
 
+    // Custom subtitle from another entity and/or specific attribute
+    const hasCustomSource = Boolean(
+      this._config?.subtitle_entity?.trim() || this._config?.subtitle_attribute?.trim(),
+    );
+    if (hasCustomSource && (!this._config?.subtitle_only_when_active || this._isActive)) {
+      const source = this._config?.subtitle_entity?.trim()
+        ? this.hass?.states[this._config.subtitle_entity.trim()]
+        : entity;
+      if (source) {
+        const attrName = this._config?.subtitle_attribute?.trim();
+        let val: unknown;
+        if (attrName) {
+          val = source.attributes[attrName];
+        } else {
+          const s = source.state;
+          if (s !== 'unavailable' && s !== 'unknown') {
+            const unit = source.attributes.unit_of_measurement;
+            val = unit ? `${s}${unit}` : s;
+          }
+        }
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          const prefix = this._config?.subtitle_prefix ?? '';
+          const suffix = this._config?.subtitle_suffix ?? '';
+          return `${prefix}${String(val)}${suffix}`;
+        }
+      }
+    }
+
     if (this._isActive && this._config?.label_active) return this._config.label_active;
     if (!this._isActive && this._config?.label_inactive) return this._config.label_inactive;
 
@@ -465,7 +494,7 @@ export class M3EStatusCard extends LitElement {
     const tileRect = this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
     this._popupOpen = true;
-    if (this._resolvedPopupType === 'sensor') {
+    if (this._resolvedPopupType === 'sensor' || this._resolvedPopupType === 'custom') {
       void this._fetchHistory();
     }
     await this.updateComplete;
@@ -1768,7 +1797,7 @@ export class M3EStatusCard extends LitElement {
                   <span class="dialog-title">${name}</span>
                 </header>
 
-                ${popupType === 'sensor'
+                ${popupType === 'sensor' || popupType === 'custom'
                   ? this._renderSensorPopup(icon)
                   : popupType === 'climate'
                     ? this._renderClimatePopup()

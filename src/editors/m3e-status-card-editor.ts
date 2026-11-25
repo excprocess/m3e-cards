@@ -60,6 +60,7 @@ export class M3EStatusCardEditor extends LitElement {
             mode: 'dropdown',
             options: [
               { value: 'auto', label: 'Automatico (in base al dispositivo)' },
+              { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
               { value: 'sensor', label: 'Sensore (Anello di stato + Storico)' },
               { value: 'climate', label: 'Clima / Termostato (Dial + Mode)' },
               { value: 'remote', label: 'Telecomando / TV (Rocker + Pulsanti)' },
@@ -118,7 +119,31 @@ export class M3EStatusCardEditor extends LitElement {
       schema.push({ name: 'navigation_path', selector: { text: {} } });
     }
 
-    if (type === 'sensor') {
+    if (type === 'custom') {
+      schema.push(
+        { name: 'subtitle_entity', selector: { entity: {} } },
+        { name: 'subtitle_attribute', selector: { text: {} } },
+        {
+          type: 'grid',
+          name: '',
+          schema: [
+            { name: 'subtitle_prefix', selector: { text: {} } },
+            { name: 'subtitle_suffix', selector: { text: {} } },
+          ],
+        },
+        { name: 'subtitle_only_when_active', selector: { boolean: {} } },
+        { name: 'active_state', selector: { text: {} } },
+        {
+          type: 'grid',
+          name: '',
+          schema: [
+            { name: 'label_active', selector: { text: {} } },
+            { name: 'label_inactive', selector: { text: {} } },
+          ],
+        },
+        { name: 'status_entity', selector: { entity: {} } },
+      );
+    } else if (type === 'sensor') {
       schema.push(
         { name: 'active_state', selector: { text: {} } },
         {
@@ -178,6 +203,11 @@ export class M3EStatusCardEditor extends LitElement {
       active_state: 'Stati attivi personalizzati (es. on,home,detected)',
       label_active: 'Testo stato attivo',
       label_inactive: 'Testo stato inattivo',
+      subtitle_entity: 'Entità per testo stato (es. prossima sveglia)',
+      subtitle_attribute: 'Attributo da mostrare come stato (opzionale)',
+      subtitle_prefix: 'Prefisso testo stato (es. Sveglia: )',
+      subtitle_suffix: 'Suffisso testo stato',
+      subtitle_only_when_active: 'Mostra testo personalizzato solo quando attiva',
       popup_type: 'Tipo card / Schermata popup',
       tap_action: 'Azione al tocco (Tap)',
       hold_action: 'Azione pressione prolungata (Hold)',

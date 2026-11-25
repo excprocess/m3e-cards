@@ -82,7 +82,7 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
   card_style?: M3ECardStyle;
 }
 
-export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'none';
+export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'custom' | 'none';
 
 export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
 export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';
@@ -133,6 +133,16 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   label_active?: string;
   /** Optional custom label when inactive (e.g. "No motion", "Fuori") */
   label_inactive?: string;
+  /** Optional entity whose state/attribute is displayed as the card subtitle (e.g. next alarm sensor on Night Mode card) */
+  subtitle_entity?: string;
+  /** Optional attribute name to display as the card subtitle (reads from subtitle_entity if set, otherwise primary entity) */
+  subtitle_attribute?: string;
+  /** Optional text prefix before the custom subtitle value */
+  subtitle_prefix?: string;
+  /** Optional text suffix after the custom subtitle value */
+  subtitle_suffix?: string;
+  /** When true, show the custom subtitle only when the card is active (falls back to label_inactive/Off when inactive) */
+  subtitle_only_when_active?: boolean;
   /** Popup screen variant to open on tap/hold */
   popup_type?: M3EStatusPopupType;
   /** Optional secondary telemetry entity (auto-discovered from same device_id if omitted) */
