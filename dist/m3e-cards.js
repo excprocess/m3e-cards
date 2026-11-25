@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const yt = globalThis, Zt = yt.ShadowRoot && (yt.ShadyCSS === void 0 || yt.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Rt = Symbol(), Xt = /* @__PURE__ */ new WeakMap();
+const yt = globalThis, Bt = yt.ShadowRoot && (yt.ShadyCSS === void 0 || yt.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, Rt = Symbol(), Xt = /* @__PURE__ */ new WeakMap();
 let le = class {
   constructor(e, i, s) {
     if (this._$cssResult$ = !0, s !== Rt) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -12,7 +12,7 @@ let le = class {
   get styleSheet() {
     let e = this.o;
     const i = this.t;
-    if (Zt && e === void 0) {
+    if (Bt && e === void 0) {
       const s = i !== void 0 && i.length === 1;
       s && (e = Xt.get(i)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), s && Xt.set(i, e));
     }
@@ -30,12 +30,12 @@ const _e = (t) => new le(typeof t == "string" ? t : t + "", void 0, Rt), P = (t,
   })(r) + t[o + 1], t[0]);
   return new le(i, t, Rt);
 }, be = (t, e) => {
-  if (Zt) t.adoptedStyleSheets = e.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
+  if (Bt) t.adoptedStyleSheets = e.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
   else for (const i of e) {
     const s = document.createElement("style"), r = yt.litNonce;
     r !== void 0 && s.setAttribute("nonce", r), s.textContent = i.cssText, t.appendChild(s);
   }
-}, qt = Zt ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
+}, qt = Bt ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
   let i = "";
   for (const s of e.cssRules) i += s.cssText;
   return _e(i);
@@ -516,8 +516,8 @@ let S = class extends J {
   }
 };
 S._$litElement$ = !0, S.finalized = !0, jt.litElementHydrateSupport?.({ LitElement: S });
-const Be = jt.litElementPolyfillSupport;
-Be?.({ LitElement: S });
+const Ze = jt.litElementPolyfillSupport;
+Ze?.({ LitElement: S });
 (jt.litElementVersions ??= []).push("4.2.2");
 /**
  * @license
@@ -534,7 +534,7 @@ const O = (t) => (e, i) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ze = { attribute: !0, type: String, converter: xt, reflect: !1, hasChanged: Ut }, Re = (t = Ze, e, i) => {
+const Be = { attribute: !0, type: String, converter: xt, reflect: !1, hasChanged: Ut }, Re = (t = Be, e, i) => {
   const { kind: s, metadata: r } = i;
   let o = globalThis.litPropertyMetadata.get(r);
   if (o === void 0 && globalThis.litPropertyMetadata.set(r, o = /* @__PURE__ */ new Map()), s === "setter" && ((t = Object.create(t)).wrapped = !0), o.set(i.name, t), s === "accessor") {
@@ -588,7 +588,7 @@ function M(t, e) {
     } });
   };
 }
-const B = P`
+const Z = P`
   :host {
     display: block;
     height: 100%;
@@ -1051,7 +1051,7 @@ let I = class extends S {
   }
 };
 I.styles = [
-  B,
+  Z,
   P`
       :host {
         --m3e-spring-bouncy: 500ms linear(
@@ -2001,7 +2001,7 @@ let it = class extends S {
   }
 };
 it.styles = [
-  B,
+  Z,
   P`
       :host {
         display: block;
@@ -2883,7 +2883,7 @@ let w = class extends S {
   }
 };
 w.styles = [
-  B,
+  Z,
   P`
       :host {
         /* MediumBouncy, Low stiffness spring for M3 Expressive On <-> Off morphing */
@@ -3668,7 +3668,7 @@ let st = class extends S {
   }
 };
 st.styles = [
-  B,
+  Z,
   P`
       .control-pill {
         position: relative;
@@ -4157,7 +4157,7 @@ let D = class extends S {
   }
 };
 D.styles = [
-  B,
+  Z,
   P`
       .group-wrapper {
         display: flex;
@@ -4574,7 +4574,7 @@ let F = class extends S {
   }
 };
 F.styles = [
-  B,
+  Z,
   P`
       .scene-tile {
         height: 100%;
@@ -4828,6 +4828,7 @@ let gt = class extends S {
     const t = this._config?.popup_type ?? "auto";
     if (t !== "auto") return t;
     const e = this._config?.entity ?? "";
+    if (e.startsWith("input_select.") || e.startsWith("select.")) return "selector";
     if (e.startsWith("climate.")) return "climate";
     if (e.startsWith("media_player.")) return "media";
     if (e.startsWith("remote.")) {
@@ -4867,6 +4868,7 @@ let gt = class extends S {
             mode: "dropdown",
             options: [
               { value: "auto", label: "Automatico (in base al dispositivo)" },
+              { value: "selector", label: "Selettore (Scelta opzioni M3 Expressive)" },
               { value: "custom", label: "Personalizzata (stato/attributi liberi)" },
               { value: "sensor", label: "Sensore (Anello di stato + Storico)" },
               { value: "climate", label: "Clima / Termostato (Dial + Mode)" },
@@ -5051,11 +5053,11 @@ var yi = Object.defineProperty, xi = Object.getOwnPropertyDescriptor, x = (t, e,
     (n = t[o]) && (r = (s ? n(e, i, r) : n(r)) || r);
   return s && r && yi(e, i, r), r;
 };
-const Bt = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+const Zt = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 function zt(t, e) {
   if (e === "raw") return t;
   const i = t.trim();
-  if (!Bt.test(i)) return t;
+  if (!Zt.test(i)) return t;
   const s = new Date(i);
   if (Number.isNaN(s.getTime())) return t;
   const r = s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -5322,6 +5324,7 @@ let y = class extends S {
     const t = this._config?.popup_type ?? "auto";
     if (t !== "auto") return t;
     const e = this._config?.entity ?? "";
+    if (e.startsWith("input_select.") || e.startsWith("select.")) return "selector";
     if (e.startsWith("climate.")) return "climate";
     if (e.startsWith("media_player.")) return "media";
     if (e.startsWith("remote.")) {
@@ -5372,7 +5375,7 @@ let y = class extends S {
       return e !== "off" && typeof l == "number" ? `${a} ${l}` : a;
     }
     if (n === "sensor") {
-      if (Bt.test(e.trim()))
+      if (Zt.test(e.trim()))
         return zt(e, i);
       const a = t.attributes.unit_of_measurement, l = a ? `${e}${a}` : e;
       if (t.attributes.device_class === "temperature" || a === "°C" || a === "°F") {
@@ -5384,7 +5387,7 @@ let y = class extends S {
       }
       return l;
     }
-    return n === "media_player" ? e.charAt(0).toUpperCase() + e.slice(1) : Bt.test(e.trim()) ? zt(e, i) : e.charAt(0).toUpperCase() + e.slice(1);
+    return n === "media_player" ? e.charAt(0).toUpperCase() + e.slice(1) : Zt.test(e.trim()) ? zt(e, i) : e.charAt(0).toUpperCase() + e.slice(1);
   }
   _isNumericHistoryEntity(t) {
     if (!t || !t.entity_id.startsWith("sensor.")) return !1;
@@ -6252,6 +6255,92 @@ let y = class extends S {
       </div>
     `;
   }
+  _selectOption(t) {
+    if (!this.hass || !this._config?.entity) return;
+    const e = this._config.entity.split(".")[0];
+    this.hass.callService(e, "select_option", {
+      entity_id: this._config.entity,
+      option: t
+    }), window.setTimeout(() => this.closePopup(), 160);
+  }
+  _renderSelectorOptionIcon(t, e) {
+    const i = t.toLowerCase();
+    return i.includes("away") || i.includes("fuori") || i.includes("assent") || i.includes("out") || i.includes("vacanz") ? c`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M10 3 2 9v12h7v-2H4v-9l6-4.5L15 9.25V11h2V8.25L10 3Zm7 10a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm0 6c-2.67 0-5 1.34-5 3v1h10v-1c0-1.66-2.33-3-5-3Z"
+          />
+        </svg>
+      ` : i.includes("night") || i.includes("nott") || i.includes("sleep") ? c`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12.3 4.9a7 7 0 0 0 6.8 9.2A8 8 0 1 1 12.3 4.9Z"
+          />
+        </svg>
+      ` : i.includes("home") || i.includes("casa") || i.includes("present") ? e ? c`
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 3 3 10v11h18V10l-9-7Zm0 5.5a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm4.5 9.5h-9v-.75c0-1.5 3-2.25 4.5-2.25s4.5.75 4.5 2.25V18Z"
+              />
+            </svg>
+          ` : c`
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 3 3 10v11h18V10l-9-7Zm7 16H5v-8l7-5.44L19 11v8Zm-7-9.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-4 7.5h8v-.5c0-1.33-2.67-2-4-2s-4 .67-4 2v.5Z"
+              />
+            </svg>
+          ` : e ? c`
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.5-4.5 1.4 1.4-5.9 5.9Z"
+            />
+          </svg>
+        ` : c`
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h10v2H4v-2Z"
+            />
+          </svg>
+        `;
+  }
+  _renderSelectorPopup() {
+    const t = this._entity, e = t?.attributes.options, i = Array.isArray(e) ? e.map(String) : [], s = t?.state ?? "";
+    return i.length === 0 ? c`
+        <div class="selector-empty">
+          Nessuna opzione disponibile per questa entità. Collega un <code>input_select</code> o
+          <code>select</code>.
+        </div>
+      ` : c`
+      <div class="selector-list" role="radiogroup" aria-label="Seleziona opzione">
+        ${i.map((r) => {
+      const o = r === s;
+      return c`
+            <button
+              type="button"
+              class="selector-row ${o ? "is-selected" : ""}"
+              role="radio"
+              aria-checked=${String(o)}
+              @click=${() => this._selectOption(r)}
+            >
+              <span class="selector-row-icon">
+                ${this._renderSelectorOptionIcon(r, o)}
+              </span>
+              <span class="selector-row-label">${r}</span>
+              <span class="m3-radio ${o ? "checked" : ""}" aria-hidden="true">
+                <span class="m3-radio-dot"></span>
+              </span>
+            </button>
+          `;
+    })}
+      </div>
+    `;
+  }
   /* =========================================================================
      MAIN RENDER
      ========================================================================= */
@@ -6336,7 +6425,7 @@ let y = class extends S {
                   </div>
                 </header>
 
-                ${r === "sensor" || r === "custom" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}
+                ${r === "selector" ? this._renderSelectorPopup() : r === "sensor" || r === "custom" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}
               </div>
             ` : h}
       </dialog>
@@ -6344,7 +6433,7 @@ let y = class extends S {
   }
 };
 y.styles = [
-  B,
+  Z,
   P`
       :host {
         --m3e-spring-bouncy: 520ms linear(
@@ -7412,6 +7501,110 @@ y.styles = [
         justify-content: space-between;
         cursor: pointer;
       }
+
+      /* =====================================================================
+         SELECTOR POPUP (M3 Expressive Radio Option List)
+         ===================================================================== */
+      .selector-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 58dvh;
+        overflow-y: auto;
+        padding: 2px 0;
+      }
+
+      .selector-row {
+        width: 100%;
+        min-height: 70px;
+        padding: 15px 22px;
+        border: 0;
+        border-radius: 22px;
+        background: var(--md-sys-color-surface-container-high, #ededf0);
+        color: var(--md-sys-color-on-surface, #1b1b1f);
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        text-align: left;
+        transition:
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .selector-row.is-selected {
+        border-radius: var(--m3e-corner-full);
+        background: var(--md-sys-color-primary-container, #dfe2ed);
+        color: var(--md-sys-color-on-primary-container, #2b3248);
+      }
+
+      .selector-row:active {
+        transform: scale(0.98);
+      }
+
+      .selector-row-icon {
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+      }
+
+      .selector-row-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .selector-row-label {
+        flex: 1 1 auto;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .selector-row.is-selected .selector-row-label {
+        font-weight: 600;
+      }
+
+      .m3-radio {
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--md-sys-color-on-surface-variant, #44464f);
+        display: grid;
+        place-items: center;
+        transition: border-color var(--m3e-spring-effects-fast);
+      }
+
+      .m3-radio.checked {
+        border-color: var(--md-sys-color-on-primary-container, #2b3248);
+      }
+
+      .m3-radio-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--md-sys-color-on-primary-container, #2b3248);
+        transform: scale(0);
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .m3-radio.checked .m3-radio-dot {
+        transform: scale(1);
+      }
+
+      .selector-empty {
+        padding: 20px 16px;
+        border-radius: 20px;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        font-size: 14px;
+        line-height: 1.45;
+        text-align: center;
+      }
     `
 ];
 x([
@@ -7468,7 +7661,7 @@ x([
 y = x([
   O("m3e-status-card")
 ], y);
-var Mi = Object.defineProperty, Pi = Object.getOwnPropertyDescriptor, Z = (t, e, i, s) => {
+var Mi = Object.defineProperty, Pi = Object.getOwnPropertyDescriptor, B = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Pi(e, i) : e, o = t.length - 1, n; o >= 0; o--)
     (n = t[o]) && (r = (s ? n(e, i, r) : n(r)) || r);
   return s && r && Mi(e, i, r), r;
@@ -7857,7 +8050,7 @@ let T = class extends S {
   }
 };
 T.styles = [
-  B,
+  Z,
   P`
       :host {
         --m3e-spring-bouncy: 540ms linear(
@@ -8197,28 +8390,28 @@ T.styles = [
       }
     `
 ];
-Z([
+B([
   A({ attribute: !1 })
 ], T.prototype, "hass", 2);
-Z([
+B([
   f()
 ], T.prototype, "_config", 2);
-Z([
+B([
   f()
 ], T.prototype, "_pressed", 2);
-Z([
+B([
   f()
 ], T.prototype, "_popupOpen", 2);
-Z([
+B([
   M("dialog.toggle-dialog")
 ], T.prototype, "_dialogEl", 2);
-Z([
+B([
   M(".toggle-tile")
 ], T.prototype, "_tileEl", 2);
-Z([
+B([
   M(".dialog-surface")
 ], T.prototype, "_dialogSurfaceEl", 2);
-T = Z([
+T = B([
   O("m3e-toggle-card")
 ], T);
 function R(t) {

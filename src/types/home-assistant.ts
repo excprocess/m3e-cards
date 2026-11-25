@@ -82,7 +82,15 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
   card_style?: M3ECardStyle;
 }
 
-export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'custom' | 'none';
+export type M3EStatusPopupType =
+  | 'auto'
+  | 'selector'
+  | 'sensor'
+  | 'climate'
+  | 'remote'
+  | 'media'
+  | 'custom'
+  | 'none';
 
 export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
 export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';

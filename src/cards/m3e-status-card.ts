@@ -399,6 +399,7 @@ export class M3EStatusCard extends LitElement {
     const cfg = this._config?.popup_type ?? 'auto';
     if (cfg !== 'auto') return cfg;
     const id = this._config?.entity ?? '';
+    if (id.startsWith('input_select.') || id.startsWith('select.')) return 'selector';
     if (id.startsWith('climate.')) return 'climate';
     if (id.startsWith('media_player.')) return 'media';
     if (id.startsWith('remote.')) {
@@ -1805,6 +1806,127 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _selectOption(option: string): void {
+    if (!this.hass || !this._config?.entity) return;
+    const domain = this._config.entity.split('.')[0];
+    this.hass.callService(domain, 'select_option', {
+      entity_id: this._config.entity,
+      option,
+    });
+    window.setTimeout(() => this.closePopup(), 160);
+  }
+
+  private _renderSelectorOptionIcon(option: string, filled: boolean) {
+    const lower = option.toLowerCase();
+
+    if (
+      lower.includes('away') ||
+      lower.includes('fuori') ||
+      lower.includes('assent') ||
+      lower.includes('out') ||
+      lower.includes('vacanz')
+    ) {
+      return html`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M10 3 2 9v12h7v-2H4v-9l6-4.5L15 9.25V11h2V8.25L10 3Zm7 10a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5Zm0 6c-2.67 0-5 1.34-5 3v1h10v-1c0-1.66-2.33-3-5-3Z"
+          />
+        </svg>
+      `;
+    }
+
+    if (lower.includes('night') || lower.includes('nott') || lower.includes('sleep')) {
+      return html`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12.3 4.9a7 7 0 0 0 6.8 9.2A8 8 0 1 1 12.3 4.9Z"
+          />
+        </svg>
+      `;
+    }
+
+    if (lower.includes('home') || lower.includes('casa') || lower.includes('present')) {
+      return filled
+        ? html`
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 3 3 10v11h18V10l-9-7Zm0 5.5a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm4.5 9.5h-9v-.75c0-1.5 3-2.25 4.5-2.25s4.5.75 4.5 2.25V18Z"
+              />
+            </svg>
+          `
+        : html`
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 3 3 10v11h18V10l-9-7Zm7 16H5v-8l7-5.44L19 11v8Zm-7-9.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-4 7.5h8v-.5c0-1.33-2.67-2-4-2s-4 .67-4 2v.5Z"
+              />
+            </svg>
+          `;
+    }
+
+    return filled
+      ? html`
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.2 14.2-3.5-3.5 1.4-1.4 2.1 2.1 4.5-4.5 1.4 1.4-5.9 5.9Z"
+            />
+          </svg>
+        `
+      : html`
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M4 6h16v2H4V6Zm0 5h16v2H4v-2Zm0 5h10v2H4v-2Z"
+            />
+          </svg>
+        `;
+  }
+
+  private _renderSelectorPopup() {
+    const entity = this._entity;
+    const rawOptions = entity?.attributes.options;
+    const options = Array.isArray(rawOptions) ? rawOptions.map(String) : [];
+    const current = entity?.state ?? '';
+
+    if (options.length === 0) {
+      return html`
+        <div class="selector-empty">
+          Nessuna opzione disponibile per questa entità. Collega un <code>input_select</code> o
+          <code>select</code>.
+        </div>
+      `;
+    }
+
+    return html`
+      <div class="selector-list" role="radiogroup" aria-label="Seleziona opzione">
+        ${options.map((opt) => {
+          const selected = opt === current;
+          return html`
+            <button
+              type="button"
+              class="selector-row ${selected ? 'is-selected' : ''}"
+              role="radio"
+              aria-checked=${String(selected)}
+              @click=${() => this._selectOption(opt)}
+            >
+              <span class="selector-row-icon">
+                ${this._renderSelectorOptionIcon(opt, selected)}
+              </span>
+              <span class="selector-row-label">${opt}</span>
+              <span class="m3-radio ${selected ? 'checked' : ''}" aria-hidden="true">
+                <span class="m3-radio-dot"></span>
+              </span>
+            </button>
+          `;
+        })}
+      </div>
+    `;
+  }
+
   /* =========================================================================
      MAIN RENDER
      ========================================================================= */
@@ -1920,13 +2042,15 @@ export class M3EStatusCard extends LitElement {
                   </div>
                 </header>
 
-                ${popupType === 'sensor' || popupType === 'custom'
-                  ? this._renderSensorPopup(icon)
-                  : popupType === 'climate'
-                    ? this._renderClimatePopup()
-                    : popupType === 'remote'
-                      ? this._renderRemotePopup()
-                      : this._renderMediaPopup()}
+                ${popupType === 'selector'
+                  ? this._renderSelectorPopup()
+                  : popupType === 'sensor' || popupType === 'custom'
+                    ? this._renderSensorPopup(icon)
+                    : popupType === 'climate'
+                      ? this._renderClimatePopup()
+                      : popupType === 'remote'
+                        ? this._renderRemotePopup()
+                        : this._renderMediaPopup()}
               </div>
             `
           : nothing}
@@ -3002,6 +3126,110 @@ export class M3EStatusCard extends LitElement {
         align-items: center;
         justify-content: space-between;
         cursor: pointer;
+      }
+
+      /* =====================================================================
+         SELECTOR POPUP (M3 Expressive Radio Option List)
+         ===================================================================== */
+      .selector-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: 58dvh;
+        overflow-y: auto;
+        padding: 2px 0;
+      }
+
+      .selector-row {
+        width: 100%;
+        min-height: 70px;
+        padding: 15px 22px;
+        border: 0;
+        border-radius: 22px;
+        background: var(--md-sys-color-surface-container-high, #ededf0);
+        color: var(--md-sys-color-on-surface, #1b1b1f);
+        font: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        text-align: left;
+        transition:
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .selector-row.is-selected {
+        border-radius: var(--m3e-corner-full);
+        background: var(--md-sys-color-primary-container, #dfe2ed);
+        color: var(--md-sys-color-on-primary-container, #2b3248);
+      }
+
+      .selector-row:active {
+        transform: scale(0.98);
+      }
+
+      .selector-row-icon {
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+      }
+
+      .selector-row-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .selector-row-label {
+        flex: 1 1 auto;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .selector-row.is-selected .selector-row-label {
+        font-weight: 600;
+      }
+
+      .m3-radio {
+        flex: 0 0 22px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--md-sys-color-on-surface-variant, #44464f);
+        display: grid;
+        place-items: center;
+        transition: border-color var(--m3e-spring-effects-fast);
+      }
+
+      .m3-radio.checked {
+        border-color: var(--md-sys-color-on-primary-container, #2b3248);
+      }
+
+      .m3-radio-dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--md-sys-color-on-primary-container, #2b3248);
+        transform: scale(0);
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .m3-radio.checked .m3-radio-dot {
+        transform: scale(1);
+      }
+
+      .selector-empty {
+        padding: 20px 16px;
+        border-radius: 20px;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        font-size: 14px;
+        line-height: 1.45;
+        text-align: center;
       }
     `,
   ];

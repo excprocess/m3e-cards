@@ -15,6 +15,7 @@ export class M3EStatusCardEditor extends LitElement {
     const cfg = this._config?.popup_type ?? 'auto';
     if (cfg !== 'auto') return cfg;
     const id = this._config?.entity ?? '';
+    if (id.startsWith('input_select.') || id.startsWith('select.')) return 'selector';
     if (id.startsWith('climate.')) return 'climate';
     if (id.startsWith('media_player.')) return 'media';
     if (id.startsWith('remote.')) {
@@ -61,6 +62,7 @@ export class M3EStatusCardEditor extends LitElement {
             mode: 'dropdown',
             options: [
               { value: 'auto', label: 'Automatico (in base al dispositivo)' },
+              { value: 'selector', label: 'Selettore (Scelta opzioni M3 Expressive)' },
               { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
               { value: 'sensor', label: 'Sensore (Anello di stato + Storico)' },
               { value: 'climate', label: 'Clima / Termostato (Dial + Mode)' },
