@@ -86,7 +86,7 @@ export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'med
 
 export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
 export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';
-export type M3ECardStyle = 'default' | 'pill' | 'expressive' | 'compact';
+export type M3ECardStyle = 'default' | 'pill' | 'morph' | 'expressive' | 'compact';
 export type M3ESubtitleFormat = 'auto' | 'relative' | 'time' | 'datetime' | 'raw';
 export type M3ESubtitleVisibility = 'both' | 'on' | 'off';
 

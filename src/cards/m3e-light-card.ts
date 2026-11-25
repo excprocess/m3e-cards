@@ -111,6 +111,7 @@ export class M3ELightCard extends LitElement {
               mode: 'dropdown',
               options: [
                 { value: 'default', label: 'Google Home (Default 28px)' },
+                { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
                 { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
                 { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
                 { value: 'compact', label: 'Compatta (56px / 18px)' },

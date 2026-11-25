@@ -88,7 +88,26 @@ export const m3eBaseStyles = css`
     border-radius: var(--m3e-corner-full);
   }
 
-  /* 2. M3 Expressive Dynamic Shape Morph (20px inactive <-> full pill active) */
+  /* 2. Google Home Morph (28px standard inactive <-> full round pill active) */
+  ha-card.style-morph {
+    border-radius: 28px;
+    transition:
+      border-radius 520ms linear(
+        0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
+        1.038 56%, 0.992 71%, 1.005 86%, 1
+      ),
+      transform var(--m3e-spring-spatial-fast),
+      background-color var(--m3e-spring-effects-default),
+      border-color var(--m3e-spring-effects-default),
+      box-shadow var(--m3e-spring-effects-default);
+  }
+
+  ha-card.style-morph.is-on,
+  ha-card.style-morph.is-active {
+    border-radius: var(--m3e-corner-full);
+  }
+
+  /* 3. M3 Expressive Dynamic Shape Morph (20px inactive <-> full pill active) */
   ha-card.style-expressive {
     border-radius: 20px;
     transition:
