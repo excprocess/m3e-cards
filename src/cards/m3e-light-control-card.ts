@@ -7,11 +7,11 @@ import type { HassEntity, HomeAssistant, M3ELightControlCardConfig } from '../ty
 export class M3ELightControlCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3ELightControlCardConfig;
-  @state() private _pressedSide: 'on' | 'off' | null = null;
   @state() private _optimisticOn: boolean | null = null;
 
   private _optimisticTimer: number | null = null;
   private _lastAnyOn?: boolean;
+  private _lastDarkMode?: boolean;
 
   public static getStubConfig(): M3ELightControlCardConfig {
     return {
@@ -75,6 +75,13 @@ export class M3ELightControlCard extends LitElement {
     }
   }
 
+  private get _isDark(): boolean {
+    if (typeof this.hass?.themes?.darkMode === 'boolean') {
+      return this.hass.themes.darkMode;
+    }
+    return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  }
+
   private _targetLightEntities(): HassEntity[] {
     if (!this.hass) return [];
     const configured = this._config?.entities;
@@ -91,22 +98,49 @@ export class M3ELightControlCard extends LitElement {
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
-    if (
-      changedProps.has('_config') ||
-      changedProps.has('_pressedSide') ||
-      changedProps.has('_optimisticOn')
-    ) {
+    if (changedProps.has('_config') || changedProps.has('_optimisticOn')) {
       return true;
     }
     if (changedProps.has('hass')) {
       const nextAnyOn = this._computeAnyOn();
-      if (nextAnyOn !== this._lastAnyOn) {
+      const nextDark = this._isDark;
+      if (nextAnyOn !== this._lastAnyOn || nextDark !== this._lastDarkMode) {
         this._lastAnyOn = nextAnyOn;
+        this._lastDarkMode = nextDark;
         return true;
       }
       return false;
     }
     return false;
+  }
+
+  private _spawnRipple(e: PointerEvent): void {
+    const btn = e.currentTarget as HTMLElement;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2.1;
+    const x = e.clientX - rect.left - size / 2;
+    const y = e.clientY - rect.top - size / 2;
+
+    const wave = document.createElement('span');
+    wave.className = 'm3-ripple';
+    wave.style.width = `${size}px`;
+    wave.style.height = `${size}px`;
+    wave.style.left = `${x}px`;
+    wave.style.top = `${y}px`;
+    btn.appendChild(wave);
+
+    const anim = wave.animate(
+      [
+        { transform: 'scale(0.15)', opacity: 0.28 },
+        { transform: 'scale(1)', opacity: 0.16, offset: 0.65 },
+        { transform: 'scale(1.05)', opacity: 0 },
+      ],
+      {
+        duration: 460,
+        easing: 'cubic-bezier(0.2, 0, 0, 1)',
+      },
+    );
+    anim.onfinish = () => wave.remove();
   }
 
   private _trigger(turnOn: boolean): void {
@@ -135,40 +169,35 @@ export class M3ELightControlCard extends LitElement {
     const labelOn = this._config.label_on?.trim() || 'All on';
     const labelOff = this._config.label_off?.trim() || 'All off';
     const useTheme = Boolean(this._config.use_theme_color);
+    const isDark = this._isDark;
 
     return html`
       <ha-card
-        class="control-pill ${isOn ? 'state-on' : 'state-off'} ${useTheme ? 'use-theme' : ''} ${this._pressedSide ? `pressing-${this._pressedSide}` : ''}"
+        class="control-pill ${isOn ? 'state-on' : 'state-off'} ${useTheme ? 'use-theme' : ''} ${isDark ? 'is-dark' : 'is-light'}"
         role="group"
         aria-label="Light control"
       >
-        <!-- Sliding shared-element active indicator with pill outer edge & straight center divider -->
+        <!-- Sliding shared-element active indicator with razor-sharp curved border & straight center edge -->
         <div class="pill-indicator" aria-hidden="true"></div>
 
         <button
           type="button"
           class="seg-btn seg-left ${isOn ? 'is-selected' : ''}"
           aria-pressed=${String(isOn)}
-          @pointerdown=${() => (this._pressedSide = 'on')}
-          @pointerup=${() => (this._pressedSide = null)}
-          @pointerleave=${() => (this._pressedSide = null)}
-          @pointercancel=${() => (this._pressedSide = null)}
+          @pointerdown=${(e: PointerEvent) => this._spawnRipple(e)}
           @click=${() => this._trigger(true)}
         >
-          <span>${labelOn}</span>
+          <span class="seg-label">${labelOn}</span>
         </button>
 
         <button
           type="button"
           class="seg-btn seg-right ${!isOn ? 'is-selected' : ''}"
           aria-pressed=${String(!isOn)}
-          @pointerdown=${() => (this._pressedSide = 'off')}
-          @pointerup=${() => (this._pressedSide = null)}
-          @pointerleave=${() => (this._pressedSide = null)}
-          @pointercancel=${() => (this._pressedSide = null)}
+          @pointerdown=${(e: PointerEvent) => this._spawnRipple(e)}
           @click=${() => this._trigger(false)}
         >
-          <span>${labelOff}</span>
+          <span class="seg-label">${labelOff}</span>
         </button>
       </ha-card>
     `;
@@ -180,30 +209,36 @@ export class M3ELightControlCard extends LitElement {
       .control-pill {
         position: relative;
         height: 100%;
-        min-height: 68px;
+        min-height: 64px;
         border-radius: var(--m3e-corner-full);
         display: grid;
         grid-template-columns: 1fr 1fr;
         overflow: hidden;
-        background: var(--ha-card-background, var(--md-sys-color-surface-container-low, #efefef));
+        background: var(--ha-card-background, var(--md-sys-color-surface-container, #efefef));
+        /* Google Home Light Mode warm amber palette */
         --pill-active-bg: #fae08d;
-        --pill-active-press: #dfd08d;
-        --pill-active-fg: #1c1b18;
-        --pill-active-border: #1c1b18;
+        --pill-active-fg: #5c4900;
+        --pill-active-border: #6f5900;
+        --pill-ripple: #6f5900;
       }
 
+      /* Google Home Dark Mode warm amber container */
+      .control-pill.is-dark:not(.use-theme) {
+        --pill-active-bg: #4d411c;
+        --pill-active-fg: #ffe082;
+        --pill-active-border: #d9be6c;
+        --pill-ripple: #ffe082;
+      }
+
+      /* Optional M3Y theme override */
       .control-pill.use-theme {
         --pill-active-bg: var(--md-sys-color-primary-container, #dbe1ff);
-        --pill-active-press: color-mix(
-          in srgb,
-          var(--md-sys-color-primary, #4c5c92) 22%,
-          var(--md-sys-color-primary-container, #dbe1ff)
-        );
         --pill-active-fg: var(--md-sys-color-on-primary-container, #1c1b18);
         --pill-active-border: var(--md-sys-color-on-primary-container, #1c1b18);
+        --pill-ripple: var(--md-sys-color-on-primary-container, #1c1b18);
       }
 
-      /* Sliding active indicator with M3 Spatial motion & shape morphing */
+      /* Sliding active indicator: full pill outer edge + straight vertical center edge */
       .pill-indicator {
         position: absolute;
         inset-block: 0;
@@ -212,13 +247,13 @@ export class M3ELightControlCard extends LitElement {
         pointer-events: none;
         box-sizing: border-box;
         background: var(--pill-active-bg);
-        border: 1.5px solid var(--pill-active-border);
+        box-shadow: inset 0 0 0 1.5px var(--pill-active-border);
         border-radius: 9999px 0 0 9999px;
         transform: translateX(0%);
         transition:
-          transform 300ms cubic-bezier(0.2, 0, 0, 1),
-          border-radius 300ms cubic-bezier(0.2, 0, 0, 1),
-          background-color 180ms cubic-bezier(0.2, 0, 0, 1);
+          transform 280ms cubic-bezier(0.2, 0, 0, 1),
+          border-radius 280ms cubic-bezier(0.2, 0, 0, 1),
+          background-color 200ms cubic-bezier(0.2, 0, 0, 1);
       }
 
       .control-pill.state-off .pill-indicator {
@@ -226,18 +261,14 @@ export class M3ELightControlCard extends LitElement {
         border-radius: 0 9999px 9999px 0;
       }
 
-      .control-pill.state-on.pressing-on .pill-indicator,
-      .control-pill.state-off.pressing-off .pill-indicator {
-        background: var(--pill-active-press);
-      }
-
       .seg-btn {
         position: relative;
         z-index: 1;
+        overflow: hidden;
         border: 0;
         margin: 0;
         padding: 0 16px;
-        min-height: 68px;
+        min-height: 64px;
         background: transparent;
         cursor: pointer;
         font: inherit;
@@ -249,17 +280,33 @@ export class M3ELightControlCard extends LitElement {
         align-items: center;
         justify-content: center;
         outline: none;
-        transition:
-          color 200ms cubic-bezier(0.2, 0, 0, 1),
-          transform 160ms cubic-bezier(0.2, 0, 0, 1);
+        transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .seg-left {
+        border-radius: 9999px 0 0 9999px;
+      }
+
+      .seg-right {
+        border-radius: 0 9999px 9999px 0;
       }
 
       .seg-btn.is-selected {
         color: var(--pill-active-fg);
       }
 
-      .seg-btn:active {
-        transform: scale(0.97);
+      .seg-label {
+        position: relative;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .m3-ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: var(--pill-ripple);
+        pointer-events: none;
+        transform-origin: center;
       }
 
       .seg-btn:focus-visible {
