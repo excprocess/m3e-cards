@@ -264,7 +264,7 @@ N.elementStyles = [], N.shadowRootOptions = { mode: "open" }, N[X("elementProper
  */
 const yt = globalThis, Tt = (t) => t, ot = yt.trustedTypes, Mt = ot ? ot.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, zt = "$lit$", T = `lit$${Math.random().toFixed(9).slice(2)}$`, Bt = "?" + T, se = `<${Bt}>`, H = document, K = () => H.createComment(""), J = (t) => t === null || typeof t != "object" && typeof t != "function", bt = Array.isArray, re = (t) => bt(t) || typeof t?.[Symbol.iterator] == "function", ht = `[ 	
 \f\r]`, Y = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Ot = /-->/g, Dt = />/g, D = RegExp(`>|${ht}(?:([^\\s"'>=/]+)(${ht}*=${ht}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), It = /'/g, Lt = /"/g, Nt = /^(?:script|style|textarea|title)$/i, Vt = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), d = Vt(1), ut = Vt(2), V = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), Rt = /* @__PURE__ */ new WeakMap(), L = H.createTreeWalker(H, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), It = /'/g, Lt = /"/g, Nt = /^(?:script|style|textarea|title)$/i, Vt = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), d = Vt(1), ut = Vt(2), V = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), Rt = /* @__PURE__ */ new WeakMap(), L = H.createTreeWalker(H, 129);
 function Zt(t, e) {
   if (!bt(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Mt !== void 0 ? Mt.createHTML(e) : e;
@@ -274,8 +274,8 @@ const oe = (t, e) => {
   let r, o = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", n = Y;
   for (let a = 0; a < i; a++) {
     const l = t[a];
-    let c, h, u = -1, g = 0;
-    for (; g < l.length && (n.lastIndex = g, h = n.exec(l), h !== null); ) g = n.lastIndex, n === Y ? h[1] === "!--" ? n = Ot : h[1] !== void 0 ? n = Dt : h[2] !== void 0 ? (Nt.test(h[2]) && (r = RegExp("</" + h[2], "g")), n = D) : h[3] !== void 0 && (n = D) : n === D ? h[0] === ">" ? (n = r ?? Y, u = -1) : h[1] === void 0 ? u = -2 : (u = n.lastIndex - h[2].length, c = h[1], n = h[3] === void 0 ? D : h[3] === '"' ? Lt : It) : n === Lt || n === It ? n = D : n === Ot || n === Dt ? n = Y : (n = D, r = void 0);
+    let c, p, u = -1, g = 0;
+    for (; g < l.length && (n.lastIndex = g, p = n.exec(l), p !== null); ) g = n.lastIndex, n === Y ? p[1] === "!--" ? n = Ot : p[1] !== void 0 ? n = Dt : p[2] !== void 0 ? (Nt.test(p[2]) && (r = RegExp("</" + p[2], "g")), n = D) : p[3] !== void 0 && (n = D) : n === D ? p[0] === ">" ? (n = r ?? Y, u = -1) : p[1] === void 0 ? u = -2 : (u = n.lastIndex - p[2].length, c = p[1], n = p[3] === void 0 ? D : p[3] === '"' ? Lt : It) : n === Lt || n === It ? n = D : n === Ot || n === Dt ? n = Y : (n = D, r = void 0);
     const v = n === D && t[a + 1].startsWith("/>") ? " " : "";
     o += n === Y ? l + se : u >= 0 ? (s.push(c), l.slice(0, u) + zt + l.slice(u) + T + v) : l + T + (u === -2 ? a : v);
   }
@@ -286,7 +286,7 @@ class Q {
     let r;
     this.parts = [];
     let o = 0, n = 0;
-    const a = e.length - 1, l = this.parts, [c, h] = oe(e, i);
+    const a = e.length - 1, l = this.parts, [c, p] = oe(e, i);
     if (this.el = Q.createElement(c, s), L.currentNode = this.el.content, i === 2 || i === 3) {
       const u = this.el.content.firstChild;
       u.replaceWith(...u.childNodes);
@@ -294,7 +294,7 @@ class Q {
     for (; (r = L.nextNode()) !== null && l.length < a; ) {
       if (r.nodeType === 1) {
         if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(zt)) {
-          const g = h[n++], v = r.getAttribute(u).split(T), y = /([.?@])?(.*)/.exec(g);
+          const g = p[n++], v = r.getAttribute(u).split(T), y = /([.?@])?(.*)/.exec(g);
           l.push({ type: 1, index: o, name: y[2], strings: v, ctor: y[1] === "." ? ae : y[1] === "?" ? le : y[1] === "@" ? ce : lt }), r.removeAttribute(u);
         } else u.startsWith(T) && (l.push({ type: 6, index: o }), r.removeAttribute(u));
         if (Nt.test(r.tagName)) {
@@ -357,7 +357,7 @@ class tt {
     return this._$AM?._$AU ?? this._$Cv;
   }
   constructor(e, i, s, r) {
-    this.type = 2, this._$AH = p, this._$AN = void 0, this._$AA = e, this._$AB = i, this._$AM = s, this.options = r, this._$Cv = r?.isConnected ?? !0;
+    this.type = 2, this._$AH = h, this._$AN = void 0, this._$AA = e, this._$AB = i, this._$AM = s, this.options = r, this._$Cv = r?.isConnected ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -371,7 +371,7 @@ class tt {
     return this._$AB;
   }
   _$AI(e, i = this) {
-    e = Z(this, e, i), J(e) ? e === p || e == null || e === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : e !== this._$AH && e !== V && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : re(e) ? this.k(e) : this._(e);
+    e = Z(this, e, i), J(e) ? e === h || e == null || e === "" ? (this._$AH !== h && this._$AR(), this._$AH = h) : e !== this._$AH && e !== V && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : re(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -380,7 +380,7 @@ class tt {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== p && J(this._$AH) ? this._$AA.nextSibling.data = e : this.T(H.createTextNode(e)), this._$AH = e;
+    this._$AH !== h && J(this._$AH) ? this._$AA.nextSibling.data = e : this.T(H.createTextNode(e)), this._$AH = e;
   }
   $(e) {
     const { values: i, _$litType$: s } = e, r = typeof s == "number" ? this._$AC(e) : (s.el === void 0 && (s.el = Q.createElement(Zt(s.h, s.h[0]), this.options)), s);
@@ -419,7 +419,7 @@ class lt {
     return this._$AM._$AU;
   }
   constructor(e, i, s, r, o) {
-    this.type = 1, this._$AH = p, this._$AN = void 0, this.element = e, this.name = i, this._$AM = r, this.options = o, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = p;
+    this.type = 1, this._$AH = h, this._$AN = void 0, this.element = e, this.name = i, this._$AM = r, this.options = o, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = h;
   }
   _$AI(e, i = this, s, r) {
     const o = this.strings;
@@ -428,12 +428,12 @@ class lt {
     else {
       const a = e;
       let l, c;
-      for (e = o[0], l = 0; l < o.length - 1; l++) c = Z(this, a[s + l], i, l), c === V && (c = this._$AH[l]), n ||= !J(c) || c !== this._$AH[l], c === p ? e = p : e !== p && (e += (c ?? "") + o[l + 1]), this._$AH[l] = c;
+      for (e = o[0], l = 0; l < o.length - 1; l++) c = Z(this, a[s + l], i, l), c === V && (c = this._$AH[l]), n ||= !J(c) || c !== this._$AH[l], c === h ? e = h : e !== h && (e += (c ?? "") + o[l + 1]), this._$AH[l] = c;
     }
     n && !r && this.j(e);
   }
   j(e) {
-    e === p ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+    e === h ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
 class ae extends lt {
@@ -441,7 +441,7 @@ class ae extends lt {
     super(...arguments), this.type = 3;
   }
   j(e) {
-    this.element[this.name] = e === p ? void 0 : e;
+    this.element[this.name] = e === h ? void 0 : e;
   }
 }
 class le extends lt {
@@ -449,7 +449,7 @@ class le extends lt {
     super(...arguments), this.type = 4;
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== p);
+    this.element.toggleAttribute(this.name, !!e && e !== h);
   }
 }
 class ce extends lt {
@@ -457,8 +457,8 @@ class ce extends lt {
     super(e, i, s, r, o), this.type = 5;
   }
   _$AI(e, i = this) {
-    if ((e = Z(this, e, i, 0) ?? p) === V) return;
-    const s = this._$AH, r = e === p && s !== p || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, o = e !== p && (s === p || r);
+    if ((e = Z(this, e, i, 0) ?? h) === V) return;
+    const s = this._$AH, r = e === h && s !== h || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, o = e !== h && (s === h || r);
     r && this.element.removeEventListener(this.name, this, s), o && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
@@ -872,11 +872,11 @@ let x = class extends R {
     Array.isArray(this._config?.favorite_colors) && this._config.favorite_colors.forEach((a, l) => {
       const c = a.rgb_color ?? (a.color_temp_kelvin ? ft(a.color_temp_kelvin) : null);
       if (!c) return;
-      const h = gt(c);
+      const p = gt(c);
       o({
-        id: `cfg-${l}-${h}`,
-        label: a.label || (a.color_temp_kelvin ? `${a.color_temp_kelvin}K` : h),
-        hex: h,
+        id: `cfg-${l}-${p}`,
+        label: a.label || (a.color_temp_kelvin ? `${a.color_temp_kelvin}K` : p),
+        hex: p,
         rgb: c,
         kelvin: a.color_temp_kelvin
       });
@@ -885,11 +885,11 @@ let x = class extends R {
     if (Array.isArray(n) && n.forEach((a, l) => {
       const c = a.rgb_color ?? (a.color_temp_kelvin ? ft(a.color_temp_kelvin) : null);
       if (!c) return;
-      const h = gt(c);
+      const p = gt(c);
       o({
-        id: `ha-${l}-${h}`,
-        label: a.color_temp_kelvin ? `${a.color_temp_kelvin}K` : h,
-        hex: h,
+        id: `ha-${l}-${p}`,
+        label: a.color_temp_kelvin ? `${a.color_temp_kelvin}K` : p,
+        hex: p,
         rgb: c,
         kelvin: a.color_temp_kelvin
       });
@@ -950,7 +950,7 @@ let x = class extends R {
     const s = this._config.entity, r = this.hass.entities?.[s], o = r?.device_id ?? null, n = r?.area_id ?? (o ? this.hass.devices?.[o]?.area_id ?? null : null), a = (this._entity?.attributes.friendly_name || "").trim().toLowerCase();
     for (const [l, c] of Object.entries(this.hass.states)) {
       if (!l.startsWith("scene.") || e.has(l)) continue;
-      const h = this.hass.entities?.[l], u = h?.device_id ?? null, g = h?.area_id ?? (u ? this.hass.devices?.[u]?.area_id ?? null : null), v = String(c.attributes.group_name ?? "").trim().toLowerCase();
+      const p = this.hass.entities?.[l], u = p?.device_id ?? null, g = p?.area_id ?? (u ? this.hass.devices?.[u]?.area_id ?? null : null), v = String(c.attributes.group_name ?? "").trim().toLowerCase();
       (!!(o && u === o) || !!(a && v && v === a) || !!(n && g === n)) && i(l);
     }
     return t;
@@ -1102,7 +1102,7 @@ let x = class extends R {
      RENDER
      ========================================================================= */
   render() {
-    if (!this._config) return p;
+    if (!this._config) return h;
     const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._config.icon || t?.attributes.icon || "mdi:lightbulb", s = this._isOn, r = this._brightnessPct, o = this._isUnavailable ? "Unavailable" : s ? this._supportsBrightness ? `On • ${r}%` : "On" : "Off", n = this._computeColorVars(), a = this._matchedPresetId, l = this._popupOpen ? this._getAvailableScenes() : [];
     return d`
       <ha-card
@@ -1159,22 +1159,6 @@ let x = class extends R {
                     </svg>
                   </button>
                   <span class="dialog-title">${e}</span>
-                  ${l.length > 0 ? d`
-                        <button
-                          type="button"
-                          class="scene-btn ${this._scenesSheetOpen ? "is-open" : ""}"
-                          @click=${() => this._scenesSheetOpen = !this._scenesSheetOpen}
-                          aria-label="Scenes"
-                          title="Scene"
-                        >
-                          <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                              fill="currentColor"
-                              d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5ZM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15Z"
-                            />
-                          </svg>
-                        </button>
-                      ` : p}
                   <button
                     type="button"
                     class="power-btn ${s ? "is-on" : ""}"
@@ -1231,7 +1215,7 @@ let x = class extends R {
                             <div class="sun-layer sun-filled" aria-hidden="true">
                               ${this._renderSunIcon()}
                             </div>
-                          ` : p}
+                          ` : h}
                     </div>
                   </div>
 
@@ -1241,16 +1225,22 @@ let x = class extends R {
                   </div>
                 </div>
 
-                ${this._presets.length > 0 ? d`
+                ${this._presets.length > 0 || l.length > 0 ? d`
                       <div class="swatch-bar" role="radiogroup" aria-label="Light color presets">
                         <button
                           type="button"
-                          class="palette-btn"
-                          title="Use Material You theme color"
+                          class="palette-btn ${this._scenesSheetOpen ? "is-open" : ""}"
+                          title=${l.length > 0 ? "Scene" : "More info"}
                           @click=${() => {
-      this._selectedPresetId = null, this._toggleLight();
+      l.length > 0 ? this._scenesSheetOpen = !this._scenesSheetOpen : this._config && (this.closePopup(), this.dispatchEvent(
+        new CustomEvent("hass-more-info", {
+          bubbles: !0,
+          composed: !0,
+          detail: { entityId: this._config.entity }
+        })
+      ));
     }}
-                          aria-label="Color presets"
+                          aria-label=${l.length > 0 ? "Scenes" : "Color picker"}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path
@@ -1275,7 +1265,7 @@ let x = class extends R {
                           `
     )}
                       </div>
-                    ` : p}
+                    ` : h}
                 ${this._scenesSheetOpen && l.length > 0 ? d`
                       <div
                         class="scenes-sheet-backdrop"
@@ -1295,11 +1285,11 @@ let x = class extends R {
                           </div>
                           <div class="scenes-sheet-list">
                             ${l.map((c) => {
-      const h = this._activeSceneId === c.entity_id;
+      const p = this._activeSceneId === c.entity_id;
       return d`
                                 <button
                                   type="button"
-                                  class="scene-option ${h ? "selected" : ""}"
+                                  class="scene-option ${p ? "selected" : ""}"
                                   @click=${() => this._activateScene(c)}
                                 >
                                   <span class="scene-option-left">
@@ -1310,16 +1300,16 @@ let x = class extends R {
                                         ></ha-state-icon>` : d`<svg viewBox="0 0 24 24" class="scene-svg"><path fill="currentColor" d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"/></svg>`}
                                     <span>${this._cleanSceneName(c)}</span>
                                   </span>
-                                  ${h ? d`<span>✓</span>` : p}
+                                  ${p ? d`<span>✓</span>` : h}
                                 </button>
                               `;
     })}
                           </div>
                         </div>
                       </div>
-                    ` : p}
+                    ` : h}
               </div>
-            ` : p}
+            ` : h}
       </dialog>
     `;
   }
@@ -1883,6 +1873,12 @@ x.styles = [
         place-items: center;
         background: var(--md-sys-color-surface-container-highest, #303036);
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .palette-btn.is-open {
+        border-radius: 16px;
+        background: var(--md-sys-color-primary-container, #344479);
+        color: var(--md-sys-color-on-primary-container, #dbe1ff);
       }
 
       .palette-btn svg {
@@ -2608,8 +2604,8 @@ let b = class extends R {
       const c = l.trim();
       if (!c || a.length <= c.length) return null;
       if (a.toLowerCase().startsWith(c.toLowerCase())) {
-        const h = a.slice(c.length).replace(/^[\s\-–—:]+/, "").trim();
-        if (h) return h.charAt(0).toUpperCase() + h.slice(1);
+        const p = a.slice(c.length).replace(/^[\s\-–—:]+/, "").trim();
+        if (p) return p.charAt(0).toUpperCase() + p.slice(1);
       }
       return null;
     }, r = this.hass?.entities?.[t.entity_id]?.device_id, o = r ? this.hass?.devices?.[r] : void 0;
@@ -2630,8 +2626,8 @@ let b = class extends R {
       for (; c < a.length && c < l.length - 1 && a[c].toLowerCase() === l[c].toLowerCase(); )
         c++;
       if (c > 0) {
-        const h = l.slice(c).join(" ").replace(/^[\s\-–—:]+/, "").trim();
-        if (h) return h.charAt(0).toUpperCase() + h.slice(1);
+        const p = l.slice(c).join(" ").replace(/^[\s\-–—:]+/, "").trim();
+        if (p) return p.charAt(0).toUpperCase() + p.slice(1);
       }
     }
     return i;
@@ -2644,7 +2640,7 @@ let b = class extends R {
   }
   _renderHistoryChart() {
     const t = this._historyEntityId ? this.hass?.states[this._historyEntityId] : this._resolveHistoryEntity();
-    if (!t) return p;
+    if (!t) return h;
     const e = String(t.attributes.unit_of_measurement ?? ""), i = this._historyEntityId === this._entity?.entity_id ? "Last 24 hours" : `${this._cleanSiblingLabel(t)} • 24h`;
     if (this._historyLoading)
       return d`
@@ -2657,9 +2653,9 @@ let b = class extends R {
         </div>
       `;
     const s = this._historyPoints;
-    if (s.length < 2) return p;
-    const r = Math.min(...s.map((m) => m.v)), o = Math.max(...s.map((m) => m.v)), n = o - r || 1, a = s[0].t, l = s[s.length - 1].t, c = l - a || 1, h = 320, u = 104, g = 6, v = 12, y = s.map((m) => ({
-      x: g + (m.t - a) / c * (h - g * 2),
+    if (s.length < 2) return h;
+    const r = Math.min(...s.map((m) => m.v)), o = Math.max(...s.map((m) => m.v)), n = o - r || 1, a = s[0].t, l = s[s.length - 1].t, c = l - a || 1, p = 320, u = 104, g = 6, v = 12, y = s.map((m) => ({
+      x: g + (m.t - a) / c * (p - g * 2),
       y: u - v - (m.v - r) / n * (u - v * 2),
       ...m
     }));
@@ -2685,7 +2681,7 @@ let b = class extends R {
 
         <svg
           class="history-svg"
-          viewBox="0 0 ${h} ${u}"
+          viewBox="0 0 ${p} ${u}"
           preserveAspectRatio="none"
           @pointerdown=${F}
           @pointermove=${(m) => {
@@ -2700,12 +2696,12 @@ let b = class extends R {
                 <stop offset="100%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.0" />
               </linearGradient>
             </defs>
-            <line x1=${g} y1=${v} x2=${h - g} y2=${v} class="history-grid-line" />
-            <line x1=${g} y1=${u / 2} x2=${h - g} y2=${u / 2} class="history-grid-line" />
-            <line x1=${g} y1=${u - v} x2=${h - g} y2=${u - v} class="history-grid-line" />
+            <line x1=${g} y1=${v} x2=${p - g} y2=${v} class="history-grid-line" />
+            <line x1=${g} y1=${u / 2} x2=${p - g} y2=${u / 2} class="history-grid-line" />
+            <line x1=${g} y1=${u - v} x2=${p - g} y2=${u - v} class="history-grid-line" />
             <path d=${U} fill="url(#${j})" />
             <path d=${A} class="history-line" />
-            ${z !== null ? ut`<line x1=${k.x} y1=${v} x2=${k.x} y2=${u - v} class="history-cursor-line" />` : p}
+            ${z !== null ? ut`<line x1=${k.x} y1=${v} x2=${k.x} y2=${u - v} class="history-cursor-line" />` : h}
             <circle cx=${k.x} cy=${k.y} r="4.5" class="history-dot" />
           `}
         </svg>
@@ -2746,13 +2742,13 @@ let b = class extends R {
                 `;
     })}
             </div>
-          ` : p}
+          ` : h}
 
       ${this._renderHistoryChart()}
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, o = this._outdoorEntity, n = Math.floor(s), a = Math.abs(s - n - 0.5) < 0.05, l = this._tempToDeg(s), c = r !== null ? this._tempToDeg(r) : null, h = 140, u = 140, g = 114, v = Ee(h, u, g, it, it + I), y = q(h, u, g, l), A = c !== null ? q(h, u, g, c) : null, U = c !== null ? q(h, u, g - 22, c) : null, z = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], k = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], O = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], F = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], j = String(t?.attributes.preset_mode ?? "none"), m = String(t?.attributes.fan_mode ?? "auto"), B = String(t?.attributes.swing_mode ?? "off"), S = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((_) => _.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((_) => _.attributes.device_class === "humidity").state}%` : null, E = k.length > 0, dt = O.length > 0, pt = F.length > 0, Pt = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", W = (_) => _.replace(/_/g, " ").replace(/^./, (et) => et.toUpperCase()), G = this._activeSheet === "mode" ? { title: "Select a mode", options: z, current: e, onSelect: (_) => this._setClimateMode(_) } : this._activeSheet === "preset" ? { title: "Select preset", options: k, current: j, onSelect: (_) => this._setClimatePreset(_) } : this._activeSheet === "fan" ? { title: "Fan speed", options: O, current: m, onSelect: (_) => this._setClimateFan(_) } : this._activeSheet === "swing" ? { title: "Swing mode", options: F, current: B, onSelect: (_) => this._setClimateSwing(_) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, o = this._outdoorEntity, n = Math.floor(s), a = Math.abs(s - n - 0.5) < 0.05, l = this._tempToDeg(s), c = r !== null ? this._tempToDeg(r) : null, p = 140, u = 140, g = 114, v = Ee(p, u, g, it, it + I), y = q(p, u, g, l), A = c !== null ? q(p, u, g, c) : null, U = c !== null ? q(p, u, g - 22, c) : null, z = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], k = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], O = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], F = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], j = String(t?.attributes.preset_mode ?? "none"), m = String(t?.attributes.fan_mode ?? "auto"), B = String(t?.attributes.swing_mode ?? "off"), S = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((_) => _.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((_) => _.attributes.device_class === "humidity").state}%` : null, E = k.length > 0, dt = O.length > 0, pt = F.length > 0, Pt = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", W = (_) => _.replace(/_/g, " ").replace(/^./, (et) => et.toUpperCase()), G = this._activeSheet === "mode" ? { title: "Select a mode", options: z, current: e, onSelect: (_) => this._setClimateMode(_) } : this._activeSheet === "preset" ? { title: "Select preset", options: k, current: j, onSelect: (_) => this._setClimatePreset(_) } : this._activeSheet === "fan" ? { title: "Fan speed", options: O, current: m, onSelect: (_) => this._setClimateFan(_) } : this._activeSheet === "swing" ? { title: "Swing mode", options: F, current: B, onSelect: (_) => this._setClimateSwing(_) } : null;
     return d`
       <div class="climate-hero ${Pt} ${this._dialDragging ? "is-dragging" : ""}">
         <div
@@ -2763,7 +2759,7 @@ let b = class extends R {
           @pointercancel=${this._onDialPointerUp}
         >
           <svg class="dial-svg" viewBox="0 0 280 280" aria-hidden="true">
-            <circle cx=${h} cy=${u} r="132" class="dial-bg-circle" />
+            <circle cx=${p} cy=${u} r="132" class="dial-bg-circle" />
             <path d=${v} class="dial-arc-track" />
 
             ${A && U ? ut`
@@ -2776,7 +2772,7 @@ let b = class extends R {
                   >
                     ${Math.round(r)}
                   </text>
-                ` : p}
+                ` : h}
 
             <!-- Interactive Target Thumb: morphs from dot -> elongated radial pill on drag -->
             <g transform="translate(${y.x.toFixed(2)}, ${y.y.toFixed(2)}) rotate(${l.toFixed(1)})">
@@ -2794,7 +2790,7 @@ let b = class extends R {
           <div class="dial-center">
             ${i && !this._dialDragging ? d`<span class="dial-readout-off">Off</span>` : d`
                   <span class="dial-readout-num">
-                    ${n}${a ? d`<sup>5</sup>` : p}
+                    ${n}${a ? d`<sup>5</sup>` : h}
                   </span>
                 `}
 
@@ -2849,7 +2845,7 @@ let b = class extends R {
                   </span>
                   <span class="trait-chevron">⌄</span>
                 </button>
-              ` : p}
+              ` : h}
         </div>
 
         <!-- Adaptive Row 2: Fan speed & Swing (only rendered if entity exposes them) -->
@@ -2875,7 +2871,7 @@ let b = class extends R {
                         </span>
                         <span class="trait-chevron">⌄</span>
                       </button>
-                    ` : p}
+                    ` : h}
 
                 ${pt ? d`
                       <button
@@ -2889,9 +2885,9 @@ let b = class extends R {
                         </span>
                         <span class="trait-chevron">⌄</span>
                       </button>
-                    ` : p}
+                    ` : h}
               </div>
-            ` : p}
+            ` : h}
 
         ${r !== null || o || S ? d`
               <div class="telemetry-card">
@@ -2900,21 +2896,21 @@ let b = class extends R {
                         <span>Indoor temperature</span>
                         <strong>${r}°</strong>
                       </div>
-                    ` : p}
+                    ` : h}
                 ${S ? d`
                       <div class="telemetry-row">
                         <span>Humidity</span>
                         <strong>${S}</strong>
                       </div>
-                    ` : p}
+                    ` : h}
                 ${o ? d`
                       <div class="telemetry-row">
                         <span>Outdoor temperature</span>
                         <strong>${o.state}${o.attributes.unit_of_measurement ?? "°"}</strong>
                       </div>
-                    ` : p}
+                    ` : h}
               </div>
-            ` : p}
+            ` : h}
       </div>
 
       <!-- Unified Inline Bottom Sheet for Mode / Preset / Fan / Swing -->
@@ -2942,14 +2938,14 @@ let b = class extends R {
                         @click=${() => G.onSelect(_)}
                       >
                         <span>${W(_)}</span>
-                        ${et ? d`<span class="check-mark">✓</span>` : p}
+                        ${et ? d`<span class="check-mark">✓</span>` : h}
                       </button>
                     `;
     })}
                 </div>
               </div>
             </div>
-          ` : p}
+          ` : h}
     `;
   }
   _renderRemotePopup() {
@@ -3090,9 +3086,9 @@ let b = class extends R {
         <div class="media-hero-mid">
           <div class="media-meta">
             <span class="media-title">${s}</span>
-            ${r ? d`<span class="media-artist">${r}</span>` : p}
+            ${r ? d`<span class="media-artist">${r}</span>` : h}
           </div>
-          ${i ? p : d`
+          ${i ? h : d`
                 <button
                   type="button"
                   class="media-play-fab"
@@ -3114,7 +3110,7 @@ let b = class extends R {
           </button>
           <div class="scrubber-track">
             <div class="scrubber-fill" style="width: ${i ? 0 : 28}%"></div>
-            ${i ? p : d`<span class="scrubber-dot" style="left: 28%"></span>`}
+            ${i ? h : d`<span class="scrubber-dot" style="left: 28%"></span>`}
           </div>
           <button
             type="button"
@@ -3163,7 +3159,7 @@ let b = class extends R {
                 >
                   Turn on
                 </button>
-              ` : p : d`
+              ` : h : d`
               <button
                 type="button"
                 class="primary-action-pill"
@@ -3183,7 +3179,7 @@ let b = class extends R {
                 <span>Media &amp; Controls</span>
                 <span>↗</span>
               </button>
-            ` : p}
+            ` : h}
       </div>
     `;
   }
@@ -3191,7 +3187,7 @@ let b = class extends R {
      MAIN RENDER
      ========================================================================= */
   render() {
-    if (!this._config) return p;
+    if (!this._config) return h;
     const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._isActive, s = i ? this._config.icon_active || t?.attributes.icon : this._config.icon_inactive || this._config.icon_active || t?.attributes.icon, r = this._resolvedPopupType, o = r !== "none";
     return d`
       <ha-card
@@ -3227,7 +3223,7 @@ let b = class extends R {
                     />
                   </svg>
                 </span>
-              ` : p}
+              ` : h}
         </div>
       </ha-card>
 
@@ -3261,7 +3257,7 @@ let b = class extends R {
 
                 ${r === "sensor" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}
               </div>
-            ` : p}
+            ` : h}
       </dialog>
     `;
   }
@@ -4586,7 +4582,7 @@ let P = class extends R {
     `;
   }
   render() {
-    if (!this._config) return p;
+    if (!this._config) return h;
     const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._isOn, s = i ? this._config.icon_on || t?.attributes.icon : this._config.icon_off || this._config.icon_on || t?.attributes.icon, r = this._isUnavailable ? "Unavailable" : i ? this._config.label_on || "On" : this._config.label_off || "Off";
     return d`
       <ha-card
@@ -4671,7 +4667,7 @@ let P = class extends R {
                   <span class="switch-readout">${r}</span>
                 </div>
               </div>
-            ` : p}
+            ` : h}
       </dialog>
     `;
   }

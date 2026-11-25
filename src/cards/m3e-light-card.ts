@@ -855,24 +855,6 @@ export class M3ELightCard extends LitElement {
                     </svg>
                   </button>
                   <span class="dialog-title">${name}</span>
-                  ${scenes.length > 0
-                    ? html`
-                        <button
-                          type="button"
-                          class="scene-btn ${this._scenesSheetOpen ? 'is-open' : ''}"
-                          @click=${() => (this._scenesSheetOpen = !this._scenesSheetOpen)}
-                          aria-label="Scenes"
-                          title="Scene"
-                        >
-                          <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                              fill="currentColor"
-                              d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5ZM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15Z"
-                            />
-                          </svg>
-                        </button>
-                      `
-                    : nothing}
                   <button
                     type="button"
                     class="power-btn ${isOn ? 'is-on' : ''}"
@@ -941,18 +923,28 @@ export class M3ELightCard extends LitElement {
                   </div>
                 </div>
 
-                ${this._presets.length > 0
+                ${this._presets.length > 0 || scenes.length > 0
                   ? html`
                       <div class="swatch-bar" role="radiogroup" aria-label="Light color presets">
                         <button
                           type="button"
-                          class="palette-btn"
-                          title="Use Material You theme color"
+                          class="palette-btn ${this._scenesSheetOpen ? 'is-open' : ''}"
+                          title=${scenes.length > 0 ? 'Scene' : 'More info'}
                           @click=${() => {
-                            this._selectedPresetId = null;
-                            this._toggleLight();
+                            if (scenes.length > 0) {
+                              this._scenesSheetOpen = !this._scenesSheetOpen;
+                            } else if (this._config) {
+                              this.closePopup();
+                              this.dispatchEvent(
+                                new CustomEvent('hass-more-info', {
+                                  bubbles: true,
+                                  composed: true,
+                                  detail: { entityId: this._config.entity },
+                                }),
+                              );
+                            }
                           }}
-                          aria-label="Color presets"
+                          aria-label=${scenes.length > 0 ? 'Scenes' : 'Color picker'}
                         >
                           <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path
@@ -1592,6 +1584,12 @@ export class M3ELightCard extends LitElement {
         place-items: center;
         background: var(--md-sys-color-surface-container-highest, #303036);
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .palette-btn.is-open {
+        border-radius: 16px;
+        background: var(--md-sys-color-primary-container, #344479);
+        color: var(--md-sys-color-on-primary-container, #dbe1ff);
       }
 
       .palette-btn svg {
