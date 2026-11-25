@@ -194,4 +194,31 @@ export const m3eBaseStyles = css`
     width: 22px;
     height: 22px;
   }
+
+  /* =========================================================================
+     SHARED MATERIAL 3 EXPRESSIVE POPUP & SHEET MOTION KEYFRAMES
+     ========================================================================= */
+  @keyframes m3e-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes m3e-sheet-up {
+    from {
+      transform: translateY(48px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  dialog[open]::backdrop {
+    animation: m3e-fade-in 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
 `;

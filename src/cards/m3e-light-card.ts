@@ -4,6 +4,7 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/home-assistant';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
@@ -562,63 +563,14 @@ export class M3ELightCard extends LitElement {
       dialog.showModal();
     }
 
-    if (surface && tileRect) {
-      const targetRect = surface.getBoundingClientRect();
-      const dx = tileRect.left + tileRect.width / 2 - (targetRect.left + targetRect.width / 2);
-      const dy = tileRect.top + tileRect.height / 2 - (targetRect.top + targetRect.height / 2);
-      const sx = Math.max(0.25, tileRect.width / targetRect.width);
-      const sy = Math.max(0.15, tileRect.height / targetRect.height);
-
-      surface.animate(
-        [
-          {
-            transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-            borderRadius: '28px',
-            opacity: 0.7,
-          },
-          {
-            transform: 'translate(0px, 0px) scale(1, 1)',
-            borderRadius: '32px',
-            opacity: 1,
-          },
-        ],
-        {
-          duration: 380,
-          easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)',
-        },
-      );
-    }
+    animateDialogOpen(surface, tileRect);
   }
 
   public closePopup(): void {
-    const dialog = this._dialogEl;
-    const surface = this._dialogSurfaceEl;
-    if (!dialog || !dialog.open) {
-      this._popupOpen = false;
-      return;
-    }
-
-    if (surface) {
-      const anim = surface.animate(
-        [
-          { transform: 'scale(1)', opacity: 1 },
-          { transform: 'scale(0.92)', opacity: 0 },
-        ],
-        {
-          duration: 180,
-          easing: 'cubic-bezier(0.4, 0, 1, 1)',
-        },
-      );
-      anim.onfinish = () => {
-        dialog.close();
-        this._popupOpen = false;
-        this._scenesSheetOpen = false;
-      };
-    } else {
-      dialog.close();
+    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
       this._scenesSheetOpen = false;
-    }
+    });
   }
 
   private _onDialogBackdropClick = (e: MouseEvent): void => {
@@ -1416,6 +1368,7 @@ export class M3ELightCard extends LitElement {
         display: flex;
         align-items: flex-end;
         z-index: 10;
+        animation: m3e-fade-in 180ms cubic-bezier(0.2, 0, 0, 1);
       }
 
       .scenes-sheet {
@@ -1427,6 +1380,7 @@ export class M3ELightCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        animation: m3e-sheet-up 260ms cubic-bezier(0.05, 0.7, 0.1, 1);
       }
 
       .scenes-sheet-header {

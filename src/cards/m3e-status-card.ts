@@ -14,6 +14,7 @@ import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 
@@ -622,12 +623,12 @@ export class M3EStatusCard extends LitElement {
   }
 
   /* =========================================================================
-     POPUP OPEN / CLOSE (Container Transform)
+     POPUP OPEN / CLOSE (Material You Container Transform / Bottom Sheet)
      ========================================================================= */
-  public async openPopup(): Promise<void> {
+  public async openPopup(originRect?: DOMRect): Promise<void> {
     if (this._resolvedPopupType === 'none' || this._popupOpen) return;
     window.getSelection()?.removeAllRanges();
-    const tileRect = this._tileEl?.getBoundingClientRect();
+    const tileRect = originRect ?? this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
     this._popupOpen = true;
     if (this._resolvedPopupType === 'sensor' || this._resolvedPopupType === 'custom') {
@@ -640,61 +641,14 @@ export class M3EStatusCard extends LitElement {
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
 
-    if (surface && tileRect) {
-      const targetRect = surface.getBoundingClientRect();
-      const dx = tileRect.left + tileRect.width / 2 - (targetRect.left + targetRect.width / 2);
-      const dy = tileRect.top + tileRect.height / 2 - (targetRect.top + targetRect.height / 2);
-      const sx = Math.max(0.28, tileRect.width / targetRect.width);
-      const sy = Math.max(0.16, tileRect.height / targetRect.height);
-
-      surface.animate(
-        [
-          {
-            transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-            borderRadius: '28px',
-            opacity: 0.72,
-          },
-          {
-            transform: 'translate(0px, 0px) scale(1, 1)',
-            borderRadius: '32px',
-            opacity: 1,
-          },
-        ],
-        {
-          duration: 380,
-          easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)',
-        },
-      );
-    }
+    animateDialogOpen(surface, tileRect);
   }
 
   public closePopup(): void {
-    const dialog = this._dialogEl;
-    const surface = this._dialogSurfaceEl;
-    if (!dialog || !dialog.open) {
+    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
       this._activeSheet = null;
-      return;
-    }
-
-    if (surface) {
-      const anim = surface.animate(
-        [
-          { transform: 'scale(1)', opacity: 1 },
-          { transform: 'scale(0.92)', opacity: 0 },
-        ],
-        { duration: 180, easing: 'cubic-bezier(0.4, 0, 1, 1)' },
-      );
-      anim.onfinish = () => {
-        dialog.close();
-        this._popupOpen = false;
-        this._activeSheet = null;
-      };
-    } else {
-      dialog.close();
-      this._popupOpen = false;
-      this._activeSheet = null;
-    }
+    });
   }
 
   private _handleHoldAction(): void {
@@ -2973,6 +2927,7 @@ export class M3EStatusCard extends LitElement {
         display: flex;
         align-items: flex-end;
         z-index: 10;
+        animation: m3e-fade-in 180ms cubic-bezier(0.2, 0, 0, 1);
       }
 
       .mode-sheet {
@@ -2984,6 +2939,7 @@ export class M3EStatusCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 12px;
+        animation: m3e-sheet-up 260ms cubic-bezier(0.05, 0.7, 0.1, 1);
       }
 
       .mode-sheet-header {

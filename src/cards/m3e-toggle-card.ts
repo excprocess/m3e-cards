@@ -6,6 +6,7 @@ import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 
 const LONG_PRESS_MS = 420;
 
@@ -235,58 +236,13 @@ export class M3EToggleCard extends LitElement {
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
 
-    if (surface && tileRect) {
-      const targetRect = surface.getBoundingClientRect();
-      const dx = tileRect.left + tileRect.width / 2 - (targetRect.left + targetRect.width / 2);
-      const dy = tileRect.top + tileRect.height / 2 - (targetRect.top + targetRect.height / 2);
-      const sx = Math.max(0.28, tileRect.width / targetRect.width);
-      const sy = Math.max(0.16, tileRect.height / targetRect.height);
-
-      surface.animate(
-        [
-          {
-            transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
-            borderRadius: '28px',
-            opacity: 0.72,
-          },
-          {
-            transform: 'translate(0px, 0px) scale(1, 1)',
-            borderRadius: '32px',
-            opacity: 1,
-          },
-        ],
-        {
-          duration: 380,
-          easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)',
-        },
-      );
-    }
+    animateDialogOpen(surface, tileRect);
   }
 
   public closePopup(): void {
-    const dialog = this._dialogEl;
-    const surface = this._dialogSurfaceEl;
-    if (!dialog || !dialog.open) {
+    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
-      return;
-    }
-
-    if (surface) {
-      const anim = surface.animate(
-        [
-          { transform: 'scale(1)', opacity: 1 },
-          { transform: 'scale(0.92)', opacity: 0 },
-        ],
-        { duration: 180, easing: 'cubic-bezier(0.4, 0, 1, 1)' },
-      );
-      anim.onfinish = () => {
-        dialog.close();
-        this._popupOpen = false;
-      };
-    } else {
-      dialog.close();
-      this._popupOpen = false;
-    }
+    });
   }
 
   private _handleHoldAction(): void {

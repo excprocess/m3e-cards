@@ -1,5 +1,5 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type {
@@ -16,6 +16,7 @@ export class M3EThermostatCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3EThermostatCardConfig;
   @state() private _optimisticTemp: number | null = null;
+  @query('.thermostat-card') private _cardEl?: HTMLElement;
 
   private _optimisticTimer: number | null = null;
   private _popupHost?: M3EStatusCard;
@@ -196,7 +197,7 @@ export class M3EThermostatCard extends LitElement {
 
   private _openPopup(): void {
     if (this._isUnavailable) return;
-    this._popupHost?.openPopup();
+    this._popupHost?.openPopup(this._cardEl?.getBoundingClientRect());
   }
 
   private _attachPopupHost = (el: Element | undefined): void => {
@@ -219,8 +220,10 @@ export class M3EThermostatCard extends LitElement {
   };
 
   private _renderHeaderIcon(tone: 'heat' | 'cool' | 'auto' | 'neutral', unavailable: boolean) {
-    if (unavailable) {
-      // Outlined thermometer icon matching Google Home offline thermostat
+    const mode = String(this._entity?.state ?? 'off').toLowerCase();
+
+    if (unavailable || tone === 'neutral') {
+      // Outlined thermometer icon for Offline / Off / Idle
       return html`
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -232,7 +235,7 @@ export class M3EThermostatCard extends LitElement {
     }
 
     if (tone === 'heat') {
-      // 3 wavy heat lines matching Google Home heating thermostat
+      // 3 wavy heat lines matching Google Home heating plan
       return html`
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -247,6 +250,7 @@ export class M3EThermostatCard extends LitElement {
     }
 
     if (tone === 'cool') {
+      // Snowflake icon for cooling plan
       return html`
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -257,15 +261,31 @@ export class M3EThermostatCard extends LitElement {
       `;
     }
 
-    // Neutral / Idle / Off -> 3 wavy lines or thermometer
+    if (mode === 'dry') {
+      return html`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69Z" />
+        </svg>
+      `;
+    }
+
+    if (mode === 'fan_only') {
+      return html`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 11a1 1 0 1 0 1 1 1 1 0 0 0-1-1Zm.5-9C17 2 17.1 5.57 14.73 6.75a3.36 3.36 0 0 0-1.62 2.47 3.17 3.17 0 0 1 1.23.91C18 8.13 22 8.92 22 12.5c0 4.5-3.58 4.6-4.75 2.23a3.44 3.44 0 0 0-2.5-1.62 3.24 3.24 0 0 1-.91 1.23c2 3.69 1.2 7.66-2.38 7.66C7 22 6.89 18.42 9.26 17.24a3.46 3.46 0 0 0 1.62-2.45 3.17 3.17 0 0 1-1.25-.92C5.94 15.85 2 15.07 2 11.5 2 7 5.54 6.89 6.72 9.26a3.39 3.39 0 0 0 2.48 1.61 3.24 3.24 0 0 1 .92-1.22C8.16 5.95 8.92 2 12.5 2Z"
+          />
+        </svg>
+      `;
+    }
+
+    // Auto / heat_cool -> thermostat dial ring icon
     return html`
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path
-          d="M7 19c1.4-2 1.4-4 0-6s-1.4-4 0-6M12 19c1.4-2 1.4-4 0-6s-1.4-4 0-6M17 19c1.4-2 1.4-4 0-6s-1.4-4 0-6"
-          stroke="currentColor"
-          stroke-width="2.1"
-          stroke-linecap="round"
-          fill="none"
+          fill="currentColor"
+          d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm0-12a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"
         />
       </svg>
     `;
