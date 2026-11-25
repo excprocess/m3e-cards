@@ -1,3 +1,4 @@
+import './cards/m3e-assist-card';
 import './cards/m3e-light-card';
 import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
@@ -5,6 +6,7 @@ import './cards/m3e-scene-card';
 import './cards/m3e-status-card';
 import './cards/m3e-toggle-card';
 
+export { M3EAssistCard } from './cards/m3e-assist-card';
 export { M3ELightCard } from './cards/m3e-light-card';
 export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
@@ -14,6 +16,7 @@ export { M3EToggleCard } from './cards/m3e-toggle-card';
 export type {
   HomeAssistant,
   HassEntity,
+  M3EAssistCardConfig,
   M3ELightCardConfig,
   M3ELightControlCardConfig,
   M3ELightGroupCardConfig,
@@ -88,5 +91,13 @@ registerCard({
   name: 'M3 Expressive Light Group Card',
   description:
     'Google Home–style expandable light group bar with aggregate brightness slider and 2-column child light grid.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-assist-card',
+  name: 'M3 Expressive Assist & Mode Bar',
+  description:
+    'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector in Material 3 Expressive.',
   preview: true,
 });

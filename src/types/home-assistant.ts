@@ -90,6 +90,17 @@ export type M3ECardStyle = 'default' | 'pill' | 'morph' | 'expressive' | 'compac
 export type M3ESubtitleFormat = 'auto' | 'relative' | 'time' | 'datetime' | 'raw';
 export type M3ESubtitleVisibility = 'both' | 'on' | 'off';
 
+export interface M3EAssistCardConfig extends LovelaceCardConfig {
+  /** Optional input_select / select entity for Home/Away mode (replaces Google Home's presence dot on the left) */
+  entity?: string;
+  /** Placeholder text inside the Assist bar (e.g. "Ask Corazza's" or "Chiedi a Casa") */
+  placeholder?: string;
+  /** Assist pipeline ID ('preferred', 'last_used', or specific pipeline ID) */
+  pipeline_id?: string;
+  /** Start voice listening immediately when opening Assist (default: false = opens chat) */
+  start_listening?: boolean;
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];
