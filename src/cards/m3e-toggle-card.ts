@@ -85,11 +85,11 @@ export class M3EToggleCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return 1;
+    return 2;
   }
 
   public getGridOptions() {
-    return { rows: 1, columns: 6, min_rows: 1, min_columns: 3 };
+    return { rows: 'auto', columns: 6, min_columns: 3 };
   }
 
   public disconnectedCallback(): void {
@@ -155,6 +155,7 @@ export class M3EToggleCard extends LitElement {
 
   public async openPopup(): Promise<void> {
     if (this._isUnavailable || this._popupOpen) return;
+    window.getSelection()?.removeAllRanges();
     const tileRect = this._tileEl?.getBoundingClientRect();
     this._popupOpen = true;
     await this.updateComplete;
@@ -418,11 +419,13 @@ export class M3EToggleCard extends LitElement {
          ===================================================================== */
       .toggle-tile {
         height: 100%;
-        min-height: 56px;
+        min-height: 84px;
         cursor: pointer;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 18px);
+        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
@@ -469,11 +472,11 @@ export class M3EToggleCard extends LitElement {
         position: relative;
         z-index: 1;
         height: 100%;
-        min-height: 56px;
-        padding: 10px 16px;
+        min-height: 84px;
+        padding: 16px 20px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         pointer-events: none;
       }
 
@@ -548,6 +551,9 @@ export class M3EToggleCard extends LitElement {
       .dialog-surface {
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         border-radius: 32px;
         max-height: calc(100dvh - 24px);
         overflow-y: auto;

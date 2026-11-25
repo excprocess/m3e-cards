@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const W = globalThis, lt = W.ShadowRoot && (W.ShadyCSS === void 0 || W.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ct = Symbol(), Pt = /* @__PURE__ */ new WeakMap();
+const W = globalThis, lt = W.ShadowRoot && (W.ShadyCSS === void 0 || W.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ct = Symbol(), St = /* @__PURE__ */ new WeakMap();
 let Ut = class {
   constructor(e, i, s) {
     if (this._$cssResult$ = !0, s !== ct) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -14,7 +14,7 @@ let Ut = class {
     const i = this.t;
     if (lt && e === void 0) {
       const s = i !== void 0 && i.length === 1;
-      s && (e = Pt.get(i)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), s && Pt.set(i, e));
+      s && (e = St.get(i)), e === void 0 && ((this.o = e = new CSSStyleSheet()).replaceSync(this.cssText), s && St.set(i, e));
     }
     return e;
   }
@@ -35,7 +35,7 @@ const Wt = (t) => new Ut(typeof t == "string" ? t : t + "", void 0, ct), q = (t,
     const s = document.createElement("style"), r = W.litNonce;
     r !== void 0 && s.setAttribute("nonce", r), s.textContent = i.cssText, t.appendChild(s);
   }
-}, St = lt ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
+}, Pt = lt ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
   let i = "";
   for (const s of e.cssRules) i += s.cssText;
   return Wt(i);
@@ -129,8 +129,8 @@ let O = class extends HTMLElement {
     const i = [];
     if (Array.isArray(e)) {
       const s = new Set(e.flat(1 / 0).reverse());
-      for (const r of s) i.unshift(St(r));
-    } else e !== void 0 && i.push(St(e));
+      for (const r of s) i.unshift(Pt(r));
+    } else e !== void 0 && i.push(Pt(e));
     return i;
   }
   static _$Eu(e, i) {
@@ -262,7 +262,7 @@ O.elementStyles = [], O.shadowRootOptions = { mode: "open" }, O[z("elementProper
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const dt = globalThis, At = (t) => t, Y = dt.trustedTypes, Et = Y ? Y.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Lt = "$lit$", P = `lit$${Math.random().toFixed(9).slice(2)}$`, zt = "?" + P, ie = `<${zt}>`, T = document, H = () => T.createComment(""), V = (t) => t === null || typeof t != "object" && typeof t != "function", ht = Array.isArray, se = (t) => ht(t) || typeof t?.[Symbol.iterator] == "function", ot = `[ 	
+const dt = globalThis, At = (t) => t, Y = dt.trustedTypes, Et = Y ? Y.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Lt = "$lit$", S = `lit$${Math.random().toFixed(9).slice(2)}$`, zt = "?" + S, ie = `<${zt}>`, T = document, H = () => T.createComment(""), V = (t) => t === null || typeof t != "object" && typeof t != "function", ht = Array.isArray, se = (t) => ht(t) || typeof t?.[Symbol.iterator] == "function", ot = `[ 	
 \f\r]`, L = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Mt = /-->/g, Tt = />/g, C = RegExp(`>|${ot}(?:([^\\s"'>=/]+)(${ot}*=${ot}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), Ot = /'/g, Dt = /"/g, Bt = /^(?:script|style|textarea|title)$/i, Ht = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), c = Ht(1), re = Ht(2), D = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), Rt = /* @__PURE__ */ new WeakMap(), E = T.createTreeWalker(T, 129);
 function Vt(t, e) {
@@ -277,7 +277,7 @@ const oe = (t, e) => {
     let d, h, u = -1, v = 0;
     for (; v < l.length && (n.lastIndex = v, h = n.exec(l), h !== null); ) v = n.lastIndex, n === L ? h[1] === "!--" ? n = Mt : h[1] !== void 0 ? n = Tt : h[2] !== void 0 ? (Bt.test(h[2]) && (r = RegExp("</" + h[2], "g")), n = C) : h[3] !== void 0 && (n = C) : n === C ? h[0] === ">" ? (n = r ?? L, u = -1) : h[1] === void 0 ? u = -2 : (u = n.lastIndex - h[2].length, d = h[1], n = h[3] === void 0 ? C : h[3] === '"' ? Dt : Ot) : n === Dt || n === Ot ? n = C : n === Mt || n === Tt ? n = L : (n = C, r = void 0);
     const x = n === C && t[a + 1].startsWith("/>") ? " " : "";
-    o += n === L ? l + ie : u >= 0 ? (s.push(d), l.slice(0, u) + Lt + l.slice(u) + P + x) : l + P + (u === -2 ? a : x);
+    o += n === L ? l + ie : u >= 0 ? (s.push(d), l.slice(0, u) + Lt + l.slice(u) + S + x) : l + S + (u === -2 ? a : x);
   }
   return [Vt(t, o + (t[i] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
 };
@@ -294,11 +294,11 @@ class Z {
     for (; (r = E.nextNode()) !== null && l.length < a; ) {
       if (r.nodeType === 1) {
         if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(Lt)) {
-          const v = h[n++], x = r.getAttribute(u).split(P), k = /([.?@])?(.*)/.exec(v);
+          const v = h[n++], x = r.getAttribute(u).split(S), k = /([.?@])?(.*)/.exec(v);
           l.push({ type: 1, index: o, name: k[2], strings: x, ctor: k[1] === "." ? ae : k[1] === "?" ? le : k[1] === "@" ? ce : K }), r.removeAttribute(u);
-        } else u.startsWith(P) && (l.push({ type: 6, index: o }), r.removeAttribute(u));
+        } else u.startsWith(S) && (l.push({ type: 6, index: o }), r.removeAttribute(u));
         if (Bt.test(r.tagName)) {
-          const u = r.textContent.split(P), v = u.length - 1;
+          const u = r.textContent.split(S), v = u.length - 1;
           if (v > 0) {
             r.textContent = Y ? Y.emptyScript : "";
             for (let x = 0; x < v; x++) r.append(u[x], H()), E.nextNode(), l.push({ type: 2, index: ++o });
@@ -308,7 +308,7 @@ class Z {
       } else if (r.nodeType === 8) if (r.data === zt) l.push({ type: 2, index: o });
       else {
         let u = -1;
-        for (; (u = r.data.indexOf(P, u + 1)) !== -1; ) l.push({ type: 7, index: o }), u += P.length - 1;
+        for (; (u = r.data.indexOf(S, u + 1)) !== -1; ) l.push({ type: 7, index: o }), u += S.length - 1;
       }
       o++;
     }
@@ -594,6 +594,9 @@ const ft = q`
     height: 100%;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     font-family: var(
       --font-family,
       var(--ha-font-family-body, 'Roboto Flex', 'Google Sans', Roboto, system-ui, sans-serif)
@@ -648,7 +651,7 @@ const ft = q`
     border-style: solid;
     border-width: var(--ha-card-border-width, 0px);
     border-color: var(--ha-card-border-color, transparent);
-    border-radius: var(--m3e-card-border-radius, 18px);
+    border-radius: var(--m3e-card-border-radius, 28px);
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
       background-color var(--m3e-spring-effects-default),
@@ -800,10 +803,10 @@ let m = class extends M {
     };
   }
   getCardSize() {
-    return 1;
+    return 2;
   }
   getGridOptions() {
-    return { rows: 1, columns: 6, min_rows: 1, min_columns: 3 };
+    return { rows: "auto", columns: 6, min_columns: 3 };
   }
   disconnectedCallback() {
     super.disconnectedCallback(), this._clearLongPress();
@@ -953,6 +956,7 @@ let m = class extends M {
      ========================================================================= */
   async openPopup() {
     if (this._isUnavailable || this._popupOpen) return;
+    window.getSelection()?.removeAllRanges();
     const t = this._tileEl?.getBoundingClientRect();
     this._popupOpen = !0, await this.updateComplete;
     const e = this._dialogEl, i = this._dialogSurfaceEl;
@@ -1236,7 +1240,7 @@ m.styles = [
          ===================================================================== */
       .tile-card {
         height: 100%;
-        min-height: 56px;
+        min-height: 84px;
         cursor: pointer;
         user-select: none;
         touch-action: pan-y;
@@ -1317,11 +1321,11 @@ m.styles = [
         position: relative;
         z-index: 1;
         height: 100%;
-        min-height: 56px;
-        padding: 10px 16px;
+        min-height: 84px;
+        padding: 16px 20px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         pointer-events: none;
       }
 
@@ -1412,6 +1416,9 @@ m.styles = [
       .dialog-surface {
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         border-radius: 32px;
         max-height: calc(100dvh - 24px);
         overflow-y: auto;
@@ -1747,10 +1754,10 @@ b([
 m = b([
   gt("m3e-light-card")
 ], m);
-var Pe = Object.defineProperty, Se = Object.getOwnPropertyDescriptor, y = (t, e, i, s) => {
-  for (var r = s > 1 ? void 0 : s ? Se(e, i) : e, o = t.length - 1, n; o >= 0; o--)
+var Se = Object.defineProperty, Pe = Object.getOwnPropertyDescriptor, y = (t, e, i, s) => {
+  for (var r = s > 1 ? void 0 : s ? Pe(e, i) : e, o = t.length - 1, n; o >= 0; o--)
     (n = t[o]) && (r = (s ? n(e, i, r) : n(r)) || r);
-  return s && r && Pe(e, i, r), r;
+  return s && r && Se(e, i, r), r;
 };
 const ke = /* @__PURE__ */ new Set([
   "on",
@@ -1943,10 +1950,10 @@ let _ = class extends M {
     };
   }
   getCardSize() {
-    return 1;
+    return 2;
   }
   getGridOptions() {
-    return { rows: 1, columns: 6, min_rows: 1, min_columns: 3 };
+    return { rows: "auto", columns: 6, min_columns: 3 };
   }
   shouldUpdate(t) {
     if (t.has("_config") || t.has("_pressed") || t.has("_popupOpen") || t.has("_dialDragging") || t.has("_dialTemp") || t.has("_activeSheet") || t.has("_volDragging") || t.has("_volPct"))
@@ -2078,6 +2085,7 @@ let _ = class extends M {
      ========================================================================= */
   async openPopup() {
     if (this._resolvedPopupType === "none" || this._popupOpen) return;
+    window.getSelection()?.removeAllRanges();
     const t = this._tileEl?.getBoundingClientRect();
     this._activeSheet = null, this._popupOpen = !0, await this.updateComplete;
     const e = this._dialogEl, i = this._dialogSurfaceEl;
@@ -2890,11 +2898,13 @@ _.styles = [
          ===================================================================== */
       .status-tile {
         height: 100%;
-        min-height: 56px;
+        min-height: 84px;
         cursor: pointer;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 18px);
+        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           border-radius var(--m3e-spring-bouncy),
           transform var(--m3e-spring-spatial-fast),
@@ -2938,11 +2948,11 @@ _.styles = [
         position: relative;
         z-index: 1;
         height: 100%;
-        min-height: 56px;
-        padding: 10px 14px 10px 16px;
+        min-height: 84px;
+        padding: 16px 18px 16px 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
       }
 
       .tile-icon {
@@ -3036,6 +3046,9 @@ _.styles = [
         overflow-y: auto;
         overflow-x: hidden;
         max-height: calc(100dvh - 24px);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
@@ -3875,7 +3888,7 @@ y([
 _ = y([
   gt("m3e-status-card")
 ], _);
-var Ee = Object.defineProperty, Me = Object.getOwnPropertyDescriptor, S = (t, e, i, s) => {
+var Ee = Object.defineProperty, Me = Object.getOwnPropertyDescriptor, P = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Me(e, i) : e, o = t.length - 1, n; o >= 0; o--)
     (n = t[o]) && (r = (s ? n(e, i, r) : n(r)) || r);
   return s && r && Ee(e, i, r), r;
@@ -3954,10 +3967,10 @@ let w = class extends M {
     this._config = { ...t };
   }
   getCardSize() {
-    return 1;
+    return 2;
   }
   getGridOptions() {
-    return { rows: 1, columns: 6, min_rows: 1, min_columns: 3 };
+    return { rows: "auto", columns: 6, min_columns: 3 };
   }
   disconnectedCallback() {
     super.disconnectedCallback(), this._clearLongPress();
@@ -3999,6 +4012,7 @@ let w = class extends M {
   }
   async openPopup() {
     if (this._isUnavailable || this._popupOpen) return;
+    window.getSelection()?.removeAllRanges();
     const t = this._tileEl?.getBoundingClientRect();
     this._popupOpen = !0, await this.updateComplete;
     const e = this._dialogEl, i = this._dialogSurfaceEl;
@@ -4167,11 +4181,13 @@ w.styles = [
          ===================================================================== */
       .toggle-tile {
         height: 100%;
-        min-height: 56px;
+        min-height: 84px;
         cursor: pointer;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 18px);
+        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
@@ -4218,11 +4234,11 @@ w.styles = [
         position: relative;
         z-index: 1;
         height: 100%;
-        min-height: 56px;
-        padding: 10px 16px;
+        min-height: 84px;
+        padding: 16px 20px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 16px;
         pointer-events: none;
       }
 
@@ -4297,6 +4313,9 @@ w.styles = [
       .dialog-surface {
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         border-radius: 32px;
         max-height: calc(100dvh - 24px);
         overflow-y: auto;
@@ -4434,28 +4453,28 @@ w.styles = [
       }
     `
 ];
-S([
+P([
   J({ attribute: !1 })
 ], w.prototype, "hass", 2);
-S([
+P([
   f()
 ], w.prototype, "_config", 2);
-S([
+P([
   f()
 ], w.prototype, "_pressed", 2);
-S([
+P([
   f()
 ], w.prototype, "_popupOpen", 2);
-S([
+P([
   $("dialog.toggle-dialog")
 ], w.prototype, "_dialogEl", 2);
-S([
+P([
   $(".toggle-tile")
 ], w.prototype, "_tileEl", 2);
-S([
+P([
   $(".dialog-surface")
 ], w.prototype, "_dialogSurfaceEl", 2);
-w = S([
+w = P([
   gt("m3e-toggle-card")
 ], w);
 function mt(t) {

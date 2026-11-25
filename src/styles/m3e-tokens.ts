@@ -13,6 +13,9 @@ export const m3eBaseStyles = css`
     height: 100%;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     font-family: var(
       --font-family,
       var(--ha-font-family-body, 'Roboto Flex', 'Google Sans', Roboto, system-ui, sans-serif)
@@ -67,7 +70,7 @@ export const m3eBaseStyles = css`
     border-style: solid;
     border-width: var(--ha-card-border-width, 0px);
     border-color: var(--ha-card-border-color, transparent);
-    border-radius: var(--m3e-card-border-radius, 18px);
+    border-radius: var(--m3e-card-border-radius, 28px);
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
       background-color var(--m3e-spring-effects-default),

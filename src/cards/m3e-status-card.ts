@@ -211,11 +211,11 @@ export class M3EStatusCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return 1;
+    return 2;
   }
 
   public getGridOptions() {
-    return { rows: 1, columns: 6, min_rows: 1, min_columns: 3 };
+    return { rows: 'auto', columns: 6, min_columns: 3 };
   }
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
@@ -434,6 +434,7 @@ export class M3EStatusCard extends LitElement {
      ========================================================================= */
   public async openPopup(): Promise<void> {
     if (this._resolvedPopupType === 'none' || this._popupOpen) return;
+    window.getSelection()?.removeAllRanges();
     const tileRect = this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
     this._popupOpen = true;
@@ -1586,11 +1587,13 @@ export class M3EStatusCard extends LitElement {
          ===================================================================== */
       .status-tile {
         height: 100%;
-        min-height: 56px;
+        min-height: 84px;
         cursor: pointer;
         user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 18px);
+        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           border-radius var(--m3e-spring-bouncy),
           transform var(--m3e-spring-spatial-fast),
@@ -1634,11 +1637,11 @@ export class M3EStatusCard extends LitElement {
         position: relative;
         z-index: 1;
         height: 100%;
-        min-height: 56px;
-        padding: 10px 14px 10px 16px;
+        min-height: 84px;
+        padding: 16px 18px 16px 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
       }
 
       .tile-icon {
@@ -1732,6 +1735,9 @@ export class M3EStatusCard extends LitElement {
         overflow-y: auto;
         overflow-x: hidden;
         max-height: calc(100dvh - 24px);
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-touch-callout: none;
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
