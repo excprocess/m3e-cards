@@ -105,6 +105,7 @@ export class M3ELightCard extends LitElement {
         { name: 'icon', selector: { icon: {} } },
         { name: 'use_light_color', selector: { boolean: {} } },
         { name: 'allow_drag_off', selector: { boolean: {} } },
+        { name: 'scenes', selector: { entity: { domain: 'scene', multiple: true } } },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
@@ -113,6 +114,7 @@ export class M3ELightCard extends LitElement {
           icon: 'Icona personalizzata',
           use_light_color: 'Usa colore reale della luce',
           allow_drag_off: 'Spegni trascinando a 0%',
+          scenes: 'Scene collegate (opzionale, oltre a quelle rilevate dal dispositivo/stanza)',
         };
         return labels[schema.name] ?? schema.name;
       },
@@ -129,6 +131,8 @@ export class M3ELightCard extends LitElement {
   @state() private _popupDragging = false;
   @state() private _popupDragPct: number | null = null;
   @state() private _selectedPresetId: string | null = null;
+  @state() private _scenesSheetOpen = false;
+  @state() private _activeSceneId: string | null = null;
 
   @query('dialog.light-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.tile-card') private _tileEl?: HTMLElement;
@@ -175,7 +179,9 @@ export class M3ELightCard extends LitElement {
       changedProps.has('_popupOpen') ||
       changedProps.has('_popupDragging') ||
       changedProps.has('_popupDragPct') ||
-      changedProps.has('_selectedPresetId')
+      changedProps.has('_selectedPresetId') ||
+      changedProps.has('_scenesSheetOpen') ||
+      changedProps.has('_activeSceneId')
     ) {
       return true;
     }
@@ -385,6 +391,87 @@ export class M3ELightCard extends LitElement {
     }
   }
 
+  private _getAvailableScenes(): HassEntity[] {
+    if (!this.hass || !this._config) return [];
+    const results: HassEntity[] = [];
+    const seen = new Set<string>();
+
+    const addScene = (id: string) => {
+      if (seen.has(id)) return;
+      const st = this.hass?.states[id];
+      if (!st || !id.startsWith('scene.')) return;
+      seen.add(id);
+      results.push(st);
+    };
+
+    // 1. Manually configured scenes from GUI/YAML
+    if (Array.isArray(this._config.scenes)) {
+      for (const id of this._config.scenes) {
+        addScene(id);
+      }
+    }
+
+    // 2. Auto-discovered scenes linked to the same device_id, Hue group_name, or area_id
+    const primaryId = this._config.entity;
+    const primaryEntry = this.hass.entities?.[primaryId];
+    const deviceId = primaryEntry?.device_id ?? null;
+    const areaId =
+      primaryEntry?.area_id ??
+      (deviceId ? this.hass.devices?.[deviceId]?.area_id ?? null : null);
+    const primaryFriendly = (this._entity?.attributes.friendly_name || '').trim().toLowerCase();
+
+    for (const [id, st] of Object.entries(this.hass.states)) {
+      if (!id.startsWith('scene.') || seen.has(id)) continue;
+      const entry = this.hass.entities?.[id];
+      const sceneDeviceId = entry?.device_id ?? null;
+      const sceneAreaId =
+        entry?.area_id ??
+        (sceneDeviceId ? this.hass.devices?.[sceneDeviceId]?.area_id ?? null : null);
+      const groupName = String(st.attributes.group_name ?? '').trim().toLowerCase();
+
+      const sameDevice = Boolean(deviceId && sceneDeviceId === deviceId);
+      const sameHueGroup = Boolean(primaryFriendly && groupName && groupName === primaryFriendly);
+      const sameArea = Boolean(areaId && sceneAreaId === areaId);
+
+      if (sameDevice || sameHueGroup || sameArea) {
+        addScene(id);
+      }
+    }
+
+    return results;
+  }
+
+  private _cleanSceneName(scene: HassEntity): string {
+    const raw = (scene.attributes.friendly_name || scene.entity_id.replace('scene.', '')).trim();
+    const deviceId = this.hass?.entities?.[this._config?.entity ?? '']?.device_id;
+    const dev = deviceId ? this.hass?.devices?.[deviceId] : undefined;
+    const candidates = [
+      String(scene.attributes.group_name ?? ''),
+      dev?.name_by_user ?? '',
+      dev?.name ?? '',
+      this._config?.name ?? '',
+      this._entity?.attributes.friendly_name ?? '',
+    ];
+
+    for (const prefix of candidates) {
+      const p = prefix.trim();
+      if (p && raw.length > p.length && raw.toLowerCase().startsWith(p.toLowerCase())) {
+        const rest = raw.slice(p.length).replace(/^[\s\-–—:]+/, '').trim();
+        if (rest) return rest.charAt(0).toUpperCase() + rest.slice(1);
+      }
+    }
+    return raw;
+  }
+
+  private _activateScene(scene: HassEntity): void {
+    if (!this.hass) return;
+    this._activeSceneId = scene.entity_id;
+    this.hass.callService('scene', 'turn_on', {
+      entity_id: scene.entity_id,
+    });
+    this._scenesSheetOpen = false;
+  }
+
   private _toggleLight(): void {
     if (!this.hass || !this._config || this._isUnavailable) return;
     this.hass.callService('light', 'toggle', {
@@ -421,6 +508,7 @@ export class M3ELightCard extends LitElement {
     if (this._isUnavailable || this._popupOpen) return;
     window.getSelection()?.removeAllRanges();
     const tileRect = this._tileEl?.getBoundingClientRect();
+    this._scenesSheetOpen = false;
     this._popupOpen = true;
     await this.updateComplete;
 
@@ -482,10 +570,12 @@ export class M3ELightCard extends LitElement {
       anim.onfinish = () => {
         dialog.close();
         this._popupOpen = false;
+        this._scenesSheetOpen = false;
       };
     } else {
       dialog.close();
       this._popupOpen = false;
+      this._scenesSheetOpen = false;
     }
   }
 
@@ -707,6 +797,7 @@ export class M3ELightCard extends LitElement {
 
     const colorVars = this._computeColorVars();
     const matchedPreset = this._matchedPresetId;
+    const scenes = this._popupOpen ? this._getAvailableScenes() : [];
 
     return html`
       <ha-card
@@ -764,6 +855,24 @@ export class M3ELightCard extends LitElement {
                     </svg>
                   </button>
                   <span class="dialog-title">${name}</span>
+                  ${scenes.length > 0
+                    ? html`
+                        <button
+                          type="button"
+                          class="scene-btn ${this._scenesSheetOpen ? 'is-open' : ''}"
+                          @click=${() => (this._scenesSheetOpen = !this._scenesSheetOpen)}
+                          aria-label="Scenes"
+                          title="Scene"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5ZM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15Z"
+                            />
+                          </svg>
+                        </button>
+                      `
+                    : nothing}
                   <button
                     type="button"
                     class="power-btn ${isOn ? 'is-on' : ''}"
@@ -867,6 +976,53 @@ export class M3ELightCard extends LitElement {
                             ></button>
                           `,
                         )}
+                      </div>
+                    `
+                  : nothing}
+                ${this._scenesSheetOpen && scenes.length > 0
+                  ? html`
+                      <div
+                        class="scenes-sheet-backdrop"
+                        @click=${() => (this._scenesSheetOpen = false)}
+                      >
+                        <div class="scenes-sheet" @click=${(e: Event) => e.stopPropagation()}>
+                          <div class="scenes-sheet-header">
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              @click=${() => (this._scenesSheetOpen = false)}
+                              aria-label="Close scenes"
+                            >
+                              ⌄
+                            </button>
+                            <span>Scene</span>
+                          </div>
+                          <div class="scenes-sheet-list">
+                            ${scenes.map((scene) => {
+                              const selected = this._activeSceneId === scene.entity_id;
+                              return html`
+                                <button
+                                  type="button"
+                                  class="scene-option ${selected ? 'selected' : ''}"
+                                  @click=${() => this._activateScene(scene)}
+                                >
+                                  <span class="scene-option-left">
+                                    ${typeof customElements !== 'undefined' &&
+                                    customElements.get('ha-state-icon')
+                                      ? html`<ha-state-icon
+                                          class="scene-ha-icon"
+                                          .hass=${this.hass}
+                                          .stateObj=${scene}
+                                        ></ha-state-icon>`
+                                      : html`<svg viewBox="0 0 24 24" class="scene-svg"><path fill="currentColor" d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"/></svg>`}
+                                    <span>${this._cleanSceneName(scene)}</span>
+                                  </span>
+                                  ${selected ? html`<span>✓</span>` : nothing}
+                                </button>
+                              `;
+                            })}
+                          </div>
+                        </div>
                       </div>
                     `
                   : nothing}
@@ -1067,6 +1223,7 @@ export class M3ELightCard extends LitElement {
       }
 
       .dialog-surface {
+        position: relative;
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         user-select: none;
@@ -1113,6 +1270,7 @@ export class M3ELightCard extends LitElement {
       }
 
       .icon-btn,
+      .scene-btn,
       .power-btn {
         flex: 0 0 auto;
         width: 44px;
@@ -1124,6 +1282,7 @@ export class M3ELightCard extends LitElement {
         cursor: pointer;
         background: transparent;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+        font-size: 20px;
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
@@ -1134,25 +1293,109 @@ export class M3ELightCard extends LitElement {
         background: color-mix(in srgb, currentColor 8%, transparent);
       }
 
+      .scene-btn,
       .power-btn {
         background: var(--md-sys-color-surface-container-highest, #35343a);
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
       }
 
+      .scene-btn.is-open,
       .power-btn.is-on {
         background: var(--md-sys-color-primary-container, #344479);
         color: var(--md-sys-color-on-primary-container, #dbe1ff);
       }
 
       .icon-btn:active,
+      .scene-btn:active,
       .power-btn:active {
         transform: scale(0.92);
       }
 
       .icon-btn svg,
+      .scene-btn svg,
       .power-btn svg {
         width: 22px;
         height: 22px;
+      }
+
+      /* Inline Scenes Bottom Sheet */
+      .scenes-sheet-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: flex-end;
+        z-index: 10;
+      }
+
+      .scenes-sheet {
+        width: 100%;
+        max-height: 78%;
+        background: var(--md-sys-color-surface-container, #1e1f26);
+        border-radius: 28px 28px 0 0;
+        padding: 16px 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .scenes-sheet-header {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 500;
+      }
+
+      .scenes-sheet-list {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        max-height: 52vh;
+        padding-bottom: 6px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .scene-option {
+        width: 100%;
+        border: 0;
+        padding: 15px 18px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        transition: border-radius var(--m3e-spring-spatial-fast);
+      }
+
+      .scene-option.selected {
+        border-radius: var(--m3e-corner-full);
+        background: var(--md-sys-color-primary-container, #344479);
+        color: var(--md-sys-color-on-primary-container, #dbe1ff);
+      }
+
+      .scene-option-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .scene-svg,
+      .scene-ha-icon {
+        width: 20px;
+        height: 20px;
+        --mdc-icon-size: 20px;
+        flex: 0 0 auto;
       }
 
       /* Vertical Capsule Stage */

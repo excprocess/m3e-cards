@@ -19,6 +19,7 @@ export interface HassEntity {
 export interface HassEntityRegistryEntry {
   entity_id: string;
   device_id?: string | null;
+  area_id?: string | null;
   options?: {
     light?: {
       favorite_colors?: Array<{
@@ -33,6 +34,7 @@ export interface HassDeviceRegistryEntry {
   id: string;
   name?: string | null;
   name_by_user?: string | null;
+  area_id?: string | null;
 }
 
 export interface HomeAssistant {
@@ -72,6 +74,8 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
   allow_drag_off?: boolean;
   /** Optional custom color/temperature presets (falls back to HA favorite_colors + recent colors + defaults) */
   favorite_colors?: M3ELightColorPreset[];
+  /** Optional scene entities linked to this light (in addition to auto-discovered Hue/device/area scenes) */
+  scenes?: string[];
 }
 
 export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'none';
