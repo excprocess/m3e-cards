@@ -82,7 +82,8 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
 
 export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'none';
 
-export type M3EHoldAction = 'popup' | 'more-info' | 'none';
+export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
+export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';
 
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
@@ -91,8 +92,10 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
   icon_off?: string;
   label_on?: string;
   label_off?: string;
-  /** Action on long-press: open M3E popup (default), native HA more-info dialog, or none */
+  /** Action on long-press: open M3E popup (default), native HA more-info, navigate/Bubble/Browser Mod, or none */
   hold_action?: M3EHoldAction;
+  /** Dashboard path (/lovelace/...), Bubble Card hash (#popup), or script.* / browser_mod.* service */
+  navigation_path?: string;
 }
 
 export interface M3ERemoteButtonsConfig {
@@ -131,10 +134,12 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   secondary_entity?: string;
   /** Optional outdoor temperature entity (for climate popup telemetry) */
   outdoor_entity?: string;
-  /** Primary tap behavior: open popup (default) or toggle entity */
-  tap_action?: 'popup' | 'toggle';
-  /** Action on long-press: open M3E popup (default), native HA more-info dialog, or none */
+  /** Primary tap behavior: open popup (default), toggle, navigate/Bubble/Browser Mod, more-info, or none */
+  tap_action?: M3ETapAction;
+  /** Action on long-press: open M3E popup (default), native HA more-info, navigate/Bubble/Browser Mod, or none */
   hold_action?: M3EHoldAction;
+  /** Dashboard path (/lovelace/...), Bubble Card hash (#popup), or script.* / browser_mod.* service */
+  navigation_path?: string;
   /** Optional target device ID for multi-device remote transmitters (remote.send_command device parameter) */
   remote_device?: string;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */

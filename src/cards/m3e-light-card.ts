@@ -743,9 +743,10 @@ export class M3ELightCard extends LitElement {
   /* =========================================================================
      ICONS
      ========================================================================= */
-  private _renderBulbIcon(iconName: string, isOn: boolean) {
-    if (typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
-      return html`<ha-icon .icon=${iconName}></ha-icon>`;
+  private _renderBulbIcon(customIcon: string | undefined, isOn: boolean) {
+    // Only use <ha-icon> when the user explicitly configured a custom icon in card settings
+    if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
+      return html`<ha-icon .icon=${customIcon}></ha-icon>`;
     }
     return isOn
       ? html`
@@ -784,7 +785,7 @@ export class M3ELightCard extends LitElement {
     if (!this._config) return nothing;
     const entity = this._entity;
     const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
-    const icon = this._config.icon || entity?.attributes.icon || 'mdi:lightbulb';
+    const customIcon = this._config.icon?.trim() || undefined;
     const isOn = this._isOn;
     const pct = this._brightnessPct;
     const subtitle = this._isUnavailable
@@ -823,7 +824,7 @@ export class M3ELightCard extends LitElement {
         <div class="state-layer" aria-hidden="true"></div>
 
         <div class="tile-content">
-          <span class="bulb-icon">${this._renderBulbIcon(icon, isOn)}</span>
+          <span class="bulb-icon">${this._renderBulbIcon(customIcon, isOn)}</span>
           <div class="meta">
             <span class="title">${name}</span>
             <span class="subtitle">${subtitle}</span>

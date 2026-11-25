@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3EToggleCardConfig } from '../types/home-assistant';
+import { executeNavigationTarget } from '../utils/navigation';
 
 const LONG_PRESS_MS = 420;
 
@@ -70,21 +71,24 @@ export class M3EToggleCard extends LitElement {
               options: [
                 { value: 'popup', label: 'Apri popup Material 3 Expressive' },
                 { value: 'more-info', label: 'Schermata nativa Home Assistant' },
+                { value: 'navigate', label: 'Apri percorso / Bubble Card (#hash) / Browser Mod' },
                 { value: 'none', label: 'Nessuna azione' },
               ],
             },
           },
         },
+        { name: 'navigation_path', selector: { text: {} } },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Entità (switch, presa, input_boolean…)',
           name: 'Nome personalizzato',
-          icon_on: 'Icona acceso',
-          icon_off: 'Icona spento',
+          icon_on: 'Icona acceso (vuoto = standard Google Home)',
+          icon_off: 'Icona spento (vuoto = standard Google Home)',
           label_on: 'Testo acceso (default: On)',
           label_off: 'Testo spento (default: Off)',
           hold_action: 'Azione pressione prolungata (Hold)',
+          navigation_path: 'Percorso / #popup Bubble Card / script o browser_mod',
         };
         return labels[schema.name] ?? schema.name;
       },
@@ -241,6 +245,10 @@ export class M3EToggleCard extends LitElement {
     const action = this._config.hold_action ?? 'popup';
     if (action === 'none') return;
     window.getSelection()?.removeAllRanges();
+    if (action === 'navigate') {
+      executeNavigationTarget(this, this.hass, this._config.navigation_path);
+      return;
+    }
     if (action === 'more-info') {
       this.dispatchEvent(
         new CustomEvent('hass-more-info', {
@@ -329,9 +337,10 @@ export class M3EToggleCard extends LitElement {
     const entity = this._entity;
     const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
     const isOn = this._isOn;
+    // Only use custom icon if explicitly configured in card settings; otherwise standard Google Home SVG
     const icon = isOn
-      ? this._config.icon_on || entity?.attributes.icon
-      : this._config.icon_off || this._config.icon_on || entity?.attributes.icon;
+      ? this._config.icon_on?.trim() || undefined
+      : this._config.icon_off?.trim() || this._config.icon_on?.trim() || undefined;
     const label = this._isUnavailable
       ? 'Unavailable'
       : isOn

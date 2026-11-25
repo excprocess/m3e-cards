@@ -1,5 +1,6 @@
 import { LitElement, css, html, svg, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
+import '../editors/m3e-status-card-editor';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type {
   HassEntity,
@@ -8,6 +9,7 @@ import type {
   M3EStatusCardConfig,
   M3EStatusPopupType,
 } from '../types/home-assistant';
+import { executeNavigationTarget } from '../utils/navigation';
 
 type ClimateSheetKind = 'mode' | 'preset' | 'fan' | 'swing' | null;
 
@@ -120,128 +122,8 @@ export class M3EStatusCard extends LitElement {
     };
   }
 
-  public static getConfigForm() {
-    return {
-      schema: [
-        { name: 'entity', required: true, selector: { entity: {} } },
-        { name: 'status_entity', selector: { entity: {} } },
-        { name: 'name', selector: { text: {} } },
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'icon_active', selector: { icon: {} } },
-            { name: 'icon_inactive', selector: { icon: {} } },
-          ],
-        },
-        {
-          name: 'active_state',
-          selector: { text: {} },
-        },
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'label_active', selector: { text: {} } },
-            { name: 'label_inactive', selector: { text: {} } },
-          ],
-        },
-        {
-          name: 'popup_type',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'auto', label: 'Automatico (in base al dispositivo)' },
-                { value: 'sensor', label: 'Sensore (Anello di stato + Telemetria)' },
-                { value: 'climate', label: 'Clima / Termostato (Dial circolare + Mode)' },
-                { value: 'remote', label: 'Telecomando / TV (Rocker Volume + Controlli)' },
-                { value: 'media', label: 'Media / Speaker (Player + Volume Pill)' },
-                { value: 'none', label: 'Nessun popup' },
-              ],
-            },
-          },
-        },
-        {
-          name: 'tap_action',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'popup', label: 'Apri schermata espansa' },
-                { value: 'toggle', label: 'Toggle stato (hold per azione secondaria)' },
-              ],
-            },
-          },
-        },
-        {
-          name: 'hold_action',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'popup', label: 'Apri popup Material 3 Expressive' },
-                { value: 'more-info', label: 'Schermata nativa Home Assistant' },
-                { value: 'none', label: 'Nessuna azione' },
-              ],
-            },
-          },
-        },
-        { name: 'secondary_entity', selector: { entity: {} } },
-        { name: 'outdoor_entity', selector: { entity: { domain: 'sensor' } } },
-        { name: 'remote_device', selector: { text: {} } },
-        {
-          type: 'expandable',
-          title: 'Pulsanti Telecomando (Entità button/script o comandi remote)',
-          name: 'remote_buttons',
-          schema: [
-            { name: 'volume_up', selector: { text: {} } },
-            { name: 'volume_down', selector: { text: {} } },
-            { name: 'mute', selector: { text: {} } },
-            { name: 'unmute', selector: { text: {} } },
-            { name: 'power_on', selector: { text: {} } },
-            { name: 'power_off', selector: { text: {} } },
-            { name: 'play', selector: { text: {} } },
-            { name: 'pause', selector: { text: {} } },
-            { name: 'prev', selector: { text: {} } },
-            { name: 'next', selector: { text: {} } },
-            { name: 'ch_up', selector: { text: {} } },
-            { name: 'ch_down', selector: { text: {} } },
-          ],
-        },
-      ],
-      computeLabel: (schema: { name: string }) => {
-        const labels: Record<string, string> = {
-          entity: 'Entità principale',
-          status_entity: 'Entità stato dispositivo (opzionale, es. per telecomandi)',
-          name: 'Nome personalizzato',
-          icon_active: 'Icona stato attivo',
-          icon_inactive: 'Icona stato inattivo',
-          active_state: 'Stati attivi (es. on,home,detected)',
-          label_active: 'Testo stato attivo',
-          label_inactive: 'Testo stato inattivo',
-          popup_type: 'Tipo card / Schermata popup',
-          tap_action: 'Azione al tocco',
-          hold_action: 'Azione pressione prolungata (Hold)',
-          secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
-          outdoor_entity: 'Temperatura esterna (per Clima)',
-          remote_device: 'Device ID trasmettitore (per remote multi-dispositivo)',
-          volume_up: 'Volume + (es. button.tv_vol_up o VolumeUp)',
-          volume_down: 'Volume − (es. button.tv_vol_down o VolumeDown)',
-          mute: 'Mute',
-          unmute: 'Unmute',
-          power_on: 'Accensione (On)',
-          power_off: 'Spegnimento (Off)',
-          play: 'Play',
-          pause: 'Pause',
-          prev: 'Precedente',
-          next: 'Successivo',
-          ch_up: 'Canale +',
-          ch_down: 'Canale −',
-        };
-        return labels[schema.name] ?? schema.name;
-      },
-    };
+  public static getConfigElement(): HTMLElement {
+    return document.createElement('m3e-status-card-editor');
   }
 
   public setConfig(config: M3EStatusCardConfig): void {
@@ -655,6 +537,10 @@ export class M3EStatusCard extends LitElement {
     const action = this._config.hold_action ?? 'popup';
     if (action === 'none') return;
     window.getSelection()?.removeAllRanges();
+    if (action === 'navigate') {
+      executeNavigationTarget(this, this.hass, this._config.navigation_path);
+      return;
+    }
     if (action === 'more-info') {
       this._openMoreInfo(this._config.entity);
       return;
@@ -689,7 +575,17 @@ export class M3EStatusCard extends LitElement {
       this._longPressTriggered = false;
       return;
     }
-    if (this._config?.tap_action === 'toggle' && this.hass && this._config) {
+    const action = this._config?.tap_action ?? 'popup';
+    if (action === 'none') return;
+    if (action === 'navigate') {
+      executeNavigationTarget(this, this.hass, this._config?.navigation_path);
+      return;
+    }
+    if (action === 'more-info' && this._config) {
+      this._openMoreInfo(this._config.entity);
+      return;
+    }
+    if (action === 'toggle' && this.hass && this._config) {
       const domain = this._config.entity.split('.')[0];
       this.hass.callService(domain, 'toggle', { entity_id: this._config.entity });
       return;
@@ -1784,11 +1680,17 @@ export class M3EStatusCard extends LitElement {
     const entity = this._entity;
     const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
     const isActive = this._isActive;
+    // Only use custom icon if explicitly configured in settings; otherwise standard Google Home SVG
     const icon = isActive
-      ? this._config.icon_active || entity?.attributes.icon
-      : this._config.icon_inactive || this._config.icon_active || entity?.attributes.icon;
+      ? this._config.icon_active?.trim() || undefined
+      : this._config.icon_inactive?.trim() || this._config.icon_active?.trim() || undefined;
     const popupType = this._resolvedPopupType;
-    const hasPopup = popupType !== 'none';
+    const hasAffordance =
+      this._config.tap_action === 'navigate' ||
+      this._config.tap_action === 'more-info' ||
+      (this._config.tap_action !== 'toggle' &&
+        this._config.tap_action !== 'none' &&
+        popupType !== 'none');
 
     return html`
       <ha-card
@@ -1819,7 +1721,7 @@ export class M3EStatusCard extends LitElement {
             <span class="tile-title">${name}</span>
             <span class="tile-subtitle">${this._stateLabel}</span>
           </div>
-          ${hasPopup
+          ${hasAffordance
             ? html`
                 <span class="tile-chevron" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
