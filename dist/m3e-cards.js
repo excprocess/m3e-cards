@@ -8785,7 +8785,7 @@ let W = class extends w {
     this._config = { ...t };
   }
   getCardSize() {
-    return 3;
+    return 2;
   }
   getGridOptions() {
     return {
@@ -8953,7 +8953,7 @@ let W = class extends w {
       (d.key === "Enter" || d.key === " ") && (d.preventDefault(), this._openPopup());
     }}
       >
-        <header class="card-header">
+        <header class="thermo-header">
           <span class="header-left">
             <span class="header-icon">${this._renderHeaderIcon(s, i)}</span>
             <span class="header-title">${e}</span>
@@ -9043,7 +9043,7 @@ W.styles = [
       }
 
       .thermostat-card {
-        padding: 18px 22px 22px;
+        padding: 14px 18px 16px;
         cursor: pointer;
         outline: none;
         display: flex;
@@ -9102,47 +9102,49 @@ W.styles = [
       }
 
       /* =====================================================================
-         HEADER ROW
+         HEADER ROW (avoid HA reserved .card-header class)
          ===================================================================== */
-      .card-header {
+      .thermo-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
+        padding: 0;
+        margin: 0;
       }
 
       .header-left {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         min-width: 0;
       }
 
       .header-icon {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
       }
 
       .header-icon svg {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
       }
 
       .header-title {
-        font-size: 16px;
+        font-size: 15px;
         font-weight: 500;
-        line-height: 22px;
+        line-height: 20px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .header-chevron {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
@@ -9159,15 +9161,15 @@ W.styles = [
          ===================================================================== */
       .controls-row {
         display: grid;
-        grid-template-columns: 78px 1fr 78px;
+        grid-template-columns: 72px 1fr 72px;
         align-items: center;
-        gap: 12px;
-        margin: 18px 0 12px;
+        gap: 10px;
+        margin: 12px 0 8px;
       }
 
       .step-btn {
-        width: 78px;
-        height: 52px;
+        width: 72px;
+        height: 48px;
         border: 0;
         border-radius: 9999px;
         background: var(--m3e-thermo-btn-bg, color-mix(in srgb, currentColor 11%, transparent));
@@ -9191,13 +9193,13 @@ W.styles = [
       }
 
       .step-btn svg {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
       }
 
       .temp-readout {
         text-align: center;
-        font-size: 64px;
+        font-size: 56px;
         font-weight: 400;
         line-height: 1;
         letter-spacing: -0.025em;
@@ -9206,9 +9208,9 @@ W.styles = [
 
       .indoor-label {
         text-align: center;
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 500;
-        line-height: 20px;
+        line-height: 18px;
         opacity: 0.88;
       }
 
@@ -9217,11 +9219,11 @@ W.styles = [
          ===================================================================== */
       .offline-hero {
         text-align: center;
-        font-size: 56px;
+        font-size: 50px;
         font-weight: 400;
         line-height: 1.1;
         letter-spacing: -0.015em;
-        padding: 24px 0 22px;
+        padding: 16px 0 14px;
         color: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 46%, transparent);
       }
 
