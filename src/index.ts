@@ -4,6 +4,7 @@ import './cards/m3e-light-card';
 import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
 import './cards/m3e-media-bar-card';
+import './cards/m3e-media-player-card';
 import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
@@ -17,6 +18,7 @@ export { M3ELightCard } from './cards/m3e-light-card';
 export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3EMediaBarCard } from './cards/m3e-media-bar-card';
+export { M3EMediaPlayerCard } from './cards/m3e-media-player-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
@@ -33,6 +35,7 @@ export type {
   M3ELightControlCardConfig,
   M3ELightGroupCardConfig,
   M3EMediaBarCardConfig,
+  M3EMediaPlayerCardConfig,
   M3EPeopleCardConfig,
   M3EPeopleItemConfig,
   M3ESceneCardConfig,
@@ -157,5 +160,13 @@ registerCard({
   name: 'Media Bar',
   description:
     'Footer-ready Google Home–style media player bar with squircle artwork, auto-scrolling marquee metadata, Cast/Source selector, and Play/Pause button.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-media-player-card',
+  name: 'Media Player',
+  description:
+    'Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.',
   preview: true,
 });

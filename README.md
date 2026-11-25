@@ -153,6 +153,20 @@ show_cast: true
 hide_when_inactive: false
 ```
 
+### 13. Media Player (`custom:m3e-media-player-card`)
+Card media player full-bleed per la dashboard in stile **Android / Material 3 Expressive**:
+- **Dynamic Color Extraction dall'artwork:** estrae automaticamente dalla `entity_picture` (tramite `<canvas>` offscreen) la palette tonale per la vignettatura, lo squircle Play/Pause e la traccia attiva, con transizione fluida al cambio brano.
+- **Shape Morphing Play/Pause:** squircle (`18px`) in `playing` ↔ cerchio pieno (`50%`) in `paused` con molla espressiva.
+- **Wavy / Squiggly Progress Slider:** onda sinusoidale animata che scorre dolcemente durante la riproduzione, si appiattisce fluidamente in pausa o durante lo scrubbing, con cursore verticale a pillola M3 e badge timestamp live per `media_seek`.
+- **Badge app automatico** (Spotify, YouTube Music, fallback M3) + chip dispositivo di output + micro-traslazione elastica su Previous/Next.
+
+```yaml
+type: custom:m3e-media-player-card
+entity: media_player.salotto_speaker
+dynamic_color: true
+show_device_chip: true
+```
+
 ---
 
 ## Installazione

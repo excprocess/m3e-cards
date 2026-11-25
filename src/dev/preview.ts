@@ -14,12 +14,16 @@ import {
 } from '@material/material-color-utilities';
 import '../index';
 import type { M3ELightCard } from '../cards/m3e-light-card';
+import type { M3EMediaBarCard } from '../cards/m3e-media-bar-card';
+import type { M3EMediaPlayerCard } from '../cards/m3e-media-player-card';
 import type { M3EStatusCard } from '../cards/m3e-status-card';
 import type { M3EToggleCard } from '../cards/m3e-toggle-card';
 import type {
   HassEntity,
   HomeAssistant,
   M3ELightCardConfig,
+  M3EMediaBarCardConfig,
+  M3EMediaPlayerCardConfig,
   M3EStatusCardConfig,
   M3EToggleCardConfig,
 } from '../types/home-assistant';
@@ -272,10 +276,24 @@ const entities: Record<string, HassEntity> = {
   },
   'media_player.salotto_speaker': {
     entity_id: 'media_player.salotto_speaker',
-    state: 'idle',
+    state: 'playing',
     attributes: {
       friendly_name: 'Salotto speaker',
-      volume_level: 0.4,
+      media_title: 'Loved by the Sun',
+      media_artist: 'The Daysleepers',
+      app_name: 'Spotify',
+      source: 'Spotify',
+      source_list: ['Spotify', 'YouTube Music', 'AirPlay', 'Bluetooth'],
+      supported_features: 2048 | 32 | 16 | 2,
+      media_duration: 245,
+      media_position: 98,
+      media_position_updated_at: new Date().toISOString(),
+      entity_picture:
+        'data:image/svg+xml;utf8,' +
+        encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><radialGradient id="g" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#f7b267"/><stop offset="55%" stop-color="#d1495b"/><stop offset="100%" stop-color="#2b193d"/></radialGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="150" cy="130" r="68" fill="#ffd97d" opacity="0.55"/><path d="M0 220 Q150 175 300 220 L300 300 L0 300 Z" fill="#1b1028" opacity="0.72"/></svg>',
+        ),
+      volume_level: 0.45,
     },
   },
   // Toggle Card demo entities
@@ -316,7 +334,46 @@ const entityRegistry = {
   },
 };
 
-const cards: Array<M3ELightCard | M3EStatusCard | M3EToggleCard> = [];
+const DEMO_TRACKS = [
+  {
+    media_title: 'Loved by the Sun',
+    media_artist: 'The Daysleepers',
+    app_name: 'Spotify',
+    media_duration: 245,
+    entity_picture:
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><radialGradient id="g" cx="50%" cy="45%" r="65%"><stop offset="0%" stop-color="#f7b267"/><stop offset="55%" stop-color="#d1495b"/><stop offset="100%" stop-color="#2b193d"/></radialGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="150" cy="130" r="68" fill="#ffd97d" opacity="0.55"/><path d="M0 220 Q150 175 300 220 L300 300 L0 300 Z" fill="#1b1028" opacity="0.72"/></svg>',
+      ),
+  },
+  {
+    media_title: 'Midnight City (Extended Synthwave Mix)',
+    media_artist: 'M83 · Hurry Up, We’re Dreaming',
+    app_name: 'Spotify',
+    media_duration: 244,
+    entity_picture:
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00c6ff"/><stop offset="55%" stop-color="#0052d4"/><stop offset="100%" stop-color="#0f1035"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="215" cy="88" r="56" fill="#7cf7ff" opacity="0.45"/><path d="M0 210 L85 160 L155 205 L235 145 L300 190 L300 300 L0 300 Z" fill="#090c26" opacity="0.78"/></svg>',
+      ),
+  },
+  {
+    media_title: 'Emerald Forest',
+    media_artist: 'Tycho',
+    app_name: 'YouTube Music',
+    media_duration: 282,
+    entity_picture:
+      'data:image/svg+xml;utf8,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6ee7b7"/><stop offset="50%" stop-color="#059669"/><stop offset="100%" stop-color="#06281e"/></linearGradient></defs><rect width="300" height="300" fill="url(#g)"/><circle cx="105" cy="115" r="72" fill="#bbf7d0" opacity="0.4"/></svg>',
+      ),
+  },
+];
+let demoTrackIdx = 0;
+
+const cards: Array<
+  M3ELightCard | M3EStatusCard | M3EToggleCard | M3EMediaBarCard | M3EMediaPlayerCard
+> = [];
 const logEl = document.getElementById('service-log')!;
 
 function createHass(): HomeAssistant {
@@ -409,6 +466,50 @@ function createHass(): HomeAssistant {
         } else if (service === 'turn_on') {
           next = { ...current, state: 'on' };
         }
+      } else if (current && domain === 'media_player') {
+        if (service === 'media_play_pause') {
+          const wasPlaying = current.state === 'playing';
+          next = {
+            ...current,
+            state: wasPlaying ? 'paused' : 'playing',
+            attributes: {
+              ...current.attributes,
+              media_position_updated_at: new Date().toISOString(),
+            },
+          };
+        } else if (service === 'media_next_track' || service === 'media_previous_track') {
+          demoTrackIdx =
+            (demoTrackIdx + (service === 'media_next_track' ? 1 : -1) + DEMO_TRACKS.length) %
+            DEMO_TRACKS.length;
+          const t = DEMO_TRACKS[demoTrackIdx];
+          next = {
+            ...current,
+            state: 'playing',
+            attributes: {
+              ...current.attributes,
+              ...t,
+              media_position: 28,
+              media_position_updated_at: new Date().toISOString(),
+            },
+          };
+        } else if (service === 'media_seek' && typeof data.seek_position === 'number') {
+          next = {
+            ...current,
+            attributes: {
+              ...current.attributes,
+              media_position: data.seek_position,
+              media_position_updated_at: new Date().toISOString(),
+            },
+          };
+        } else if (service === 'select_source' && typeof data.source === 'string') {
+          next = {
+            ...current,
+            attributes: {
+              ...current.attributes,
+              source: data.source,
+            },
+          };
+        }
       } else if (current && (domain === 'switch' || domain === 'input_boolean')) {
         if (service === 'toggle') {
           next = { ...current, state: current.state === 'on' ? 'off' : 'on' };
@@ -458,6 +559,42 @@ function mountToggleCard(container: HTMLElement, config: M3EToggleCardConfig): M
   cards.push(el);
   return el;
 }
+
+function mountMediaPlayerCard(
+  container: HTMLElement,
+  config: M3EMediaPlayerCardConfig,
+): M3EMediaPlayerCard {
+  const el = document.createElement('m3e-media-player-card') as M3EMediaPlayerCard;
+  el.setConfig(config);
+  container.appendChild(el);
+  cards.push(el);
+  return el;
+}
+
+function mountMediaBarCard(
+  container: HTMLElement,
+  config: M3EMediaBarCardConfig,
+): M3EMediaBarCard {
+  const el = document.createElement('m3e-media-bar-card') as M3EMediaBarCard;
+  el.setConfig(config);
+  container.appendChild(el);
+  cards.push(el);
+  return el;
+}
+
+const mediaShowcase = document.getElementById('media-showcase')!;
+mountMediaPlayerCard(mediaShowcase, {
+  type: 'custom:m3e-media-player-card',
+  entity: 'media_player.salotto_speaker',
+  dynamic_color: true,
+  show_device_chip: true,
+});
+mountMediaBarCard(mediaShowcase, {
+  type: 'custom:m3e-media-bar-card',
+  entity: 'media_player.salotto_speaker',
+  entities: ['media_player.salotto_speaker', 'media_player.chromecast'],
+  show_cast: true,
+});
 
 const toggleGrid = document.getElementById('toggle-grid')!;
 mountToggleCard(toggleGrid, {

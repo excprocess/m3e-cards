@@ -215,6 +215,19 @@ export interface M3EMediaBarCardConfig extends LovelaceCardConfig {
   tap_action?: 'more-info' | 'none';
 }
 
+export interface M3EMediaPlayerCardConfig extends LovelaceCardConfig {
+  /** Home Assistant media_player.* entity ID */
+  entity: string;
+  /** Optional custom name override */
+  name?: string;
+  /** Extract dynamic Material 3 Expressive colors from entity_picture artwork (default: true) */
+  dynamic_color?: boolean;
+  /** Show the device/output chip in the top-right corner (default: true) */
+  show_device_chip?: boolean;
+  /** Tap action on the card background: more-info (default) or none */
+  tap_action?: 'more-info' | 'none';
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];
