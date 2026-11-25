@@ -211,21 +211,23 @@ export interface M3EMediaBarCardConfig extends LovelaceCardConfig {
   show_cast?: boolean;
   /** Hide the footer bar when player is off/idle/unavailable (default: false) */
   hide_when_inactive?: boolean;
-  /** Tap action on the bar body: more-info (default) or none */
-  tap_action?: 'more-info' | 'none';
+  /** Tap action on the bar body: popup (default M3E Now Playing), more-info, or none */
+  tap_action?: 'popup' | 'more-info' | 'none';
 }
 
 export interface M3EMediaPlayerCardConfig extends LovelaceCardConfig {
   /** Home Assistant media_player.* entity ID */
   entity: string;
+  /** Optional additional media_player.* entities selectable from the Cast sheet */
+  entities?: string[];
   /** Optional custom name override */
   name?: string;
   /** Extract dynamic Material 3 Expressive colors from entity_picture artwork (default: true) */
   dynamic_color?: boolean;
   /** Show the device/output chip in the top-right corner (default: true) */
   show_device_chip?: boolean;
-  /** Tap action on the card background: more-info (default) or none */
-  tap_action?: 'more-info' | 'none';
+  /** Tap action on the card background: popup (default M3E Now Playing), more-info, or none */
+  tap_action?: 'popup' | 'more-info' | 'none';
 }
 
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {

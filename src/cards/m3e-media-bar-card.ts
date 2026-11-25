@@ -6,8 +6,8 @@ import type {
   HomeAssistant,
   M3EMediaBarCardConfig,
 } from '../types/home-assistant';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
-import { guardDialogTouchMove } from '../utils/scroll-lock';
+import type { M3EMediaPopup } from '../components/m3e-media-popup';
+import '../components/m3e-media-popup';
 
 const SUPPORT_SELECT_SOURCE = 2048;
 
@@ -18,12 +18,11 @@ export class M3EMediaBarCard extends LitElement {
   @state() private _selectedEntityId?: string;
   @state() private _marqueeActive = false;
   @state() private _marqueeDuration = 12;
-  @state() private _castOpen = false;
 
+  @query('.media-bar') private _barEl?: HTMLElement;
   @query('.marquee-viewport') private _marqueeViewport?: HTMLDivElement;
   @query('.marquee-measure') private _marqueeMeasure?: HTMLSpanElement;
-  @query('dialog.cast-dialog') private _dialogEl?: HTMLDialogElement;
-  @query('.dialog-surface') private _dialogSurfaceEl?: HTMLDivElement;
+  @query('m3e-media-popup') private _popupEl?: M3EMediaPopup;
 
   private _resizeObserver?: ResizeObserver;
   private _prevStates: Record<string, HassEntity | undefined> = {};
@@ -36,7 +35,7 @@ export class M3EMediaBarCard extends LitElement {
       ...config,
       show_cast: config.show_cast !== false,
       hide_when_inactive: Boolean(config.hide_when_inactive),
-      tap_action: config.tap_action ?? 'more-info',
+      tap_action: config.tap_action ?? 'popup',
     };
   }
 
@@ -93,7 +92,8 @@ export class M3EMediaBarCard extends LitElement {
             select: {
               mode: 'dropdown',
               options: [
-                { value: 'more-info', label: 'Apri dettagli media (More-info)' },
+                { value: 'popup', label: 'Apri popup Now Playing M3E' },
+                { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
                 { value: 'none', label: 'Nessuna azione' },
               ],
             },
@@ -126,8 +126,7 @@ export class M3EMediaBarCard extends LitElement {
       changedProps.has('_config') ||
       changedProps.has('_selectedEntityId') ||
       changedProps.has('_marqueeActive') ||
-      changedProps.has('_marqueeDuration') ||
-      changedProps.has('_castOpen')
+      changedProps.has('_marqueeDuration')
     ) {
       return true;
     }
@@ -258,45 +257,22 @@ export class M3EMediaBarCard extends LitElement {
   private _onBarClick(): void {
     const entity = this._activeEntity;
     if (!entity || this._config?.tap_action === 'none') return;
-    this.dispatchEvent(
-      new CustomEvent('hass-more-info', {
-        detail: { entityId: entity.entity_id },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    if (this._config?.tap_action === 'more-info') {
+      this.dispatchEvent(
+        new CustomEvent('hass-more-info', {
+          detail: { entityId: entity.entity_id },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      return;
+    }
+    void this._popupEl?.open(this._barEl?.getBoundingClientRect(), false);
   }
 
-  private async _openCastDialog(e: Event): Promise<void> {
+  private _openCastDialog(e: Event): void {
     e.stopPropagation();
-    if (this._castOpen) return;
-    this._castOpen = true;
-    await this.updateComplete;
-    const dialog = this._dialogEl;
-    if (!dialog) return;
-    if (!dialog.open) dialog.showModal();
-    animateDialogOpen(this._dialogSurfaceEl);
-  }
-
-  private _closeCastDialog(): void {
-    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
-      this._castOpen = false;
-    });
-  }
-
-  private _selectSource(source: string): void {
-    const entity = this._activeEntity;
-    if (!this.hass || !entity) return;
-    this.hass.callService('media_player', 'select_source', {
-      entity_id: entity.entity_id,
-      source,
-    });
-    window.setTimeout(() => this._closeCastDialog(), 140);
-  }
-
-  private _selectPlayer(entityId: string): void {
-    this._selectedEntityId = entityId;
-    window.setTimeout(() => this._closeCastDialog(), 140);
+    void this._popupEl?.open(this._barEl?.getBoundingClientRect(), true);
   }
 
   protected render() {
@@ -323,7 +299,6 @@ export class M3EMediaBarCard extends LitElement {
     const sourceList = Array.isArray(entity?.attributes.source_list)
       ? (entity!.attributes.source_list as string[])
       : [];
-    const currentSource = String(entity?.attributes.source ?? '');
     const features = Number(entity?.attributes.supported_features ?? 0);
     const supportsSource = (features & SUPPORT_SELECT_SOURCE) !== 0 || sourceList.length > 0;
     const hasMultiplePlayers = this._allEntityIds.length > 1;
@@ -430,104 +405,15 @@ export class M3EMediaBarCard extends LitElement {
         </div>
       </ha-card>
 
-      <!-- Cast / Output / Source M3 Expressive Selector Dialog -->
-      <dialog
-        class="cast-dialog"
-        @click=${(e: MouseEvent) => {
-          if (e.target === this._dialogEl) this._closeCastDialog();
+      <!-- Shared Material 3 Expressive Now Playing & Cast Popup -->
+      <m3e-media-popup
+        .hass=${this.hass}
+        .entityId=${entity?.entity_id ?? this._config.entity}
+        .playerIds=${this._allEntityIds}
+        @m3e-player-selected=${(e: CustomEvent<{ entityId: string }>) => {
+          this._selectedEntityId = e.detail.entityId;
         }}
-        @cancel=${(e: Event) => {
-          e.preventDefault();
-          this._closeCastDialog();
-        }}
-        @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
-      >
-        ${this._castOpen
-          ? html`
-              <div class="dialog-surface">
-                <header class="dialog-header">
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    @click=${() => this._closeCastDialog()}
-                    aria-label="Chiudi"
-                  >
-                    <svg viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
-                      />
-                    </svg>
-                  </button>
-                  <span class="dialog-title">
-                    ${hasMultiplePlayers && sourceList.length === 0
-                      ? 'Dispositivi audio'
-                      : `Output · ${title}`}
-                  </span>
-                </header>
-
-                ${hasMultiplePlayers
-                  ? html`
-                      <div class="picker-section-label">Dispositivi</div>
-                      <div class="picker-list" role="radiogroup" aria-label="Dispositivi">
-                        ${this._allEntityIds.map((id) => {
-                          const st = this.hass?.states[id];
-                          const selected = id === entity?.entity_id;
-                          const label =
-                            (st?.attributes.friendly_name as string | undefined) || id;
-                          const sub = this._getMetadataText(st);
-                          return html`
-                            <button
-                              type="button"
-                              class="picker-row ${selected ? 'is-selected' : ''}"
-                              role="radio"
-                              aria-checked=${String(selected)}
-                              @click=${() => this._selectPlayer(id)}
-                            >
-                              <span class="picker-row-text">
-                                <span class="picker-row-title">${label}</span>
-                                <span class="picker-row-sub">${sub}</span>
-                              </span>
-                              <span class="m3-radio ${selected ? 'checked' : ''}" aria-hidden="true">
-                                <span class="m3-radio-dot"></span>
-                              </span>
-                            </button>
-                          `;
-                        })}
-                      </div>
-                    `
-                  : nothing}
-
-                ${sourceList.length > 0
-                  ? html`
-                      ${hasMultiplePlayers
-                        ? html`<div class="picker-section-label">Sorgenti</div>`
-                        : nothing}
-                      <div class="picker-list" role="radiogroup" aria-label="Sorgenti">
-                        ${sourceList.map((src) => {
-                          const selected = src === currentSource;
-                          return html`
-                            <button
-                              type="button"
-                              class="picker-row ${selected ? 'is-selected' : ''}"
-                              role="radio"
-                              aria-checked=${String(selected)}
-                              @click=${() => this._selectSource(src)}
-                            >
-                              <span class="picker-row-title">${src}</span>
-                              <span class="m3-radio ${selected ? 'checked' : ''}" aria-hidden="true">
-                                <span class="m3-radio-dot"></span>
-                              </span>
-                            </button>
-                          `;
-                        })}
-                      </div>
-                    `
-                  : nothing}
-              </div>
-            `
-          : nothing}
-      </dialog>
+      ></m3e-media-popup>
     `;
   }
 
@@ -740,8 +626,8 @@ export class M3EMediaBarCard extends LitElement {
         height: 52px;
         border: 0;
         border-radius: 17px;
-        background: var(--md-sys-color-surface-container-lowest, #ffffff);
-        color: var(--md-sys-color-on-surface, #1b1b1f);
+        background: var(--md-sys-color-secondary-container, var(--md-sys-color-surface-container-highest, #ffffff));
+        color: var(--md-sys-color-on-secondary-container, var(--md-sys-color-on-surface, #1b1b1f));
         display: grid;
         place-items: center;
         cursor: pointer;
@@ -751,6 +637,10 @@ export class M3EMediaBarCard extends LitElement {
           background-color var(--m3e-spring-effects-fast),
           transform var(--m3e-spring-spatial-fast);
         -webkit-tap-highlight-color: transparent;
+      }
+
+      .play-btn:not(.is-playing) {
+        border-radius: 50%;
       }
 
       .play-btn:hover:not(:disabled) {

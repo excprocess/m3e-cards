@@ -457,17 +457,6 @@ function createHass(): HomeAssistant {
             attributes: { ...current.attributes, volume_level: data.volume_level },
           };
         } else if (service === 'media_play_pause') {
-          next = {
-            ...current,
-            state: current.state === 'playing' ? 'paused' : 'playing',
-          };
-        } else if (service === 'turn_off') {
-          next = { ...current, state: 'idle' };
-        } else if (service === 'turn_on') {
-          next = { ...current, state: 'on' };
-        }
-      } else if (current && domain === 'media_player') {
-        if (service === 'media_play_pause') {
           const wasPlaying = current.state === 'playing';
           next = {
             ...current,
@@ -509,6 +498,10 @@ function createHass(): HomeAssistant {
               source: data.source,
             },
           };
+        } else if (service === 'turn_off') {
+          next = { ...current, state: 'idle' };
+        } else if (service === 'turn_on') {
+          next = { ...current, state: 'on' };
         }
       } else if (current && (domain === 'switch' || domain === 'input_boolean')) {
         if (service === 'toggle') {
@@ -586,6 +579,7 @@ const mediaShowcase = document.getElementById('media-showcase')!;
 mountMediaPlayerCard(mediaShowcase, {
   type: 'custom:m3e-media-player-card',
   entity: 'media_player.salotto_speaker',
+  entities: ['media_player.salotto_speaker', 'media_player.chromecast'],
   dynamic_color: true,
   show_device_chip: true,
 });

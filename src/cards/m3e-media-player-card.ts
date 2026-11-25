@@ -1,5 +1,5 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type {
   HassEntity,
@@ -7,6 +7,8 @@ import type {
   M3EMediaPlayerCardConfig,
 } from '../types/home-assistant';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
+import type { M3EMediaPopup } from '../components/m3e-media-popup';
+import '../components/m3e-media-popup';
 
 const SUPPORT_SEEK = 2;
 const SUPPORT_PREVIOUS = 16;
@@ -34,6 +36,10 @@ export class M3EMediaPlayerCard extends LitElement {
   @state() private _nowTick = Date.now();
   @state() private _scrubbing = false;
   @state() private _scrubPct: number | null = null;
+  @state() private _activeEntityId?: string;
+
+  @query('.media-player-card') private _cardEl?: HTMLElement;
+  @query('m3e-media-popup') private _popupEl?: M3EMediaPopup;
 
   private _lastArtworkUrl = '';
   private _tickTimer: number | null = null;
@@ -47,7 +53,7 @@ export class M3EMediaPlayerCard extends LitElement {
       ...config,
       dynamic_color: config.dynamic_color !== false,
       show_device_chip: config.show_device_chip !== false,
-      tap_action: config.tap_action ?? 'more-info',
+      tap_action: config.tap_action ?? 'popup',
     };
   }
 
@@ -83,6 +89,10 @@ export class M3EMediaPlayerCard extends LitElement {
           selector: { entity: { domain: 'media_player' } },
         },
         {
+          name: 'entities',
+          selector: { entity: { domain: 'media_player', multiple: true } },
+        },
+        {
           name: 'name',
           selector: { text: {} },
         },
@@ -100,7 +110,8 @@ export class M3EMediaPlayerCard extends LitElement {
             select: {
               mode: 'dropdown',
               options: [
-                { value: 'more-info', label: 'Apri dettagli media (More-info)' },
+                { value: 'popup', label: 'Apri popup Now Playing M3E' },
+                { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
                 { value: 'none', label: 'Nessuna azione' },
               ],
             },
@@ -110,6 +121,7 @@ export class M3EMediaPlayerCard extends LitElement {
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Entità media player',
+          entities: 'Altri media player (selezionabili dal foglio Cast)',
           name: 'Nome dispositivo personalizzato (opzionale)',
           dynamic_color: 'Colori dinamici estratti dalla copertina (M3 Expressive)',
           show_device_chip: 'Mostra chip dispositivo in alto a destra',
@@ -127,13 +139,14 @@ export class M3EMediaPlayerCard extends LitElement {
       changedProps.has('_palette') ||
       changedProps.has('_nowTick') ||
       changedProps.has('_scrubbing') ||
-      changedProps.has('_scrubPct')
+      changedProps.has('_scrubPct') ||
+      changedProps.has('_activeEntityId')
     ) {
       return true;
     }
 
     if (changedProps.has('hass') && this.hass) {
-      const next = this.hass.states[this._config.entity];
+      const next = this.hass.states[this._currentEntityId];
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
       if (next !== this._prevEntity || oldHass?.themes?.darkMode !== this.hass.themes?.darkMode) {
         this._prevEntity = next;
@@ -190,9 +203,13 @@ export class M3EMediaPlayerCard extends LitElement {
     }
   }
 
+  private get _currentEntityId(): string {
+    return this._activeEntityId || this._config?.entity || '';
+  }
+
   private get _entity(): HassEntity | undefined {
-    if (!this.hass || !this._config) return undefined;
-    return this.hass.states[this._config.entity];
+    if (!this.hass || !this._currentEntityId) return undefined;
+    return this.hass.states[this._currentEntityId];
   }
 
   private get _artworkUrl(): string {
@@ -240,22 +257,31 @@ export class M3EMediaPlayerCard extends LitElement {
 
   private _callService(service: string, data: Record<string, unknown> = {}, e?: Event): void {
     e?.stopPropagation();
-    if (!this.hass || !this._config) return;
+    if (!this.hass || !this._currentEntityId) return;
     this.hass.callService('media_player', service, {
-      entity_id: this._config.entity,
+      entity_id: this._currentEntityId,
       ...data,
     });
   }
 
   private _onCardClick(): void {
     if (!this._config || this._config.tap_action === 'none') return;
-    this.dispatchEvent(
-      new CustomEvent('hass-more-info', {
-        detail: { entityId: this._config.entity },
-        bubbles: true,
-        composed: true,
-      }),
-    );
+    if (this._config.tap_action === 'more-info') {
+      this.dispatchEvent(
+        new CustomEvent('hass-more-info', {
+          detail: { entityId: this._currentEntityId },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      return;
+    }
+    void this._popupEl?.open(this._cardEl?.getBoundingClientRect(), false);
+  }
+
+  private _onDeviceChipClick(e: Event): void {
+    e.stopPropagation();
+    void this._popupEl?.open(this._cardEl?.getBoundingClientRect(), true);
   }
 
   private _pointerToPct(clientX: number, el: HTMLElement): number {
@@ -407,7 +433,11 @@ export class M3EMediaPlayerCard extends LitElement {
             ${this._renderAppBadge(entity)}
             ${this._config.show_device_chip !== false
               ? html`
-                  <span class="device-chip">
+                  <button
+                    type="button"
+                    class="device-chip"
+                    @click=${(e: Event) => this._onDeviceChipClick(e)}
+                  >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path
                         fill="currentColor"
@@ -415,7 +445,7 @@ export class M3EMediaPlayerCard extends LitElement {
                       />
                     </svg>
                     <span>${deviceName}</span>
-                  </span>
+                  </button>
                 `
               : nothing}
           </div>
@@ -521,6 +551,15 @@ export class M3EMediaPlayerCard extends LitElement {
           </div>
         </div>
       </ha-card>
+
+      <m3e-media-popup
+        .hass=${this.hass}
+        .entityId=${this._currentEntityId}
+        .playerIds=${[this._config.entity, ...(this._config.entities ?? [])].filter(Boolean)}
+        @m3e-player-selected=${(e: CustomEvent<{ entityId: string }>) => {
+          this._activeEntityId = e.detail.entityId;
+        }}
+      ></m3e-media-popup>
     `;
   }
 
@@ -649,6 +688,9 @@ export class M3EMediaPlayerCard extends LitElement {
       }
 
       .device-chip {
+        border: 0;
+        font: inherit;
+        cursor: pointer;
         display: inline-flex;
         align-items: center;
         gap: 6px;
@@ -660,6 +702,11 @@ export class M3EMediaPlayerCard extends LitElement {
         font-size: 12.5px;
         font-weight: 500;
         line-height: 16px;
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .device-chip:active {
+        transform: scale(0.95);
       }
 
       .device-chip svg {
