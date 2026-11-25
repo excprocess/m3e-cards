@@ -267,6 +267,7 @@ export class M3EStatusCard extends LitElement {
         this._config.subtitle_entity,
         this._config.secondary_entity,
         this._config.outdoor_entity,
+        ...(this._config.extra_entities ?? []).slice(0, 10),
         ...this._getSiblingEntityIds(),
       ].filter(Boolean) as string[];
 
@@ -381,8 +382,21 @@ export class M3EStatusCard extends LitElement {
       const dc = String(sib.attributes.device_class ?? '');
       if (preferredClasses.includes(dc)) {
         results.push(sib);
+        seen.add(sib.entity_id);
       }
     }
+
+    if (Array.isArray(this._config?.extra_entities)) {
+      for (const extraId of this._config.extra_entities.slice(0, 10)) {
+        if (!extraId || seen.has(extraId)) continue;
+        const extra = this.hass.states[extraId];
+        if (extra) {
+          results.push(extra);
+          seen.add(extra.entity_id);
+        }
+      }
+    }
+
     return results;
   }
 
@@ -1209,6 +1223,22 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _openEntityMoreInfo(entityId: string): void {
+    const dialog = this._dialogEl;
+    if (dialog?.open) {
+      dialog.close();
+    }
+    this._popupOpen = false;
+    this._activeSheet = null;
+    this.dispatchEvent(
+      new CustomEvent('hass-more-info', {
+        detail: { entityId },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private _renderSensorPopup(icon?: string) {
     const siblings = this._getSiblingSensors();
 
@@ -1232,13 +1262,25 @@ export class M3EStatusCard extends LitElement {
                 const label = this._cleanSiblingLabel(sec);
                 const val = `${sec.state}${sec.attributes.unit_of_measurement ?? ''}`;
                 return html`
-                  <div class="info-pill">
+                  <button
+                    type="button"
+                    class="info-pill is-clickable"
+                    @click=${() => this._openEntityMoreInfo(sec.entity_id)}
+                  >
                     <span class="info-pill-left">
                       ${this._renderSiblingIcon(sec)}
-                      <span>${label}</span>
+                      <span class="info-pill-label">${label}</span>
                     </span>
-                    <span class="info-pill-val">${val}</span>
-                  </div>
+                    <span class="info-pill-right">
+                      <span class="info-pill-val">${val}</span>
+                      <svg viewBox="0 0 24 24" class="info-pill-chevron" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
+                        />
+                      </svg>
+                    </span>
+                  </button>
                 `;
               })}
             </div>
@@ -2373,26 +2415,70 @@ export class M3EStatusCard extends LitElement {
       }
 
       .info-pill {
+        width: 100%;
+        border: 0;
+        font: inherit;
+        text-align: left;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
         padding: 18px 20px;
         border-radius: 24px;
         background: var(--md-sys-color-surface-container-high, #24252d);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
         font-size: 15px;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .info-pill.is-clickable {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .info-pill.is-clickable:hover {
+        background: var(--md-sys-color-surface-container-highest, #2f313a);
+      }
+
+      .info-pill.is-clickable:active {
+        transform: scale(0.98);
       }
 
       .info-pill-left {
         display: flex;
         align-items: center;
         gap: 12px;
+        min-width: 0;
         line-height: 20px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .info-pill-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .info-pill-right {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
       }
 
       .info-pill-val {
         font-weight: 600;
         font-variant-numeric: tabular-nums;
+      }
+
+      .info-pill-chevron {
+        width: 18px;
+        height: 18px;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.7;
+        flex-shrink: 0;
       }
 
       /* M3 Expressive 24h Sensor History Chart Card */

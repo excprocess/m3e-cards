@@ -235,6 +235,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   popup_type?: M3EStatusPopupType;
   /** Optional secondary telemetry entity (auto-discovered from same device_id if omitted) */
   secondary_entity?: string;
+  /** Optional list of additional entities (up to 10) displayed as clickable telemetry pills in the popup */
+  extra_entities?: string[];
   /** Optional outdoor temperature entity (for climate popup telemetry) */
   outdoor_entity?: string;
   /** Primary tap behavior: open popup (default), toggle, navigate/Bubble/Browser Mod, more-info, or none */

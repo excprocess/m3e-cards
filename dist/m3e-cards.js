@@ -4796,6 +4796,7 @@ let gt = class extends S {
       hold_action: "Azione pressione prolungata (Hold)",
       navigation_path: "Percorso dashboard (/lovelace/...) · #hash Bubble Card · script/browser_mod",
       secondary_entity: "Entità secondaria (auto-rilevata dal device se vuota)",
+      extra_entities: "Pillole entità aggiuntive nel popup (max 10)",
       outdoor_entity: "Temperatura esterna",
       remote_device: "Device ID trasmettitore (multi-dispositivo)",
       volume_up: "Volume + (es. button.tv_vol_up o VolumeUp)",
@@ -4812,7 +4813,7 @@ let gt = class extends S {
       ch_down: "Canale −"
     })[t.name] ?? t.name, this._onValueChanged = (t) => {
       const e = { ...this._config, ...t.detail.value };
-      this._config = e, this.dispatchEvent(
+      Array.isArray(e.extra_entities) && (e.extra_entities = e.extra_entities.slice(0, 10), e.extra_entities.length === 0 && delete e.extra_entities), this._config = e, this.dispatchEvent(
         new CustomEvent("config-changed", {
           bubbles: !0,
           composed: !0,
@@ -4980,7 +4981,8 @@ let gt = class extends S {
           { name: "label_inactive", selector: { text: {} } }
         ]
       },
-      { name: "status_entity", selector: { entity: {} } }
+      { name: "status_entity", selector: { entity: {} } },
+      { name: "extra_entities", selector: { entity: { multiple: !0 } } }
     ) : t === "sensor" ? i.push(
       r,
       o,
@@ -4994,7 +4996,8 @@ let gt = class extends S {
           { name: "label_inactive", selector: { text: {} } }
         ]
       },
-      { name: "secondary_entity", selector: { entity: {} } }
+      { name: "secondary_entity", selector: { entity: {} } },
+      { name: "extra_entities", selector: { entity: { multiple: !0 } } }
     ) : t === "climate" ? i.push({
       name: "outdoor_entity",
       selector: { entity: { domain: "sensor" } }
@@ -5232,6 +5235,7 @@ let y = class extends S {
         this._config.subtitle_entity,
         this._config.secondary_entity,
         this._config.outdoor_entity,
+        ...(this._config.extra_entities ?? []).slice(0, 10),
         ...this._getSiblingEntityIds()
       ].filter(Boolean);
       let i = !1;
@@ -5309,8 +5313,14 @@ let y = class extends S {
     });
     for (const r of s) {
       const o = String(r.attributes.device_class ?? "");
-      i.includes(o) && t.push(r);
+      i.includes(o) && (t.push(r), e.add(r.entity_id));
     }
+    if (Array.isArray(this._config?.extra_entities))
+      for (const r of this._config.extra_entities.slice(0, 10)) {
+        if (!r || e.has(r)) continue;
+        const o = this.hass.states[r];
+        o && (t.push(o), e.add(o.entity_id));
+      }
     return t;
   }
   get _secondaryEntity() {
@@ -5786,6 +5796,16 @@ let y = class extends S {
       </div>
     `;
   }
+  _openEntityMoreInfo(t) {
+    const e = this._dialogEl;
+    e?.open && e.close(), this._popupOpen = !1, this._activeSheet = null, this.dispatchEvent(
+      new CustomEvent("hass-more-info", {
+        detail: { entityId: t },
+        bubbles: !0,
+        composed: !0
+      })
+    );
+  }
   _renderSensorPopup(t) {
     const e = this._getSiblingSensors();
     return c`
@@ -5804,13 +5824,25 @@ let y = class extends S {
               ${e.map((i) => {
       const s = this._cleanSiblingLabel(i), r = `${i.state}${i.attributes.unit_of_measurement ?? ""}`;
       return c`
-                  <div class="info-pill">
+                  <button
+                    type="button"
+                    class="info-pill is-clickable"
+                    @click=${() => this._openEntityMoreInfo(i.entity_id)}
+                  >
                     <span class="info-pill-left">
                       ${this._renderSiblingIcon(i)}
-                      <span>${s}</span>
+                      <span class="info-pill-label">${s}</span>
                     </span>
-                    <span class="info-pill-val">${r}</span>
-                  </div>
+                    <span class="info-pill-right">
+                      <span class="info-pill-val">${r}</span>
+                      <svg viewBox="0 0 24 24" class="info-pill-chevron" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
+                        />
+                      </svg>
+                    </span>
+                  </button>
                 `;
     })}
             </div>
@@ -6747,26 +6779,70 @@ y.styles = [
       }
 
       .info-pill {
+        width: 100%;
+        border: 0;
+        font: inherit;
+        text-align: left;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
         padding: 18px 20px;
         border-radius: 24px;
         background: var(--md-sys-color-surface-container-high, #24252d);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
         font-size: 15px;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .info-pill.is-clickable {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .info-pill.is-clickable:hover {
+        background: var(--md-sys-color-surface-container-highest, #2f313a);
+      }
+
+      .info-pill.is-clickable:active {
+        transform: scale(0.98);
       }
 
       .info-pill-left {
         display: flex;
         align-items: center;
         gap: 12px;
+        min-width: 0;
         line-height: 20px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .info-pill-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .info-pill-right {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
       }
 
       .info-pill-val {
         font-weight: 600;
         font-variant-numeric: tabular-nums;
+      }
+
+      .info-pill-chevron {
+        width: 18px;
+        height: 18px;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.7;
+        flex-shrink: 0;
       }
 
       /* M3 Expressive 24h Sensor History Chart Card */

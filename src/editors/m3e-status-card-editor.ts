@@ -188,6 +188,7 @@ export class M3EStatusCardEditor extends LitElement {
           ],
         },
         { name: 'status_entity', selector: { entity: {} } },
+        { name: 'extra_entities', selector: { entity: { multiple: true } } },
       );
     } else if (type === 'sensor') {
       schema.push(
@@ -204,6 +205,7 @@ export class M3EStatusCardEditor extends LitElement {
           ],
         },
         { name: 'secondary_entity', selector: { entity: {} } },
+        { name: 'extra_entities', selector: { entity: { multiple: true } } },
       );
     } else if (type === 'climate') {
       schema.push({
@@ -263,6 +265,7 @@ export class M3EStatusCardEditor extends LitElement {
       hold_action: 'Azione pressione prolungata (Hold)',
       navigation_path: 'Percorso dashboard (/lovelace/...) · #hash Bubble Card · script/browser_mod',
       secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
+      extra_entities: 'Pillole entità aggiuntive nel popup (max 10)',
       outdoor_entity: 'Temperatura esterna',
       remote_device: 'Device ID trasmettitore (multi-dispositivo)',
       volume_up: 'Volume + (es. button.tv_vol_up o VolumeUp)',
@@ -283,6 +286,12 @@ export class M3EStatusCardEditor extends LitElement {
 
   private _onValueChanged = (e: CustomEvent<{ value: M3EStatusCardConfig }>): void => {
     const next = { ...this._config, ...e.detail.value };
+    if (Array.isArray(next.extra_entities)) {
+      next.extra_entities = next.extra_entities.slice(0, 10);
+      if (next.extra_entities.length === 0) {
+        delete next.extra_entities;
+      }
+    }
     this._config = next;
     this.dispatchEvent(
       new CustomEvent('config-changed', {
