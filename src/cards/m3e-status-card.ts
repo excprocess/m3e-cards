@@ -109,6 +109,9 @@ const DEFAULT_ACTIVE_STATES = new Set([
   'true',
 ]);
 
+const CHEVRON_DOWN_SVG = html`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`;
+const CHEVRON_UP_SVG = html`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`;
+
 const DIAL_START_DEG = 135; // bottom-left
 const DIAL_SWEEP_DEG = 270; // 270 deg clockwise to bottom-right
 
@@ -1419,7 +1422,7 @@ export class M3EStatusCard extends LitElement {
                     <span class="mode-pill-title">Preset</span>
                     <span class="mode-pill-val">${formatCap(currentPreset)}</span>
                   </span>
-                  <span class="trait-chevron">⌄</span>
+                  <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
                 </button>
               `
             : nothing}
@@ -1448,7 +1451,7 @@ export class M3EStatusCard extends LitElement {
                             <span class="mode-pill-val">${formatCap(currentFan)}</span>
                           </span>
                         </span>
-                        <span class="trait-chevron">⌄</span>
+                        <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
                       </button>
                     `
                   : nothing}
@@ -1464,7 +1467,7 @@ export class M3EStatusCard extends LitElement {
                           <span class="mode-pill-title">Swing</span>
                           <span class="mode-pill-val">${formatCap(currentSwing)}</span>
                         </span>
-                        <span class="trait-chevron">⌄</span>
+                        <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
                       </button>
                     `
                   : nothing}
@@ -1516,7 +1519,7 @@ export class M3EStatusCard extends LitElement {
                     @click=${() => (this._activeSheet = null)}
                     aria-label="Close selector"
                   >
-                    ⌄
+                    ${CHEVRON_DOWN_SVG}
                   </button>
                   <span>${sheetConfig.title}</span>
                 </div>
@@ -1654,7 +1657,7 @@ export class M3EStatusCard extends LitElement {
             aria-label="Channel down"
             @click=${() => this._triggerRemoteButton('ch_down', 'media_previous_track', {}, 'ChannelDown')}
           >
-            ⌄
+            ${CHEVRON_DOWN_SVG}
           </button>
           <span class="channel-label">CH</span>
           <button
@@ -1663,13 +1666,13 @@ export class M3EStatusCard extends LitElement {
             aria-label="Channel up"
             @click=${() => this._triggerRemoteButton('ch_up', 'media_next_track', {}, 'ChannelUp')}
           >
-            ⌃
+            ${CHEVRON_UP_SVG}
           </button>
         </div>
 
         <div class="secondary-action-card">
           <span>${source}</span>
-          <span>⌄</span>
+          <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
         </div>
       </div>
     `;
@@ -2567,8 +2570,15 @@ export class M3EStatusCard extends LitElement {
       }
 
       .trait-chevron {
-        font-size: 18px;
-        opacity: 0.75;
+        display: grid;
+        place-items: center;
+        opacity: 0.78;
+      }
+
+      .m3-chevron {
+        width: 22px;
+        height: 22px;
+        display: block;
       }
 
       .telemetry-card {

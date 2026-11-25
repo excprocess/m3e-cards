@@ -1022,7 +1022,12 @@ export class M3ELightCard extends LitElement {
                               @click=${() => (this._scenesSheetOpen = false)}
                               aria-label="Close scenes"
                             >
-                              ⌄
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"
+                                />
+                              </svg>
                             </button>
                             <span>Scene</span>
                           </div>
