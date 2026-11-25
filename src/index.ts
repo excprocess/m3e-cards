@@ -1,14 +1,17 @@
 import './cards/m3e-light-card';
+import './cards/m3e-scene-card';
 import './cards/m3e-status-card';
 import './cards/m3e-toggle-card';
 
 export { M3ELightCard } from './cards/m3e-light-card';
+export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStatusCard } from './cards/m3e-status-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
 export type {
   HomeAssistant,
   HassEntity,
   M3ELightCardConfig,
+  M3ESceneCardConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
   M3EToggleCardConfig,
@@ -55,5 +58,13 @@ registerCard({
   name: 'M3 Expressive Toggle Card',
   description:
     'Google Home–style switch/outlet toggle tile with morphing vertical switch popup.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-scene-card',
+  name: 'M3 Expressive Scene / Button Card',
+  description:
+    'Google Home–style one-tap scene, script, or button tile with animated activation feedback.',
   preview: true,
 });

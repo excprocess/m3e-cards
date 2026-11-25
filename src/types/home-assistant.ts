@@ -90,6 +90,19 @@ export type M3ECardStyle = 'default' | 'pill' | 'expressive' | 'compact';
 export type M3ESubtitleFormat = 'auto' | 'relative' | 'time' | 'datetime' | 'raw';
 export type M3ESubtitleVisibility = 'both' | 'on' | 'off';
 
+export interface M3ESceneCardConfig extends LovelaceCardConfig {
+  entity: string;
+  name?: string;
+  /** Optional resting subtitle (leave empty for clean centered title) */
+  subtitle?: string;
+  /** Optional custom MDI icon (empty = standard Google Home outline -> filled sparkles) */
+  icon?: string;
+  /** Optional accent color role during activation (default: primary) */
+  accent?: 'primary' | 'secondary' | 'tertiary';
+  /** Material 3 Expressive tile shape style */
+  card_style?: M3ECardStyle;
+}
+
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
   name?: string;
