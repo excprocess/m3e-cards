@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3EToggleCardConfig } from '../types/home-assistant';
+import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 
@@ -329,24 +330,7 @@ export class M3EToggleCard extends LitElement {
     if (iconName && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${iconName}></ha-icon>`;
     }
-    if (iconName?.includes('power-socket') || this._config?.entity.includes('caricatore')) {
-      return html`
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            fill="currentColor"
-            d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-3 9H7.5V7.5H9V11Zm7.5 0H15V7.5h1.5V11ZM12 16.5a1.5 1.5 0 0 1-1.5-1.5h3a1.5 1.5 0 0 1-1.5 1.5Z"
-          />
-        </svg>
-      `;
-    }
-    return html`
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          fill="currentColor"
-          d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM9 7h6v10H9V7Zm2 2v3h2V9h-2Z"
-        />
-      </svg>
-    `;
+    return renderM3EntityIcon(this._entity, this._isOn);
   }
 
   private _getPowerSiblings(): HassEntity[] {

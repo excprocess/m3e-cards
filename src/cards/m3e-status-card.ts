@@ -10,6 +10,7 @@ import type {
   M3EStatusPopupType,
   M3ESubtitleFormat,
 } from '../types/home-assistant';
+import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 
@@ -1012,22 +1013,7 @@ export class M3EStatusCard extends LitElement {
     if (iconName && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${iconName}></ha-icon>`;
     }
-
-    const type = this._resolvedPopupType;
-    if (iconName?.includes('thermometer') || this._config?.entity.includes('temp')) {
-      return html`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0Zm-3-9a1 1 0 0 1 1 1v4h-2V5a1 1 0 0 1 1-1Z"/></svg>`;
-    }
-    if (type === 'climate') {
-      return html`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm0-12a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"/></svg>`;
-    }
-    if (type === 'remote') {
-      return html`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z"/></svg>`;
-    }
-    if (type === 'media') {
-      return html`<svg viewBox="0 0 24 24"><path fill="currentColor" d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>`;
-    }
-    // Motion / presence sensor icon matching Google Home ( (●) )
-    return html`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M5.5 7.5a7 7 0 0 0 0 9M18.5 7.5a7 7 0 0 1 0 9"/></svg>`;
+    return renderM3EntityIcon(this._statusEntity ?? this._entity, this._isActive, this._resolvedPopupType);
   }
 
   /* =========================================================================
