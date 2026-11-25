@@ -90,6 +90,28 @@ export type M3ECardStyle = 'default' | 'pill' | 'morph' | 'expressive' | 'compac
 export type M3ESubtitleFormat = 'auto' | 'relative' | 'time' | 'datetime' | 'raw';
 export type M3ESubtitleVisibility = 'both' | 'on' | 'off';
 
+export interface M3ELightControlCardConfig extends LovelaceCardConfig {
+  /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
+  entities?: string[];
+  label_on?: string;
+  label_off?: string;
+  /** Use Material You theme primary-container instead of Google Home warm amber (default: false) */
+  use_theme_color?: boolean;
+}
+
+export interface M3ELightGroupCardConfig extends LovelaceCardConfig {
+  /** Home Assistant light group entity (exposing attributes.entity_id) */
+  entity: string;
+  name?: string;
+  icon?: string;
+  /** Start expanded by default (default: false) */
+  expanded?: boolean;
+  /** Use the group/light real color when ON (default: true) */
+  use_light_color?: boolean;
+  /** Card shape style for the group header & child tiles */
+  card_style?: M3ECardStyle;
+}
+
 export interface M3ESceneCardConfig extends LovelaceCardConfig {
   entity: string;
   name?: string;

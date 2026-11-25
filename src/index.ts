@@ -1,9 +1,13 @@
 import './cards/m3e-light-card';
+import './cards/m3e-light-control-card';
+import './cards/m3e-light-group-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-status-card';
 import './cards/m3e-toggle-card';
 
 export { M3ELightCard } from './cards/m3e-light-card';
+export { M3ELightControlCard } from './cards/m3e-light-control-card';
+export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStatusCard } from './cards/m3e-status-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
@@ -11,6 +15,8 @@ export type {
   HomeAssistant,
   HassEntity,
   M3ELightCardConfig,
+  M3ELightControlCardConfig,
+  M3ELightGroupCardConfig,
   M3ESceneCardConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
@@ -66,5 +72,21 @@ registerCard({
   name: 'M3 Expressive Scene / Button Card',
   description:
     'Google Home–style one-tap scene, script, or button tile with animated activation feedback.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-light-control-card',
+  name: 'M3 Expressive Light Control (All on / All off)',
+  description:
+    'Google Home–style dual-choice pill switch with sliding indicator to turn on/off lights or all home lights.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-light-group-card',
+  name: 'M3 Expressive Light Group Card',
+  description:
+    'Google Home–style expandable light group bar with aggregate brightness slider and 2-column child light grid.',
   preview: true,
 });

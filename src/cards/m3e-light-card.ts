@@ -831,11 +831,13 @@ export class M3ELightCard extends LitElement {
     const pct = this._brightnessPct;
     const subtitle = this._isUnavailable
       ? 'Offline'
-      : isOn
-        ? this._supportsBrightness
-          ? `On • ${pct}%`
-          : 'On'
-        : 'Off';
+      : this._dragging && this._supportsBrightness
+        ? `${pct}%`
+        : isOn
+          ? this._supportsBrightness
+            ? `On • ${pct}%`
+            : 'On'
+          : 'Off';
 
     const colorVars = this._computeColorVars();
     const matchedPreset = this._matchedPresetId;
