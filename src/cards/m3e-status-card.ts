@@ -136,6 +136,7 @@ function describeArc(cx: number, cy: number, r: number, startDeg: number, endDeg
 @customElement('m3e-status-card')
 export class M3EStatusCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
+  @property({ type: Boolean }) public popupOnly = false;
   @state() private _config?: M3EStatusCardConfig;
   @state() private _pressed = false;
   @state() private _popupOpen = false;
@@ -2068,59 +2069,63 @@ export class M3EStatusCard extends LitElement {
       : null;
 
     return html`
-      <ha-card
-        class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
-        role="button"
-        tabindex="0"
-        aria-label="${name}, ${this._stateLabel}"
-        @pointerdown=${this._onTilePointerDown}
-        @pointerup=${this._onTilePointerUp}
-        @pointerleave=${this._onTilePointerCancel}
-        @pointercancel=${this._onTilePointerCancel}
-        @click=${this._onTileClick}
-        @contextmenu=${(e: MouseEvent) => {
-          e.preventDefault();
-          this._handleHoldAction();
-        }}
-        @keydown=${(e: KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            this._onTileClick();
-          }
-        }}
-      >
-        <div class="state-layer" aria-hidden="true"></div>
-        <div class="tile-inner">
-          <span class="tile-icon">${this._renderEntityIcon(icon)}</span>
-          <div class="tile-meta">
-            <span class="tile-title">${name}</span>
-            <span class="tile-subtitle">${this._stateLabel}</span>
-          </div>
-          ${this._isUnavailable
-            ? html`
-                <span class="offline-badge" aria-hidden="true">
-                  <svg viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3ZM12 14a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm1 4h-2v-2h2v2Z"
-                    />
-                  </svg>
-                </span>
-              `
-            : hasAffordance
-              ? html`
-                  <span class="tile-chevron" aria-hidden="true">
-                    <svg viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
-                      />
-                    </svg>
-                  </span>
-                `
-              : nothing}
-        </div>
-      </ha-card>
+      ${this.popupOnly
+        ? nothing
+        : html`
+            <ha-card
+              class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
+              role="button"
+              tabindex="0"
+              aria-label="${name}, ${this._stateLabel}"
+              @pointerdown=${this._onTilePointerDown}
+              @pointerup=${this._onTilePointerUp}
+              @pointerleave=${this._onTilePointerCancel}
+              @pointercancel=${this._onTilePointerCancel}
+              @click=${this._onTileClick}
+              @contextmenu=${(e: MouseEvent) => {
+                e.preventDefault();
+                this._handleHoldAction();
+              }}
+              @keydown=${(e: KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  this._onTileClick();
+                }
+              }}
+            >
+              <div class="state-layer" aria-hidden="true"></div>
+              <div class="tile-inner">
+                <span class="tile-icon">${this._renderEntityIcon(icon)}</span>
+                <div class="tile-meta">
+                  <span class="tile-title">${name}</span>
+                  <span class="tile-subtitle">${this._stateLabel}</span>
+                </div>
+                ${this._isUnavailable
+                  ? html`
+                      <span class="offline-badge" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                          <path
+                            fill="currentColor"
+                            d="M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3ZM12 14a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm1 4h-2v-2h2v2Z"
+                          />
+                        </svg>
+                      </span>
+                    `
+                  : hasAffordance
+                    ? html`
+                        <span class="tile-chevron" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              fill="currentColor"
+                              d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
+                            />
+                          </svg>
+                        </span>
+                      `
+                    : nothing}
+              </div>
+            </ha-card>
+          `}
 
       <dialog
         class="status-dialog"

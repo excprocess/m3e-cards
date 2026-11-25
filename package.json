@@ -1,7 +1,7 @@
 {
   "name": "m3e-cards",
-  "version": "0.1.0-alpha.36",
-  "description": "Lightweight Material 3 Expressive Lovelace cards for Home Assistant, built natively with Lit and integrated with Nerwyn/material-you-utilities.",
+  "version": "0.1.0-alpha.37",
+  "description": "Material Native — Lightweight Material 3 Expressive & Google Home–native Lovelace cards for Home Assistant, built with Lit and integrated with Nerwyn/material-you-utilities.",
   "type": "module",
   "main": "dist/m3e-cards.js",
   "scripts": {

@@ -6,6 +6,7 @@ import './cards/m3e-light-group-card';
 import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-status-card';
+import './cards/m3e-thermostat-card';
 import './cards/m3e-toggle-card';
 
 export { M3EAssistCard } from './cards/m3e-assist-card';
@@ -16,6 +17,7 @@ export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStatusCard } from './cards/m3e-status-card';
+export { M3EThermostatCard } from './cards/m3e-thermostat-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
 export type {
   HomeAssistant,
@@ -31,6 +33,7 @@ export type {
   M3ESceneCardConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
+  M3EThermostatCardConfig,
   M3EToggleCardConfig,
 } from './types/home-assistant';
 
@@ -56,23 +59,23 @@ function registerCard(entry: CustomCardEntry): void {
 
 registerCard({
   type: 'm3e-light-card',
-  name: 'M3 Expressive Light Card',
+  name: 'Light Card',
   description:
-    'Google Home–style horizontal light slider tile with vertical capsule popup, shape morphing, and Material You Utilities integration.',
+    'Google Home–style horizontal light slider tile with vertical capsule popup, shape morphing, and Material You integration.',
   preview: true,
 });
 
 registerCard({
   type: 'm3e-status-card',
-  name: 'M3 Expressive Status Card',
+  name: 'Status Card',
   description:
-    'Google Home–style status tile with dual state icons, device sibling auto-discovery, and modular expanded popups (Sensor, Climate, Remote, Media).',
+    'Google Home–style status tile with dual state icons, device sibling auto-discovery, and modular popups (Sensor, Selector, Climate, Remote, Media).',
   preview: true,
 });
 
 registerCard({
   type: 'm3e-toggle-card',
-  name: 'M3 Expressive Toggle Card',
+  name: 'Toggle Card',
   description:
     'Google Home–style switch/outlet toggle tile with morphing vertical switch popup.',
   preview: true,
@@ -80,7 +83,7 @@ registerCard({
 
 registerCard({
   type: 'm3e-scene-card',
-  name: 'M3 Expressive Scene / Button Card',
+  name: 'Scene / Button Card',
   description:
     'Google Home–style one-tap scene, script, or button tile with animated activation feedback.',
   preview: true,
@@ -88,7 +91,7 @@ registerCard({
 
 registerCard({
   type: 'm3e-light-control-card',
-  name: 'M3 Expressive Light Control (All on / All off)',
+  name: 'Light Control (All on / All off)',
   description:
     'Google Home–style dual-choice pill switch with sliding indicator to turn on/off lights or all home lights.',
   preview: true,
@@ -96,7 +99,7 @@ registerCard({
 
 registerCard({
   type: 'm3e-light-group-card',
-  name: 'M3 Expressive Light Group Card',
+  name: 'Light Group Card',
   description:
     'Google Home–style expandable light group bar with aggregate brightness slider and 2-column child light grid.',
   preview: true,
@@ -104,15 +107,15 @@ registerCard({
 
 registerCard({
   type: 'm3e-assist-card',
-  name: 'M3 Expressive Assist & Mode Bar',
+  name: 'Assist & Mode Bar',
   description:
-    'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector in Material 3 Expressive.',
+    'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector.',
   preview: true,
 });
 
 registerCard({
   type: 'm3e-glance-card',
-  name: 'M3 Expressive At a Glance Strip',
+  name: 'At a Glance Strip',
   description:
     'Google Home–style horizontally scrollable At a Glance bar with circular tonal icon badges and per-entity state/attribute customization.',
   preview: true,
@@ -120,8 +123,16 @@ registerCard({
 
 registerCard({
   type: 'm3e-people-card',
-  name: 'M3 Expressive People Glance',
+  name: 'People Glance',
   description:
     'At a Glance card dedicated to people (avatar, name, location) with scrollable, full-row, vertical list, and compact layout modes.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-thermostat-card',
+  name: 'Thermostat Card',
+  description:
+    'Full-width Google Home–style thermostat card with +/- pill steppers, heat/cool semantic colors, offline state, and full climate dial popup.',
   preview: true,
 });

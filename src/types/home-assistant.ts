@@ -168,6 +168,17 @@ export interface M3EPeopleCardConfig extends LovelaceCardConfig {
   show_presence_indicator?: boolean;
 }
 
+export interface M3EThermostatCardConfig extends LovelaceCardConfig {
+  /** Home Assistant climate.* entity ID */
+  entity: string;
+  /** Optional custom name override */
+  name?: string;
+  /** Optional custom outdoor temperature sensor (forwarded to the Climate popup) */
+  outdoor_entity?: string;
+  /** Optional temperature step override (defaults to entity target_temp_step or 0.5) */
+  step?: number;
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];
