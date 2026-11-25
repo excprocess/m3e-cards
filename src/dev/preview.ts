@@ -506,6 +506,23 @@ function createHass(): HomeAssistant {
               source: data.source,
             },
           };
+        } else if (service === 'shuffle_set' && typeof data.shuffle === 'boolean') {
+          next = {
+            ...current,
+            attributes: { ...current.attributes, shuffle: data.shuffle },
+          };
+        } else if (service === 'repeat_set' && typeof data.repeat === 'string') {
+          next = {
+            ...current,
+            attributes: { ...current.attributes, repeat: data.repeat },
+          };
+        } else if (service === 'volume_mute' && typeof data.is_volume_muted === 'boolean') {
+          next = {
+            ...current,
+            attributes: { ...current.attributes, is_volume_muted: data.is_volume_muted },
+          };
+        } else if (service === 'media_stop') {
+          next = { ...current, state: 'idle' };
         } else if (service === 'turn_off') {
           next = { ...current, state: 'idle' };
         } else if (service === 'turn_on') {

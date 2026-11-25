@@ -36,9 +36,13 @@ export class M3EMediaPopup extends LitElement {
 
   @query('dialog.media-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.dialog-surface') private _dialogSurfaceEl?: HTMLDivElement;
+  @query('.artwork-frame') private _artworkFrameEl?: HTMLDivElement;
+  @query('.meta-block') private _metaBlockEl?: HTMLDivElement;
 
   private _tickTimer: number | null = null;
   private _volPendingTimer: number | null = null;
+  private _lastTrackKey = '';
+  private _pendingTrackDir: 'next' | 'prev' = 'next';
 
   public async open(originRect?: DOMRect, openCastSheet = false): Promise<void> {
     if (this._open) {
@@ -82,6 +86,40 @@ export class M3EMediaPopup extends LitElement {
     } else {
       this._stopTicker();
     }
+
+    if (this._open && entity) {
+      const trackKey = `${entity.entity_id}|${String(entity.attributes.media_title ?? '')}|${String(entity.attributes.entity_picture ?? '')}`;
+      if (this._lastTrackKey && trackKey !== this._lastTrackKey) {
+        this._animateTrackTransition(this._pendingTrackDir);
+      }
+      this._lastTrackKey = trackKey;
+    } else {
+      this._lastTrackKey = '';
+    }
+  }
+
+  private _animateTrackTransition(dir: 'next' | 'prev'): void {
+    const offset = dir === 'next' ? 28 : -28;
+    const easing = 'cubic-bezier(0.05, 0.7, 0.1, 1.0)';
+    this._artworkFrameEl?.animate(
+      [
+        { transform: `translateX(${offset}px) scale(0.92)`, opacity: 0.35 },
+        { transform: 'translateX(0px) scale(1)', opacity: 1 },
+      ],
+      { duration: 340, easing },
+    );
+    this._metaBlockEl?.animate(
+      [
+        { transform: `translateX(${offset * 0.65}px)`, opacity: 0.25 },
+        { transform: 'translateX(0px)', opacity: 1 },
+      ],
+      { duration: 300, easing },
+    );
+  }
+
+  private _skipTrack(dir: 'next' | 'prev'): void {
+    this._pendingTrackDir = dir;
+    this._call(dir === 'next' ? 'media_next_track' : 'media_previous_track');
   }
 
   private _startTicker(): void {
@@ -395,8 +433,10 @@ export class M3EMediaPopup extends LitElement {
                 <div class="transport-row">
                   <button
                     type="button"
-                    class="ctrl-btn ${shuffleOn ? 'is-active' : ''}"
-                    aria-label="Shuffle"
+                    class="ctrl-btn toggle-ctrl ${shuffleOn ? 'is-active' : ''}"
+                    aria-label="Casuale"
+                    aria-pressed=${String(shuffleOn)}
+                    title=${shuffleOn ? 'Casuale attivo' : 'Attiva casuale'}
                     @click=${() => this._toggleShuffle()}
                   >
                     <svg viewBox="0 0 24 24">
@@ -405,13 +445,14 @@ export class M3EMediaPopup extends LitElement {
                         d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41ZM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5Zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13Z"
                       />
                     </svg>
+                    <span class="active-dot" aria-hidden="true"></span>
                   </button>
 
                   <button
                     type="button"
                     class="ctrl-btn is-prev"
                     aria-label="Precedente"
-                    @click=${() => this._call('media_previous_track')}
+                    @click=${() => this._skipTrack('prev')}
                   >
                     <svg viewBox="0 0 24 24">
                       <path fill="currentColor" d="M6 6h2v12H6V6Zm3.5 6 8.5 6V6l-8.5 6Z" />
@@ -445,7 +486,7 @@ export class M3EMediaPopup extends LitElement {
                     type="button"
                     class="ctrl-btn is-next"
                     aria-label="Successivo"
-                    @click=${() => this._call('media_next_track')}
+                    @click=${() => this._skipTrack('next')}
                   >
                     <svg viewBox="0 0 24 24">
                       <path fill="currentColor" d="M16 6h2v12h-2V6ZM6 18l8.5-6L6 6v12Z" />
@@ -454,22 +495,31 @@ export class M3EMediaPopup extends LitElement {
 
                   <button
                     type="button"
-                    class="ctrl-btn ${repeatMode !== 'off' ? 'is-active' : ''}"
+                    class="ctrl-btn toggle-ctrl ${repeatMode !== 'off' ? 'is-active' : ''}"
                     aria-label="Ripeti"
+                    aria-pressed=${String(repeatMode !== 'off')}
+                    title=${repeatMode === 'one'
+                      ? 'Ripeti brano'
+                      : repeatMode === 'all'
+                        ? 'Ripeti tutto'
+                        : 'Ripetizione spenta'}
                     @click=${() => this._cycleRepeat()}
                   >
                     <svg viewBox="0 0 24 24">
                       <path
                         fill="currentColor"
-                        d="M7 7h10v3l4-4-4-4v3H5v6h2V7Zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4Z"
+                        d=${repeatMode === 'one'
+                          ? 'M7 7h10v3l4-4-4-4v3H5v6h2V7Zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4Zm-4-2V9h-1l-2 1v1h1.5v4H13Z'
+                          : 'M7 7h10v3l4-4-4-4v3H5v6h2V7Zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4Z'}
                       />
                     </svg>
+                    <span class="active-dot" aria-hidden="true"></span>
                   </button>
                 </div>
 
-                <!-- Clipped-Fill Pill Volume Slider -->
+                <!-- M3 Expressive Large Native Volume Slider -->
                 <div
-                  class="volume-pill ${this._volDragging ? 'is-dragging' : ''}"
+                  class="volume-pill ${this._volDragging ? 'is-dragging' : ''} ${isMuted ? 'is-muted' : ''}"
                   role="slider"
                   aria-label="Volume"
                   aria-valuemin="0"
@@ -480,7 +530,10 @@ export class M3EMediaPopup extends LitElement {
                   @pointerup=${this._onVolUp}
                   @pointercancel=${this._onVolUp}
                 >
-                  <div class="volume-fill" style="width: ${isMuted ? 0 : vol}%;"></div>
+                  <div class="volume-fill" style="width: ${isMuted ? 0 : vol}%;">
+                    <span class="volume-handle" aria-hidden="true"></span>
+                  </div>
+                  <div class="volume-stop-dot" aria-hidden="true"></div>
                   <div class="volume-content">
                     <button
                       type="button"
@@ -495,9 +548,11 @@ export class M3EMediaPopup extends LitElement {
                       <svg viewBox="0 0 24 24">
                         <path
                           fill="currentColor"
-                          d=${isMuted
+                          d=${isMuted || vol === 0
                             ? 'M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z'
-                            : 'M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z'}
+                            : vol < 50
+                              ? 'M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z'
+                              : 'M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z'}
                         />
                       </svg>
                     </button>
@@ -1013,8 +1068,9 @@ export class M3EMediaPopup extends LitElement {
       }
 
       .ctrl-btn {
-        width: 44px;
-        height: 44px;
+        position: relative;
+        width: 48px;
+        height: 48px;
         border: 0;
         border-radius: 50%;
         background: transparent;
@@ -1022,26 +1078,78 @@ export class M3EMediaPopup extends LitElement {
         display: grid;
         place-items: center;
         cursor: pointer;
+        padding: 0;
         transition:
           transform var(--m3e-spring-spatial-fast),
           color var(--m3e-spring-effects-fast),
           background-color var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
       }
 
       .ctrl-btn:hover {
         background: color-mix(in srgb, currentColor 10%, transparent);
       }
 
-      .ctrl-btn.is-active {
-        color: var(--md-sys-color-primary, #4285f4);
+      /* M3 Expressive Center-Bounce Tonal Fill for Shuffle & Repeat */
+      .ctrl-btn.toggle-ctrl::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: var(--md-sys-color-primary-container, #364067);
+        transform: scale(0);
+        opacity: 0;
+        transition:
+          transform var(--m3e-spring-bouncy),
+          opacity 180ms cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .ctrl-btn.toggle-ctrl.is-active::before {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      .ctrl-btn.toggle-ctrl svg {
+        position: relative;
+        z-index: 1;
+        transition: transform var(--m3e-spring-bouncy);
+      }
+
+      .ctrl-btn.toggle-ctrl.is-active {
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
+      }
+
+      .ctrl-btn.toggle-ctrl.is-active svg {
+        transform: scale(1.08);
+      }
+
+      .ctrl-btn.toggle-ctrl:active {
+        transform: scale(0.88);
+      }
+
+      .active-dot {
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--md-sys-color-primary, #bac3ff);
+        transform: translateX(-50%) scale(0);
+        transition: transform var(--m3e-spring-bouncy);
+        z-index: 1;
+      }
+
+      .ctrl-btn.toggle-ctrl.is-active .active-dot {
+        transform: translateX(-50%) scale(1);
       }
 
       .ctrl-btn.is-prev:active {
-        transform: translateX(-3px) scale(0.92);
+        transform: translateX(-5px) scale(0.9);
       }
 
       .ctrl-btn.is-next:active {
-        transform: translateX(3px) scale(0.92);
+        transform: translateX(5px) scale(0.9);
       }
 
       .ctrl-btn svg {
@@ -1050,8 +1158,8 @@ export class M3EMediaPopup extends LitElement {
       }
 
       .play-hero {
-        width: 72px;
-        height: 72px;
+        width: 74px;
+        height: 74px;
         border: 0;
         border-radius: 50%;
         background: var(--md-sys-color-primary-container, #dfe2ed);
@@ -1069,7 +1177,7 @@ export class M3EMediaPopup extends LitElement {
       }
 
       .play-hero:active {
-        transform: scale(0.92);
+        transform: scale(0.9);
       }
 
       .play-hero svg {
@@ -1077,23 +1185,34 @@ export class M3EMediaPopup extends LitElement {
         height: 30px;
       }
 
-      /* Clipped-Fill Volume Pill */
+      /* M3 Expressive Large Native Volume Slider (72px height + handle + stop dot) */
       .volume-pill {
         position: relative;
-        height: 62px;
-        border-radius: 9999px;
+        height: 72px;
+        border-radius: 24px;
         overflow: hidden;
         background: var(--md-sys-color-surface-container-high, #24252d);
         cursor: ew-resize;
         touch-action: none;
         user-select: none;
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .volume-pill.is-dragging {
+        transform: scaleY(1.03);
       }
 
       .volume-fill {
         position: absolute;
         inset-block: 0;
         left: 0;
+        min-width: 0;
         background: var(--md-sys-color-primary-container, #364067);
+        border-radius: 24px 12px 12px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 8px;
         transition: width 160ms cubic-bezier(0.2, 0, 0, 1);
       }
 
@@ -1101,20 +1220,52 @@ export class M3EMediaPopup extends LitElement {
         transition: none;
       }
 
+      .volume-handle {
+        width: 4px;
+        height: 28px;
+        border-radius: 9999px;
+        background: var(--md-sys-color-on-primary-container, #dce2ff);
+        opacity: 0.72;
+        flex-shrink: 0;
+        transition:
+          height var(--m3e-spring-spatial-fast),
+          opacity 150ms ease;
+      }
+
+      .volume-pill.is-dragging .volume-handle {
+        height: 36px;
+        opacity: 1;
+      }
+
+      .volume-stop-dot {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        transform: translateY(-50%);
+        background: var(--md-sys-color-on-surface-variant, #8e9099);
+        opacity: 0.55;
+        pointer-events: none;
+      }
+
       .volume-content {
         position: relative;
         z-index: 1;
         height: 100%;
-        padding: 0 20px 0 12px;
+        padding: 0 22px 0 14px;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+        pointer-events: none;
       }
 
       .mute-btn {
-        width: 38px;
-        height: 38px;
+        pointer-events: auto;
+        width: 42px;
+        height: 42px;
         border: 0;
         border-radius: 50%;
         background: transparent;
@@ -1124,14 +1275,18 @@ export class M3EMediaPopup extends LitElement {
         cursor: pointer;
       }
 
+      .mute-btn:hover {
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+
       .mute-btn svg {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
       }
 
       .volume-pct {
-        font-size: 15px;
-        font-weight: 500;
+        font-size: 16px;
+        font-weight: 600;
         font-variant-numeric: tabular-nums;
       }
 
