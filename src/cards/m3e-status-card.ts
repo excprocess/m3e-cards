@@ -76,23 +76,7 @@ interface HistoryPoint {
   v: number; // numeric value
 }
 
-const NUMERIC_HISTORY_CLASSES = new Set([
-  'temperature',
-  'humidity',
-  'illuminance',
-  'pressure',
-  'atmospheric_pressure',
-  'power',
-  'energy',
-  'battery',
-  'co2',
-  'pm25',
-  'pm10',
-  'aqi',
-  'moisture',
-  'voltage',
-  'current',
-]);
+const NUMERIC_HISTORY_CLASSES = new Set(['temperature', 'humidity']);
 
 const DEFAULT_ACTIVE_STATES = new Set([
   'on',
@@ -541,9 +525,10 @@ export class M3EStatusCard extends LitElement {
 
   private _isNumericHistoryEntity(entity?: HassEntity): boolean {
     if (!entity || !entity.entity_id.startsWith('sensor.')) return false;
-    const dc = String(entity.attributes.device_class ?? '');
+    const dc = String(entity.attributes.device_class ?? '').toLowerCase();
     if (NUMERIC_HISTORY_CLASSES.has(dc)) return true;
-    return Boolean(entity.attributes.unit_of_measurement) && !Number.isNaN(Number(entity.state));
+    const uom = String(entity.attributes.unit_of_measurement ?? '').trim();
+    return uom === '°C' || uom === '°F';
   }
 
   private _resolveHistoryEntity(): HassEntity | undefined {

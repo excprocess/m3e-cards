@@ -423,7 +423,7 @@ export class M3EThermostatCard extends LitElement {
       }
 
       .thermostat-card {
-        padding: 14px 18px 16px;
+        padding: 18px 20px 20px;
         cursor: pointer;
         outline: none;
         display: flex;
@@ -501,30 +501,30 @@ export class M3EThermostatCard extends LitElement {
       }
 
       .header-icon {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
       }
 
       .header-icon svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
       }
 
       .header-title {
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 500;
-        line-height: 20px;
+        line-height: 22px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .header-chevron {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
@@ -541,15 +541,15 @@ export class M3EThermostatCard extends LitElement {
          ===================================================================== */
       .controls-row {
         display: grid;
-        grid-template-columns: 72px 1fr 72px;
+        grid-template-columns: 78px 1fr 78px;
         align-items: center;
-        gap: 10px;
-        margin: 12px 0 8px;
+        gap: 12px;
+        margin: 22px 0 16px;
       }
 
       .step-btn {
-        width: 72px;
-        height: 48px;
+        width: 78px;
+        height: 54px;
         border: 0;
         border-radius: 9999px;
         background: var(--m3e-thermo-btn-bg, color-mix(in srgb, currentColor 11%, transparent));
@@ -573,13 +573,13 @@ export class M3EThermostatCard extends LitElement {
       }
 
       .step-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
       }
 
       .temp-readout {
         text-align: center;
-        font-size: 56px;
+        font-size: 62px;
         font-weight: 400;
         line-height: 1;
         letter-spacing: -0.025em;
@@ -588,9 +588,9 @@ export class M3EThermostatCard extends LitElement {
 
       .indoor-label {
         text-align: center;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 500;
-        line-height: 18px;
+        line-height: 20px;
         opacity: 0.88;
       }
 
@@ -599,11 +599,11 @@ export class M3EThermostatCard extends LitElement {
          ===================================================================== */
       .offline-hero {
         text-align: center;
-        font-size: 50px;
+        font-size: 56px;
         font-weight: 400;
         line-height: 1.1;
         letter-spacing: -0.015em;
-        padding: 16px 0 14px;
+        padding: 28px 0 26px;
         color: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 46%, transparent);
       }
 
