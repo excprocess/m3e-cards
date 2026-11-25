@@ -11577,6 +11577,7 @@ C.styles = [
         flex: 0 0 auto;
         width: 18px;
         height: 18px;
+        margin-inline-start: -8px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);

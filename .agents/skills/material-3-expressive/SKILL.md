@@ -40,7 +40,7 @@ For the complete list of CSS tokens exposed by `material-you-utilities` and Mate
    - **Shared Design Language:** Mirror corner radii (`28px` default / `9999px` pill), spacing, icon badge dimensions (`46px` Glance/People circles, `22–24px` icons), and M3 Expressive motion curves across all cards.
    - **Standard Tile Internal Spacing (MANDATORY — Google Home Proportions):**
      - Standard 6-column tiles (`Light`, `Status`, `Toggle`, `Scene`, `Light Group` header): `padding: 12px 12px 12px 14px`, `gap: 10px` (compact variant: `padding: 8px 10px 8px 12px`, `gap: 8px`).
-     - Leading icon: `24px × 24px` snug against the left edge (`14px` inset); trailing chevron: `18px × 18px` (`12px` right inset).
+     - Leading icon: `24px × 24px` snug against the left edge (`14px` inset); trailing chevron: `18px × 18px` (`12px` right inset, `margin-inline-start: -8px` to reclaim the SVG's built-in left optical padding without shifting the chevron).
      - Tile title: `14.5px` / `line-height: 18px`, `font-weight: 600`, **2-line clamp** (`display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;`) so longer Italian names (`Temperatura`, `Illuminazione`, `Termometro cameretta`, `Growlight`) never truncate prematurely on 2-column mobile grids.
      - Tile subtitle: `13px` / `line-height: 17px`, single-line ellipsis, `tabular-nums`.
 
