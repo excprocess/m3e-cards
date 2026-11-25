@@ -869,7 +869,8 @@ export class M3ELightCard extends LitElement {
          1. COMPACT GOOGLE HOME HORIZONTAL TILE (Clipped Flat-Edge Slider)
          ===================================================================== */
       .tile-card {
-        min-height: 84px;
+        height: 100%;
+        min-height: 56px;
         cursor: pointer;
         user-select: none;
         touch-action: pan-y;
@@ -949,11 +950,12 @@ export class M3ELightCard extends LitElement {
       .tile-content {
         position: relative;
         z-index: 1;
-        min-height: 84px;
-        padding: 16px 20px;
+        height: 100%;
+        min-height: 56px;
+        padding: 10px 16px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         pointer-events: none;
       }
 

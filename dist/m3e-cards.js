@@ -591,6 +591,7 @@ function w(e, t) {
 const ft = q`
   :host {
     display: block;
+    height: 100%;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
     font-family: var(
@@ -640,6 +641,7 @@ const ft = q`
   ha-card {
     display: block;
     position: relative;
+    height: 100%;
     overflow: hidden;
     background: var(--ha-card-background, var(--md-sys-color-surface-container-low, #f3f3fa));
     box-shadow: var(--ha-card-box-shadow, var(--md-sys-elevation-level1, none));
@@ -1219,7 +1221,8 @@ m.styles = [
          1. COMPACT GOOGLE HOME HORIZONTAL TILE (Clipped Flat-Edge Slider)
          ===================================================================== */
       .tile-card {
-        min-height: 84px;
+        height: 100%;
+        min-height: 56px;
         cursor: pointer;
         user-select: none;
         touch-action: pan-y;
@@ -1299,11 +1302,12 @@ m.styles = [
       .tile-content {
         position: relative;
         z-index: 1;
-        min-height: 84px;
-        padding: 16px 20px;
+        height: 100%;
+        min-height: 56px;
+        padding: 10px 16px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         pointer-events: none;
       }
 
@@ -2745,7 +2749,8 @@ _.styles = [
          1. COMPACT DASHBOARD TILE (Shape Coding: Pill = Active, 28px = Off)
          ===================================================================== */
       .status-tile {
-        min-height: 84px;
+        height: 100%;
+        min-height: 56px;
         cursor: pointer;
         user-select: none;
         outline: none;
@@ -2792,11 +2797,12 @@ _.styles = [
       .tile-inner {
         position: relative;
         z-index: 1;
-        min-height: 84px;
-        padding: 16px 18px 16px 20px;
+        height: 100%;
+        min-height: 56px;
+        padding: 10px 14px 10px 16px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
       }
 
       .tile-icon {
@@ -3987,7 +3993,8 @@ $.styles = [
          1. DASHBOARD TOGGLE TILE (Uniform 28px form factor)
          ===================================================================== */
       .toggle-tile {
-        min-height: 84px;
+        height: 100%;
+        min-height: 56px;
         cursor: pointer;
         user-select: none;
         outline: none;
@@ -4037,11 +4044,12 @@ $.styles = [
       .tile-inner {
         position: relative;
         z-index: 1;
-        min-height: 84px;
-        padding: 16px 20px;
+        height: 100%;
+        min-height: 56px;
+        padding: 10px 16px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         pointer-events: none;
       }
 

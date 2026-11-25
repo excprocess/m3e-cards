@@ -10,6 +10,7 @@ import { css } from 'lit';
 export const m3eBaseStyles = css`
   :host {
     display: block;
+    height: 100%;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
     font-family: var(
@@ -59,6 +60,7 @@ export const m3eBaseStyles = css`
   ha-card {
     display: block;
     position: relative;
+    height: 100%;
     overflow: hidden;
     background: var(--ha-card-background, var(--md-sys-color-surface-container-low, #f3f3fa));
     box-shadow: var(--ha-card-box-shadow, var(--md-sys-elevation-level1, none));

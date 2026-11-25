@@ -1426,7 +1426,8 @@ export class M3EStatusCard extends LitElement {
          1. COMPACT DASHBOARD TILE (Shape Coding: Pill = Active, 28px = Off)
          ===================================================================== */
       .status-tile {
-        min-height: 84px;
+        height: 100%;
+        min-height: 56px;
         cursor: pointer;
         user-select: none;
         outline: none;
@@ -1473,11 +1474,12 @@ export class M3EStatusCard extends LitElement {
       .tile-inner {
         position: relative;
         z-index: 1;
-        min-height: 84px;
-        padding: 16px 18px 16px 20px;
+        height: 100%;
+        min-height: 56px;
+        padding: 10px 14px 10px 16px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
       }
 
       .tile-icon {
