@@ -70,6 +70,8 @@ export class M3EStatusCard extends LitElement {
   @query('.dialog-surface') private _dialogSurfaceEl?: HTMLElement;
 
   private _prevStates: Record<string, HassEntity | undefined> = {};
+  private _longPressTimer: number | null = null;
+  private _longPressTriggered = false;
 
   public static getStubConfig(hass?: HomeAssistant): M3EStatusCardConfig {
     const entity = hass
@@ -138,7 +140,20 @@ export class M3EStatusCard extends LitElement {
               mode: 'dropdown',
               options: [
                 { value: 'popup', label: 'Apri schermata espansa' },
-                { value: 'toggle', label: 'Toggle stato (hold per popup)' },
+                { value: 'toggle', label: 'Toggle stato (hold per azione secondaria)' },
+              ],
+            },
+          },
+        },
+        {
+          name: 'hold_action',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'popup', label: 'Apri popup Material 3 Expressive' },
+                { value: 'more-info', label: 'Schermata nativa Home Assistant' },
+                { value: 'none', label: 'Nessuna azione' },
               ],
             },
           },
@@ -178,6 +193,7 @@ export class M3EStatusCard extends LitElement {
           label_inactive: 'Testo stato inattivo',
           popup_type: 'Tipo card / Schermata popup',
           tap_action: 'Azione al tocco',
+          hold_action: 'Azione pressione prolungata (Hold)',
           secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
           outdoor_entity: 'Temperatura esterna (per Clima)',
           remote_device: 'Device ID trasmettitore (per remote multi-dispositivo)',
@@ -206,8 +222,21 @@ export class M3EStatusCard extends LitElement {
     this._config = {
       popup_type: 'auto',
       tap_action: 'popup',
+      hold_action: 'popup',
       ...config,
     };
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._clearLongPress();
+  }
+
+  private _clearLongPress(): void {
+    if (this._longPressTimer !== null) {
+      window.clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
   }
 
   public getCardSize(): number {
@@ -502,7 +531,45 @@ export class M3EStatusCard extends LitElement {
     }
   }
 
+  private _handleHoldAction(): void {
+    if (!this._config) return;
+    const action = this._config.hold_action ?? 'popup';
+    if (action === 'none') return;
+    window.getSelection()?.removeAllRanges();
+    if (action === 'more-info') {
+      this._openMoreInfo(this._config.entity);
+      return;
+    }
+    this.openPopup();
+  }
+
+  private _onTilePointerDown = (e: PointerEvent): void => {
+    if (e.button !== 0) return;
+    this._pressed = true;
+    this._longPressTriggered = false;
+    this._clearLongPress();
+    this._longPressTimer = window.setTimeout(() => {
+      this._longPressTriggered = true;
+      this._pressed = false;
+      this._handleHoldAction();
+    }, 420);
+  };
+
+  private _onTilePointerUp = (): void => {
+    this._clearLongPress();
+    this._pressed = false;
+  };
+
+  private _onTilePointerCancel = (): void => {
+    this._clearLongPress();
+    this._pressed = false;
+  };
+
   private _onTileClick = (): void => {
+    if (this._longPressTriggered) {
+      this._longPressTriggered = false;
+      return;
+    }
     if (this._config?.tap_action === 'toggle' && this.hass && this._config) {
       const domain = this._config.entity.split('.')[0];
       this.hass.callService(domain, 'toggle', { entity_id: this._config.entity });
@@ -1490,14 +1557,14 @@ export class M3EStatusCard extends LitElement {
         role="button"
         tabindex="0"
         aria-label="${name}, ${this._stateLabel}"
-        @pointerdown=${() => (this._pressed = true)}
-        @pointerup=${() => (this._pressed = false)}
-        @pointerleave=${() => (this._pressed = false)}
-        @pointercancel=${() => (this._pressed = false)}
+        @pointerdown=${this._onTilePointerDown}
+        @pointerup=${this._onTilePointerUp}
+        @pointerleave=${this._onTilePointerCancel}
+        @pointercancel=${this._onTilePointerCancel}
         @click=${this._onTileClick}
         @contextmenu=${(e: MouseEvent) => {
           e.preventDefault();
-          this.openPopup();
+          this._handleHoldAction();
         }}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {

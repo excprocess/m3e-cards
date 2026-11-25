@@ -62,6 +62,19 @@ export class M3EToggleCard extends LitElement {
             { name: 'label_off', selector: { text: {} } },
           ],
         },
+        {
+          name: 'hold_action',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'popup', label: 'Apri popup Material 3 Expressive' },
+                { value: 'more-info', label: 'Schermata nativa Home Assistant' },
+                { value: 'none', label: 'Nessuna azione' },
+              ],
+            },
+          },
+        },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
@@ -71,6 +84,7 @@ export class M3EToggleCard extends LitElement {
           icon_off: 'Icona spento',
           label_on: 'Testo acceso (default: On)',
           label_off: 'Testo spento (default: Off)',
+          hold_action: 'Azione pressione prolungata (Hold)',
         };
         return labels[schema.name] ?? schema.name;
       },
@@ -81,7 +95,10 @@ export class M3EToggleCard extends LitElement {
     if (!config || !config.entity) {
       throw new Error('m3e-toggle-card: you must define an entity');
     }
-    this._config = { ...config };
+    this._config = {
+      hold_action: 'popup',
+      ...config,
+    };
   }
 
   public getCardSize(): number {
@@ -219,6 +236,24 @@ export class M3EToggleCard extends LitElement {
     }
   }
 
+  private _handleHoldAction(): void {
+    if (!this._config) return;
+    const action = this._config.hold_action ?? 'popup';
+    if (action === 'none') return;
+    window.getSelection()?.removeAllRanges();
+    if (action === 'more-info') {
+      this.dispatchEvent(
+        new CustomEvent('hass-more-info', {
+          bubbles: true,
+          composed: true,
+          detail: { entityId: this._config.entity },
+        }),
+      );
+      return;
+    }
+    this.openPopup();
+  }
+
   private _onTilePointerDown = (e: PointerEvent): void => {
     if (this._isUnavailable || e.button !== 0) return;
     this._pressed = true;
@@ -227,7 +262,7 @@ export class M3EToggleCard extends LitElement {
     this._longPressTimer = window.setTimeout(() => {
       this._longPressTriggered = true;
       this._pressed = false;
-      this.openPopup();
+      this._handleHoldAction();
     }, LONG_PRESS_MS);
   };
 
@@ -316,7 +351,7 @@ export class M3EToggleCard extends LitElement {
         @pointercancel=${this._onTilePointerCancel}
         @contextmenu=${(e: MouseEvent) => {
           e.preventDefault();
-          this.openPopup();
+          this._handleHoldAction();
         }}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === ' ' || e.key === 'Enter') {

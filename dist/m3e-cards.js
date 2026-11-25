@@ -274,8 +274,8 @@ const ne = (t, e) => {
   let r, n = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = U;
   for (let a = 0; a < i; a++) {
     const l = t[a];
-    let c, h, u = -1, v = 0;
-    for (; v < l.length && (o.lastIndex = v, h = o.exec(l), h !== null); ) v = o.lastIndex, o === U ? h[1] === "!--" ? o = Mt : h[1] !== void 0 ? o = Tt : h[2] !== void 0 ? (Bt.test(h[2]) && (r = RegExp("</" + h[2], "g")), o = C) : h[3] !== void 0 && (o = C) : o === C ? h[0] === ">" ? (o = r ?? U, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, c = h[1], o = h[3] === void 0 ? C : h[3] === '"' ? Dt : Ot) : o === Dt || o === Ot ? o = C : o === Mt || o === Tt ? o = U : (o = C, r = void 0);
+    let c, h, u = -1, _ = 0;
+    for (; _ < l.length && (o.lastIndex = _, h = o.exec(l), h !== null); ) _ = o.lastIndex, o === U ? h[1] === "!--" ? o = Mt : h[1] !== void 0 ? o = Tt : h[2] !== void 0 ? (Bt.test(h[2]) && (r = RegExp("</" + h[2], "g")), o = C) : h[3] !== void 0 && (o = C) : o === C ? h[0] === ">" ? (o = r ?? U, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, c = h[1], o = h[3] === void 0 ? C : h[3] === '"' ? Dt : Ot) : o === Dt || o === Ot ? o = C : o === Mt || o === Tt ? o = U : (o = C, r = void 0);
     const y = o === C && t[a + 1].startsWith("/>") ? " " : "";
     n += o === U ? l + ie : u >= 0 ? (s.push(c), l.slice(0, u) + Ut + l.slice(u) + P + y) : l + P + (u === -2 ? a : y);
   }
@@ -294,15 +294,15 @@ class Z {
     for (; (r = E.nextNode()) !== null && l.length < a; ) {
       if (r.nodeType === 1) {
         if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(Ut)) {
-          const v = h[o++], y = r.getAttribute(u).split(P), S = /([.?@])?(.*)/.exec(v);
+          const _ = h[o++], y = r.getAttribute(u).split(P), S = /([.?@])?(.*)/.exec(_);
           l.push({ type: 1, index: n, name: S[2], strings: y, ctor: S[1] === "." ? ae : S[1] === "?" ? le : S[1] === "@" ? ce : Q }), r.removeAttribute(u);
         } else u.startsWith(P) && (l.push({ type: 6, index: n }), r.removeAttribute(u));
         if (Bt.test(r.tagName)) {
-          const u = r.textContent.split(P), v = u.length - 1;
-          if (v > 0) {
+          const u = r.textContent.split(P), _ = u.length - 1;
+          if (_ > 0) {
             r.textContent = X ? X.emptyScript : "";
-            for (let y = 0; y < v; y++) r.append(u[y], H()), E.nextNode(), l.push({ type: 2, index: ++n });
-            r.append(u[v], H());
+            for (let y = 0; y < _; y++) r.append(u[y], H()), E.nextNode(), l.push({ type: 2, index: ++n });
+            r.append(u[_], H());
           }
         }
       } else if (r.nodeType === 8) if (r.data === zt) l.push({ type: 2, index: n });
@@ -659,10 +659,10 @@ const ft = K`
       box-shadow var(--m3e-spring-effects-default);
   }
 `;
-var ve = Object.defineProperty, _e = Object.getOwnPropertyDescriptor, b = (t, e, i, s) => {
-  for (var r = s > 1 ? void 0 : s ? _e(e, i) : e, n = t.length - 1, o; n >= 0; n--)
+var _e = Object.defineProperty, ve = Object.getOwnPropertyDescriptor, b = (t, e, i, s) => {
+  for (var r = s > 1 ? void 0 : s ? ve(e, i) : e, n = t.length - 1, o; n >= 0; n--)
     (o = t[n]) && (r = (s ? o(e, i, r) : o(r)) || r);
-  return s && r && ve(e, i, r), r;
+  return s && r && _e(e, i, r), r;
 };
 const Rt = 8, be = 420, ye = [
   { id: "warm-gold", label: "Candle", hex: "#FFE066", rgb: [255, 224, 102], kelvin: 2200 },
@@ -950,8 +950,8 @@ let m = class extends M {
     const s = this._config.entity, r = this.hass.entities?.[s], n = r?.device_id ?? null, o = r?.area_id ?? (n ? this.hass.devices?.[n]?.area_id ?? null : null), a = (this._entity?.attributes.friendly_name || "").trim().toLowerCase();
     for (const [l, c] of Object.entries(this.hass.states)) {
       if (!l.startsWith("scene.") || e.has(l)) continue;
-      const h = this.hass.entities?.[l], u = h?.device_id ?? null, v = h?.area_id ?? (u ? this.hass.devices?.[u]?.area_id ?? null : null), y = String(c.attributes.group_name ?? "").trim().toLowerCase();
-      (!!(n && u === n) || !!(a && y && y === a) || !!(o && v === o)) && i(l);
+      const h = this.hass.entities?.[l], u = h?.device_id ?? null, _ = h?.area_id ?? (u ? this.hass.devices?.[u]?.area_id ?? null : null), y = String(c.attributes.group_name ?? "").trim().toLowerCase();
+      (!!(n && u === n) || !!(a && y && y === a) || !!(o && _ === o)) && i(l);
     }
     return t;
   }
@@ -1980,9 +1980,21 @@ function Ae(t, e, i, s, r) {
   const n = B(t, e, i, s), o = B(t, e, i, r);
   return `M ${n.x.toFixed(2)} ${n.y.toFixed(2)} A ${i} ${i} 0 1 1 ${o.x.toFixed(2)} ${o.y.toFixed(2)}`;
 }
-let _ = class extends M {
+let v = class extends M {
   constructor() {
-    super(...arguments), this._pressed = !1, this._popupOpen = !1, this._dialDragging = !1, this._dialTemp = null, this._activeSheet = null, this._volDragging = !1, this._volPct = null, this._volPendingTimer = null, this._prevStates = {}, this._onTileClick = () => {
+    super(...arguments), this._pressed = !1, this._popupOpen = !1, this._dialDragging = !1, this._dialTemp = null, this._activeSheet = null, this._volDragging = !1, this._volPct = null, this._volPendingTimer = null, this._prevStates = {}, this._longPressTimer = null, this._longPressTriggered = !1, this._onTilePointerDown = (t) => {
+      t.button === 0 && (this._pressed = !0, this._longPressTriggered = !1, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
+        this._longPressTriggered = !0, this._pressed = !1, this._handleHoldAction();
+      }, 420));
+    }, this._onTilePointerUp = () => {
+      this._clearLongPress(), this._pressed = !1;
+    }, this._onTilePointerCancel = () => {
+      this._clearLongPress(), this._pressed = !1;
+    }, this._onTileClick = () => {
+      if (this._longPressTriggered) {
+        this._longPressTriggered = !1;
+        return;
+      }
       if (this._config?.tap_action === "toggle" && this.hass && this._config) {
         const t = this._config.entity.split(".")[0];
         this.hass.callService(t, "toggle", { entity_id: this._config.entity });
@@ -2076,7 +2088,20 @@ let _ = class extends M {
               mode: "dropdown",
               options: [
                 { value: "popup", label: "Apri schermata espansa" },
-                { value: "toggle", label: "Toggle stato (hold per popup)" }
+                { value: "toggle", label: "Toggle stato (hold per azione secondaria)" }
+              ]
+            }
+          }
+        },
+        {
+          name: "hold_action",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "popup", label: "Apri popup Material 3 Expressive" },
+                { value: "more-info", label: "Schermata nativa Home Assistant" },
+                { value: "none", label: "Nessuna azione" }
               ]
             }
           }
@@ -2115,6 +2140,7 @@ let _ = class extends M {
         label_inactive: "Testo stato inattivo",
         popup_type: "Tipo card / Schermata popup",
         tap_action: "Azione al tocco",
+        hold_action: "Azione pressione prolungata (Hold)",
         secondary_entity: "Entità secondaria (auto-rilevata dal device se vuota)",
         outdoor_entity: "Temperatura esterna (per Clima)",
         remote_device: "Device ID trasmettitore (per remote multi-dispositivo)",
@@ -2139,8 +2165,15 @@ let _ = class extends M {
     this._config = {
       popup_type: "auto",
       tap_action: "popup",
+      hold_action: "popup",
       ...t
     };
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback(), this._clearLongPress();
+  }
+  _clearLongPress() {
+    this._longPressTimer !== null && (window.clearTimeout(this._longPressTimer), this._longPressTimer = null);
   }
   getCardSize() {
     return 2;
@@ -2323,6 +2356,17 @@ let _ = class extends M {
       };
     } else
       t.close(), this._popupOpen = !1, this._activeSheet = null;
+  }
+  _handleHoldAction() {
+    if (!this._config) return;
+    const t = this._config.hold_action ?? "popup";
+    if (t !== "none") {
+      if (window.getSelection()?.removeAllRanges(), t === "more-info") {
+        this._openMoreInfo(this._config.entity);
+        return;
+      }
+      this.openPopup();
+    }
   }
   /* =========================================================================
      CLIMATE DIAL INTERACTION (Arc Drag with Morphing Radial Thumb)
@@ -2562,7 +2606,7 @@ let _ = class extends M {
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, n = this._outdoorEntity, o = Math.floor(s), a = Math.abs(s - o - 0.5) < 0.05, l = this._tempToDeg(s), c = r !== null ? this._tempToDeg(r) : null, h = 140, u = 140, v = 114, y = Ae(h, u, v, G, G + A), S = B(h, u, v, l), F = c !== null ? B(h, u, v, c) : null, j = c !== null ? B(h, u, v - 22, c) : null, Ft = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], vt = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], _t = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], bt = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], yt = String(t?.attributes.preset_mode ?? "none"), xt = String(t?.attributes.fan_mode ?? "auto"), wt = String(t?.attributes.swing_mode ?? "off"), et = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((g) => g.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((g) => g.attributes.device_class === "humidity").state}%` : null, it = vt.length > 0, st = _t.length > 0, rt = bt.length > 0, $t = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", R = (g) => g.replace(/_/g, " ").replace(/^./, (W) => W.toUpperCase()), I = this._activeSheet === "mode" ? { title: "Select a mode", options: Ft, current: e, onSelect: (g) => this._setClimateMode(g) } : this._activeSheet === "preset" ? { title: "Select preset", options: vt, current: yt, onSelect: (g) => this._setClimatePreset(g) } : this._activeSheet === "fan" ? { title: "Fan speed", options: _t, current: xt, onSelect: (g) => this._setClimateFan(g) } : this._activeSheet === "swing" ? { title: "Swing mode", options: bt, current: wt, onSelect: (g) => this._setClimateSwing(g) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, n = this._outdoorEntity, o = Math.floor(s), a = Math.abs(s - o - 0.5) < 0.05, l = this._tempToDeg(s), c = r !== null ? this._tempToDeg(r) : null, h = 140, u = 140, _ = 114, y = Ae(h, u, _, G, G + A), S = B(h, u, _, l), F = c !== null ? B(h, u, _, c) : null, j = c !== null ? B(h, u, _ - 22, c) : null, Ft = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], _t = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], vt = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], bt = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], yt = String(t?.attributes.preset_mode ?? "none"), xt = String(t?.attributes.fan_mode ?? "auto"), wt = String(t?.attributes.swing_mode ?? "off"), et = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((g) => g.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((g) => g.attributes.device_class === "humidity").state}%` : null, it = _t.length > 0, st = vt.length > 0, rt = bt.length > 0, $t = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", R = (g) => g.replace(/_/g, " ").replace(/^./, (W) => W.toUpperCase()), I = this._activeSheet === "mode" ? { title: "Select a mode", options: Ft, current: e, onSelect: (g) => this._setClimateMode(g) } : this._activeSheet === "preset" ? { title: "Select preset", options: _t, current: yt, onSelect: (g) => this._setClimatePreset(g) } : this._activeSheet === "fan" ? { title: "Fan speed", options: vt, current: xt, onSelect: (g) => this._setClimateFan(g) } : this._activeSheet === "swing" ? { title: "Swing mode", options: bt, current: wt, onSelect: (g) => this._setClimateSwing(g) } : null;
     return p`
       <div class="climate-hero ${$t} ${this._dialDragging ? "is-dragging" : ""}">
         <div
@@ -3009,13 +3053,13 @@ let _ = class extends M {
         role="button"
         tabindex="0"
         aria-label="${e}, ${this._stateLabel}"
-        @pointerdown=${() => this._pressed = !0}
-        @pointerup=${() => this._pressed = !1}
-        @pointerleave=${() => this._pressed = !1}
-        @pointercancel=${() => this._pressed = !1}
+        @pointerdown=${this._onTilePointerDown}
+        @pointerup=${this._onTilePointerUp}
+        @pointerleave=${this._onTilePointerCancel}
+        @pointercancel=${this._onTilePointerCancel}
         @click=${this._onTileClick}
         @contextmenu=${(o) => {
-      o.preventDefault(), this.openPopup();
+      o.preventDefault(), this._handleHoldAction();
     }}
         @keydown=${(o) => {
       (o.key === "Enter" || o.key === " ") && (o.preventDefault(), this._onTileClick());
@@ -3076,7 +3120,7 @@ let _ = class extends M {
     `;
   }
 };
-_.styles = [
+v.styles = [
   ft,
   K`
       :host {
@@ -4044,43 +4088,43 @@ _.styles = [
 ];
 x([
   tt({ attribute: !1 })
-], _.prototype, "hass", 2);
+], v.prototype, "hass", 2);
 x([
   f()
-], _.prototype, "_config", 2);
+], v.prototype, "_config", 2);
 x([
   f()
-], _.prototype, "_pressed", 2);
+], v.prototype, "_pressed", 2);
 x([
   f()
-], _.prototype, "_popupOpen", 2);
+], v.prototype, "_popupOpen", 2);
 x([
   f()
-], _.prototype, "_dialDragging", 2);
+], v.prototype, "_dialDragging", 2);
 x([
   f()
-], _.prototype, "_dialTemp", 2);
+], v.prototype, "_dialTemp", 2);
 x([
   f()
-], _.prototype, "_activeSheet", 2);
+], v.prototype, "_activeSheet", 2);
 x([
   f()
-], _.prototype, "_volDragging", 2);
+], v.prototype, "_volDragging", 2);
 x([
   f()
-], _.prototype, "_volPct", 2);
+], v.prototype, "_volPct", 2);
 x([
   $("dialog.status-dialog")
-], _.prototype, "_dialogEl", 2);
+], v.prototype, "_dialogEl", 2);
 x([
   $(".status-tile")
-], _.prototype, "_tileEl", 2);
+], v.prototype, "_tileEl", 2);
 x([
   $(".dialog-surface")
-], _.prototype, "_dialogSurfaceEl", 2);
-_ = x([
+], v.prototype, "_dialogSurfaceEl", 2);
+v = x([
   gt("m3e-status-card")
-], _);
+], v);
 var Ee = Object.defineProperty, Me = Object.getOwnPropertyDescriptor, k = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Me(e, i) : e, n = t.length - 1, o; n >= 0; n--)
     (o = t[n]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -4091,7 +4135,7 @@ let w = class extends M {
   constructor() {
     super(...arguments), this._pressed = !1, this._popupOpen = !1, this._longPressTimer = null, this._longPressTriggered = !1, this._dragStartY = null, this._onTilePointerDown = (t) => {
       this._isUnavailable || t.button !== 0 || (this._pressed = !0, this._longPressTriggered = !1, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
-        this._longPressTriggered = !0, this._pressed = !1, this.openPopup();
+        this._longPressTriggered = !0, this._pressed = !1, this._handleHoldAction();
       }, Te));
     }, this._onTilePointerUp = () => {
       this._clearLongPress(), !this._longPressTriggered && this._pressed && this._toggle(), this._pressed = !1;
@@ -4142,6 +4186,19 @@ let w = class extends M {
             { name: "label_on", selector: { text: {} } },
             { name: "label_off", selector: { text: {} } }
           ]
+        },
+        {
+          name: "hold_action",
+          selector: {
+            select: {
+              mode: "dropdown",
+              options: [
+                { value: "popup", label: "Apri popup Material 3 Expressive" },
+                { value: "more-info", label: "Schermata nativa Home Assistant" },
+                { value: "none", label: "Nessuna azione" }
+              ]
+            }
+          }
         }
       ],
       computeLabel: (t) => ({
@@ -4150,14 +4207,18 @@ let w = class extends M {
         icon_on: "Icona acceso",
         icon_off: "Icona spento",
         label_on: "Testo acceso (default: On)",
-        label_off: "Testo spento (default: Off)"
+        label_off: "Testo spento (default: Off)",
+        hold_action: "Azione pressione prolungata (Hold)"
       })[t.name] ?? t.name
     };
   }
   setConfig(t) {
     if (!t || !t.entity)
       throw new Error("m3e-toggle-card: you must define an entity");
-    this._config = { ...t };
+    this._config = {
+      hold_action: "popup",
+      ...t
+    };
   }
   getCardSize() {
     return 2;
@@ -4251,6 +4312,23 @@ let w = class extends M {
     } else
       t.close(), this._popupOpen = !1;
   }
+  _handleHoldAction() {
+    if (!this._config) return;
+    const t = this._config.hold_action ?? "popup";
+    if (t !== "none") {
+      if (window.getSelection()?.removeAllRanges(), t === "more-info") {
+        this.dispatchEvent(
+          new CustomEvent("hass-more-info", {
+            bubbles: !0,
+            composed: !0,
+            detail: { entityId: this._config.entity }
+          })
+        );
+        return;
+      }
+      this.openPopup();
+    }
+  }
   _renderIcon(t) {
     return t && typeof customElements < "u" && customElements.get("ha-icon") ? p`<ha-icon .icon=${t}></ha-icon>` : t?.includes("power-socket") || this._config?.entity.includes("caricatore") ? p`
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -4283,7 +4361,7 @@ let w = class extends M {
         @pointerleave=${this._onTilePointerCancel}
         @pointercancel=${this._onTilePointerCancel}
         @contextmenu=${(n) => {
-      n.preventDefault(), this.openPopup();
+      n.preventDefault(), this._handleHoldAction();
     }}
         @keydown=${(n) => {
       n.key === " " || n.key === "Enter" ? (n.preventDefault(), this._toggle()) : (n.key === "o" || n.key === "O") && (n.preventDefault(), this.openPopup());
@@ -4693,6 +4771,6 @@ mt({
 });
 export {
   m as M3ELightCard,
-  _ as M3EStatusCard,
+  v as M3EStatusCard,
   w as M3EToggleCard
 };

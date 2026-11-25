@@ -80,6 +80,8 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
 
 export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'none';
 
+export type M3EHoldAction = 'popup' | 'more-info' | 'none';
+
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
   name?: string;
@@ -87,6 +89,8 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
   icon_off?: string;
   label_on?: string;
   label_off?: string;
+  /** Action on long-press: open M3E popup (default), native HA more-info dialog, or none */
+  hold_action?: M3EHoldAction;
 }
 
 export interface M3ERemoteButtonsConfig {
@@ -127,6 +131,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   outdoor_entity?: string;
   /** Primary tap behavior: open popup (default) or toggle entity */
   tap_action?: 'popup' | 'toggle';
+  /** Action on long-press: open M3E popup (default), native HA more-info dialog, or none */
+  hold_action?: M3EHoldAction;
   /** Optional target device ID for multi-device remote transmitters (remote.send_command device parameter) */
   remote_device?: string;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */
