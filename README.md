@@ -122,6 +122,23 @@ items:
   - entity: person.flavia
 ```
 
+### 11. Stack (`custom:m3e-stack-card`)
+Card compatta di confronto multi-sensore in stile **Google Home** (es. *Indoor temperatures*), senza popup:
+- Header in alto a sinistra con icona personalizzabile (default casa outlined) e titolo libero.
+- Elenco ordinato di due o più sensori con nome a sinistra e valore allineato a destra in `tabular-nums` (supporta anche `climate.*` leggendo automaticamente `current_temperature`, attributi personalizzati e opzione unità di misura).
+
+```yaml
+type: custom:m3e-stack-card
+title: Indoor temperatures
+items:
+  - entity: climate.termostato
+    name: Termostato
+  - entity: sensor.cameretta_temperature
+    name: Cameretta motion sensor
+  - entity: sensor.cucina_temperature
+    name: Cucina motion sensor
+```
+
 ---
 
 ## Installazione

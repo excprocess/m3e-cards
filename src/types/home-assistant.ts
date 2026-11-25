@@ -180,6 +180,26 @@ export interface M3EThermostatCardConfig extends LovelaceCardConfig {
   step?: number;
 }
 
+export interface M3EStackItemConfig {
+  /** Home Assistant entity ID (sensor.*, climate.*, etc.) */
+  entity: string;
+  /** Optional custom row label (defaults to entity friendly_name) */
+  name?: string;
+  /** Optional attribute to display instead of entity state (for climate.* defaults to current_temperature) */
+  attribute?: string;
+}
+
+export interface M3EStackCardConfig extends LovelaceCardConfig {
+  /** Header title on the top-left (e.g. "Indoor temperatures") */
+  title?: string;
+  /** Optional custom MDI icon on the top-left (empty = Google Home outlined house) */
+  icon?: string;
+  /** Show unit_of_measurement next to values (default: false to match Google Home clean numbers) */
+  show_unit?: boolean;
+  /** Ordered list of sensors/entities to compare */
+  items: M3EStackItemConfig[];
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];

@@ -5,6 +5,7 @@ import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
 import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
+import './cards/m3e-stack-card';
 import './cards/m3e-status-card';
 import './cards/m3e-thermostat-card';
 import './cards/m3e-toggle-card';
@@ -16,6 +17,7 @@ export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
+export { M3EStackCard } from './cards/m3e-stack-card';
 export { M3EStatusCard } from './cards/m3e-status-card';
 export { M3EThermostatCard } from './cards/m3e-thermostat-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
@@ -31,6 +33,8 @@ export type {
   M3EPeopleCardConfig,
   M3EPeopleItemConfig,
   M3ESceneCardConfig,
+  M3EStackCardConfig,
+  M3EStackItemConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
   M3EThermostatCardConfig,
@@ -134,5 +138,13 @@ registerCard({
   name: 'Thermostat Card',
   description:
     'Full-width Google Home–style thermostat card with +/- pill steppers, heat/cool semantic colors, offline state, and full climate dial popup.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-stack-card',
+  name: 'Stack',
+  description:
+    'Google Home–style comparison card to list and compare multiple sensors side-by-side with customizable header icon and title.',
   preview: true,
 });
