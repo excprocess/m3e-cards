@@ -332,6 +332,14 @@ const entityRegistry = {
     entity_id: 'sensor.salotto_humidity',
     device_id: 'dev_salotto_env',
   },
+  'media_player.salotto_speaker': {
+    entity_id: 'media_player.salotto_speaker',
+    platform: 'spotify',
+  },
+  'media_player.chromecast': {
+    entity_id: 'media_player.chromecast',
+    platform: 'music_assistant',
+  },
 };
 
 const DEMO_TRACKS = [
@@ -349,7 +357,7 @@ const DEMO_TRACKS = [
   {
     media_title: 'Midnight City (Extended Synthwave Mix)',
     media_artist: 'M83 · Hurry Up, We’re Dreaming',
-    app_name: 'Spotify',
+    app_name: 'Music Assistant',
     media_duration: 244,
     entity_picture:
       'data:image/svg+xml;utf8,' +

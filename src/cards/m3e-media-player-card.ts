@@ -7,6 +7,7 @@ import type {
   M3EMediaPlayerCardConfig,
 } from '../types/home-assistant';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
+import { renderMediaBrandBadge } from '../utils/media-brand';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
 
@@ -326,47 +327,7 @@ export class M3EMediaPlayerCard extends LitElement {
   };
 
   private _renderAppBadge(entity?: HassEntity) {
-    const app = String(entity?.attributes.app_name ?? entity?.attributes.source ?? '').toLowerCase();
-
-    // Spotify circular green badge matching screenshot
-    if (app.includes('spotify')) {
-      return html`
-        <span class="app-badge is-spotify" aria-label="Spotify">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="11" fill="#1ED760" />
-            <path
-              fill="none"
-              stroke="#0a0a0a"
-              stroke-width="1.9"
-              stroke-linecap="round"
-              d="M6.8 9.4c3.6-1 7.6-.7 10.6 1M7.6 12.6c2.9-.8 6.1-.5 8.6.8M8.4 15.6c2.2-.5 4.8-.3 6.8.7"
-            />
-          </svg>
-        </span>
-      `;
-    }
-
-    // YouTube / YouTube Music
-    if (app.includes('youtube')) {
-      return html`
-        <span class="app-badge" aria-label="YouTube Music">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="11" fill="#FF0033" />
-            <circle cx="12" cy="12" r="6.5" fill="none" stroke="#ffffff" stroke-width="1.4" />
-            <path fill="#ffffff" d="M10.2 9.2v5.6l4.8-2.8-4.8-2.8Z" />
-          </svg>
-        </span>
-      `;
-    }
-
-    // Fallback Material 3 tonal music badge
-    return html`
-      <span class="app-badge is-tonal" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z" />
-        </svg>
-      </span>
-    `;
+    return renderMediaBrandBadge(this.hass, entity);
   }
 
   protected render() {
@@ -669,6 +630,20 @@ export class M3EMediaPlayerCard extends LitElement {
         display: grid;
         place-items: center;
         flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .app-badge .brand-icon-img {
+        width: 26px;
+        height: 26px;
+        object-fit: contain;
+        display: block;
+        border-radius: 6px;
+      }
+
+      .app-badge .brand-fallback-svg {
+        width: 17px;
+        height: 17px;
       }
 
       .app-badge svg {

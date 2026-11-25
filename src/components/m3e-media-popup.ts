@@ -4,6 +4,7 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant } from '../types/home-assistant';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { renderMediaBrandBadge } from '../utils/media-brand';
 
 function formatClock(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -251,41 +252,7 @@ export class M3EMediaPopup extends LitElement {
   }
 
   private _renderAppBadge(entity?: HassEntity) {
-    const app = String(entity?.attributes.app_name ?? entity?.attributes.source ?? '').toLowerCase();
-    if (app.includes('spotify')) {
-      return html`
-        <span class="app-badge" aria-label="Spotify">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="11" fill="#1ED760" />
-            <path
-              fill="none"
-              stroke="#0a0a0a"
-              stroke-width="1.9"
-              stroke-linecap="round"
-              d="M6.8 9.4c3.6-1 7.6-.7 10.6 1M7.6 12.6c2.9-.8 6.1-.5 8.6.8M8.4 15.6c2.2-.5 4.8-.3 6.8.7"
-            />
-          </svg>
-        </span>
-      `;
-    }
-    if (app.includes('youtube')) {
-      return html`
-        <span class="app-badge" aria-label="YouTube Music">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="12" cy="12" r="11" fill="#FF0033" />
-            <circle cx="12" cy="12" r="6.5" fill="none" stroke="#ffffff" stroke-width="1.4" />
-            <path fill="#ffffff" d="M10.2 9.2v5.6l4.8-2.8-4.8-2.8Z" />
-          </svg>
-        </span>
-      `;
-    }
-    return html`
-      <span class="app-badge is-tonal" aria-hidden="true">
-        <svg viewBox="0 0 24 24">
-          <path fill="currentColor" d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6Z" />
-        </svg>
-      </span>
-    `;
+    return renderMediaBrandBadge(this.hass, entity);
   }
 
   protected render() {
@@ -827,6 +794,20 @@ export class M3EMediaPopup extends LitElement {
         display: grid;
         place-items: center;
         flex-shrink: 0;
+        overflow: hidden;
+      }
+
+      .app-badge .brand-icon-img {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        display: block;
+        border-radius: 6px;
+      }
+
+      .app-badge .brand-fallback-svg {
+        width: 16px;
+        height: 16px;
       }
 
       .app-badge svg {
@@ -1275,6 +1256,7 @@ export class M3EMediaPopup extends LitElement {
         height: 18px;
       }
 
+      .cast-mini-top .app-badge .brand-icon-img,
       .cast-mini-top .app-badge svg {
         width: 18px;
         height: 18px;

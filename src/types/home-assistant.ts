@@ -20,6 +20,7 @@ export interface HassEntityRegistryEntry {
   entity_id: string;
   device_id?: string | null;
   area_id?: string | null;
+  platform?: string;
   options?: {
     light?: {
       favorite_colors?: Array<{
