@@ -3,6 +3,7 @@ import './cards/m3e-glance-card';
 import './cards/m3e-light-card';
 import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
+import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-status-card';
 import './cards/m3e-toggle-card';
@@ -12,6 +13,7 @@ export { M3EGlanceCard } from './cards/m3e-glance-card';
 export { M3ELightCard } from './cards/m3e-light-card';
 export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
+export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStatusCard } from './cards/m3e-status-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
@@ -24,6 +26,8 @@ export type {
   M3ELightCardConfig,
   M3ELightControlCardConfig,
   M3ELightGroupCardConfig,
+  M3EPeopleCardConfig,
+  M3EPeopleItemConfig,
   M3ESceneCardConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
@@ -111,5 +115,13 @@ registerCard({
   name: 'M3 Expressive At a Glance Strip',
   description:
     'Google Home–style horizontally scrollable At a Glance bar with circular tonal icon badges and per-entity state/attribute customization.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-people-card',
+  name: 'M3 Expressive People Glance',
+  description:
+    'At a Glance card dedicated to people (avatar, name, location) with scrollable, full-row, vertical list, and compact layout modes.',
   preview: true,
 });

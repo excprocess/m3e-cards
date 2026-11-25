@@ -137,6 +137,37 @@ export interface M3EGlanceCardConfig extends LovelaceCardConfig {
   transparent?: boolean;
 }
 
+export type M3EPeopleLayout = 'scroll' | 'row' | 'list';
+export type M3EPeopleSize = 'default' | 'compact';
+
+export interface M3EPeopleItemConfig {
+  /** Home Assistant person.* or device_tracker.* entity ID */
+  entity: string;
+  /** Optional custom display name (defaults to entity friendly_name) */
+  name?: string;
+  /** Optional custom MDI icon override (used instead of entity_picture if set) */
+  icon?: string;
+  /** Optional custom image URL override (defaults to entity.attributes.entity_picture) */
+  image?: string;
+  /** Optional tap action: more-info (default), navigate, none */
+  tap_action?: 'more-info' | 'navigate' | 'none';
+  /** Target path / Bubble hash / script.* when tap_action is navigate */
+  navigation_path?: string;
+}
+
+export interface M3EPeopleCardConfig extends LovelaceCardConfig {
+  /** Ordered list of people to display */
+  items: M3EPeopleItemConfig[];
+  /** Layout mode: scroll (horizontal scrollable like At a Glance), row (no scroll, fills full row), list (vertical full-width list) */
+  layout?: M3EPeopleLayout;
+  /** Visual size: default (46px avatar) or compact (36px avatar) */
+  size?: M3EPeopleSize;
+  /** Transparent background blending with dashboard (default: true). Set false to wrap in ha-card surface. */
+  transparent?: boolean;
+  /** Show subtle M3 presence indicator ring/dot when person is Home (default: true) */
+  show_presence_indicator?: boolean;
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];
