@@ -256,6 +256,9 @@ export class M3EStatusCard extends LitElement {
         this._config.outdoor_entity,
         ...(this._config.extra_entities ?? []).slice(0, 10),
         ...this._getSiblingEntityIds(),
+        ...(this._resolvedPopupType === 'power_strip'
+          ? this._getPowerStripEntities().map((e) => e.entity_id)
+          : []),
       ].filter(Boolean) as string[];
 
       let changed = false;
@@ -412,7 +415,69 @@ export class M3EStatusCard extends LitElement {
     return 'sensor';
   }
 
+  /**
+   * Resolves all toggleable outlets for the Power Strip popup:
+   * - If `extra_entities` are explicitly configured, uses those (up to 10).
+   * - Otherwise auto-discovers all switch.* / light.* / input_boolean.* entities on the same device_id.
+   */
+  private _getPowerStripEntities(): HassEntity[] {
+    if (!this.hass || !this._config) return [];
+    const results: HassEntity[] = [];
+    const seen = new Set<string>();
+
+    if (Array.isArray(this._config.extra_entities) && this._config.extra_entities.length > 0) {
+      for (const id of this._config.extra_entities.slice(0, 10)) {
+        if (!id || seen.has(id)) continue;
+        const st = this.hass.states[id];
+        if (st) {
+          results.push(st);
+          seen.add(id);
+        }
+      }
+      return results;
+    }
+
+    const primaryId = this._config.entity;
+    const primary = this.hass.states[primaryId];
+    const isToggleDomain = (id: string) =>
+      id.startsWith('switch.') || id.startsWith('light.') || id.startsWith('input_boolean.');
+
+    if (primary && isToggleDomain(primaryId)) {
+      results.push(primary);
+      seen.add(primaryId);
+    }
+
+    const deviceId = this.hass.entities?.[primaryId]?.device_id;
+    if (deviceId && this.hass.entities) {
+      const siblings: HassEntity[] = [];
+      for (const [id, entry] of Object.entries(this.hass.entities)) {
+        if (entry.device_id === deviceId && !seen.has(id) && isToggleDomain(id)) {
+          const st = this.hass.states[id];
+          if (st) {
+            siblings.push(st);
+            seen.add(id);
+          }
+        }
+      }
+      siblings.sort((a, b) =>
+        this._cleanSiblingLabel(a).localeCompare(this._cleanSiblingLabel(b), undefined, {
+          numeric: true,
+        }),
+      );
+      results.push(...siblings);
+    }
+
+    return results;
+  }
+
   private get _isActive(): boolean {
+    if (this._resolvedPopupType === 'power_strip') {
+      const outlets = this._getPowerStripEntities();
+      if (outlets.length > 0) {
+        return outlets.some((o) => o.state === 'on');
+      }
+    }
+
     const entity = this._statusEntity;
     const stateStr = String(entity?.state ?? '').toLowerCase();
     if (!stateStr || stateStr === 'unavailable' || stateStr === 'unknown') return false;
@@ -439,6 +504,21 @@ export class M3EStatusCard extends LitElement {
   }
 
   private get _stateLabel(): string {
+    if (this._resolvedPopupType === 'power_strip') {
+      const outlets = this._getPowerStripEntities();
+      if (outlets.length > 0) {
+        const allOffline = outlets.every(
+          (o) => o.state === 'unavailable' || o.state === 'unknown',
+        );
+        if (allOffline) return 'Offline';
+        const onCount = outlets.filter((o) => o.state === 'on').length;
+        if (onCount > 0) {
+          return this._config?.label_active || `${onCount} on`;
+        }
+        return this._config?.label_inactive || 'Off';
+      }
+    }
+
     const entity = this._statusEntity;
     if (!entity) return 'Offline';
     const raw = entity.state;
@@ -1941,6 +2021,99 @@ export class M3EStatusCard extends LitElement {
         `;
   }
 
+  private _togglePowerStripAll(turnOn: boolean): void {
+    if (!this.hass) return;
+    const outlets = this._getPowerStripEntities();
+    for (const ent of outlets) {
+      if (ent.state === 'unavailable' || ent.state === 'unknown') continue;
+      if ((ent.state === 'on') === turnOn) continue;
+      const domain = ent.entity_id.split('.')[0];
+      this.hass.callService(domain, turnOn ? 'turn_on' : 'turn_off', {
+        entity_id: ent.entity_id,
+      });
+    }
+  }
+
+  private _renderPowerStripPopup() {
+    const outlets = this._getPowerStripEntities();
+    const outletIds = new Set(outlets.map((o) => o.entity_id));
+    const telemetry = this._getSiblingSensors().filter((s) => !outletIds.has(s.entity_id));
+
+    return html`
+      ${outlets.length === 0
+        ? html`
+            <div class="selector-empty">
+              Nessuna presa rilevata. Seleziona le entità della multipresa nelle impostazioni della
+              card.
+            </div>
+          `
+        : html`
+            <div class="power-strip-grid">
+              ${outlets.map((ent) => {
+                const isUnavailable = ent.state === 'unavailable' || ent.state === 'unknown';
+                const isOn = ent.state === 'on';
+                const label = this._cleanSiblingLabel(ent);
+                const sub = isUnavailable ? 'Offline' : isOn ? 'On' : 'Off';
+
+                return html`
+                  <button
+                    type="button"
+                    class="ps-tile ${isOn ? 'is-on' : 'is-off'} ${isUnavailable ? 'is-unavailable' : ''}"
+                    role="switch"
+                    aria-checked=${String(isOn)}
+                    ?disabled=${isUnavailable}
+                    @click=${() => this._togglePowerEntity(ent)}
+                    @contextmenu=${(e: MouseEvent) => {
+                      e.preventDefault();
+                      this._openEntityMoreInfo(ent.entity_id);
+                    }}
+                  >
+                    <span class="ps-tile-icon" aria-hidden="true">
+                      ${renderM3EntityIcon(ent, isOn)}
+                    </span>
+                    <span class="ps-tile-meta">
+                      <span class="ps-tile-title">${label}</span>
+                      <span class="ps-tile-sub">${sub}</span>
+                    </span>
+                  </button>
+                `;
+              })}
+            </div>
+          `}
+      ${telemetry.length > 0
+        ? html`
+            <div class="modular-stack">
+              ${telemetry.map((sec) => {
+                const label = this._cleanSiblingLabel(sec);
+                const val = `${sec.state}${sec.attributes.unit_of_measurement ?? ''}`;
+                return html`
+                  <button
+                    type="button"
+                    class="info-pill is-clickable"
+                    @click=${() => this._openEntityMoreInfo(sec.entity_id)}
+                  >
+                    <span class="info-pill-left">
+                      ${this._renderSiblingIcon(sec)}
+                      <span class="info-pill-label">${label}</span>
+                    </span>
+                    <span class="info-pill-right">
+                      <span class="info-pill-val">${val}</span>
+                      <svg viewBox="0 0 24 24" class="info-pill-chevron" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                `;
+              })}
+            </div>
+          `
+        : nothing}
+    `;
+  }
+
   private _renderSelectorPopup() {
     const entity = this._entity;
     const rawOptions = entity?.attributes.options;
@@ -2079,11 +2252,16 @@ export class M3EStatusCard extends LitElement {
       >
         ${this._popupOpen
           ? (() => {
+              const isPowerStrip = popupType === 'power_strip';
               const powerEnt =
                 popupType === 'sensor' || popupType === 'custom'
                   ? this._toggleablePowerEntity
                   : undefined;
-              const powerOn = powerEnt?.state === 'on';
+              const powerStripOutlets = isPowerStrip ? this._getPowerStripEntities() : [];
+              const hasHeaderSwitch = Boolean(powerEnt) || (isPowerStrip && powerStripOutlets.length > 0);
+              const powerOn = isPowerStrip
+                ? powerStripOutlets.some((o) => o.state === 'on')
+                : powerEnt?.state === 'on';
               const closeBtn = html`
                 <button
                   type="button"
@@ -2110,7 +2288,7 @@ export class M3EStatusCard extends LitElement {
                         ? html`<span class="dialog-last-changed">${lastChanged}</span>`
                         : nothing}
                     </div>
-                    ${powerEnt
+                    ${hasHeaderSwitch
                       ? html`
                           <button
                             type="button"
@@ -2118,7 +2296,10 @@ export class M3EStatusCard extends LitElement {
                             role="switch"
                             aria-checked=${String(powerOn)}
                             aria-label=${powerOn ? 'Spegni' : 'Accendi'}
-                            @click=${() => this._togglePowerEntity(powerEnt)}
+                            @click=${() =>
+                              isPowerStrip
+                                ? this._togglePowerStripAll(!powerOn)
+                                : powerEnt && this._togglePowerEntity(powerEnt)}
                           >
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
@@ -2126,15 +2307,17 @@ export class M3EStatusCard extends LitElement {
                       : nothing}
                   </header>
 
-                  ${popupType === 'selector'
-                    ? this._renderSelectorPopup()
-                    : popupType === 'sensor' || popupType === 'custom'
-                      ? this._renderSensorPopup(icon)
-                      : popupType === 'climate'
-                        ? this._renderClimatePopup()
-                        : popupType === 'remote'
-                          ? this._renderRemotePopup()
-                          : this._renderMediaPopup()}
+                  ${popupType === 'power_strip'
+                    ? this._renderPowerStripPopup()
+                    : popupType === 'selector'
+                      ? this._renderSelectorPopup()
+                      : popupType === 'sensor' || popupType === 'custom'
+                        ? this._renderSensorPopup(icon)
+                        : popupType === 'climate'
+                          ? this._renderClimatePopup()
+                          : popupType === 'remote'
+                            ? this._renderRemotePopup()
+                            : this._renderMediaPopup()}
                 </div>
               `;
             })()
@@ -3413,6 +3596,88 @@ export class M3EStatusCard extends LitElement {
         font-size: 14px;
         line-height: 1.45;
         text-align: center;
+      }
+
+      /* =====================================================================
+         POWER STRIP POPUP (2-Column M3 Expressive Toggle Grid)
+         ===================================================================== */
+      .power-strip-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .ps-tile {
+        min-height: 76px;
+        padding: 14px 16px;
+        border: 0;
+        border-radius: 22px;
+        background: var(--md-sys-color-surface-container-high, #24252d);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .ps-tile.is-on {
+        border-radius: 28px;
+        background: var(--md-sys-color-primary-container, #364067);
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
+      }
+
+      .ps-tile:active:not(:disabled) {
+        transform: scale(0.96);
+      }
+
+      .ps-tile.is-unavailable {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .ps-tile-icon {
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
+        display: grid;
+        place-items: center;
+      }
+
+      .ps-tile-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .ps-tile-meta {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .ps-tile-title {
+        font-size: 14.5px;
+        font-weight: 600;
+        line-height: 19px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .ps-tile-sub {
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 16px;
+        opacity: 0.78;
       }
     `,
   ];

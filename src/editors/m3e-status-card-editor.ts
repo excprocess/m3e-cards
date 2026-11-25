@@ -62,6 +62,7 @@ export class M3EStatusCardEditor extends LitElement {
             mode: 'dropdown',
             options: [
               { value: 'auto', label: 'Automatico (in base al dispositivo)' },
+              { value: 'power_strip', label: 'Power Strip (Multipresa a 2 colonne)' },
               { value: 'selector', label: 'Selettore (Scelta opzioni M3 Expressive)' },
               { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
               { value: 'sensor', label: 'Sensore (Anello di stato + Storico)' },
@@ -207,6 +208,8 @@ export class M3EStatusCardEditor extends LitElement {
         { name: 'secondary_entity', selector: { entity: {} } },
         { name: 'extra_entities', selector: { entity: { multiple: true } } },
       );
+    } else if (type === 'power_strip') {
+      schema.push({ name: 'extra_entities', selector: { entity: { multiple: true } } });
     } else if (type === 'climate') {
       schema.push({
         name: 'outdoor_entity',
@@ -265,7 +268,10 @@ export class M3EStatusCardEditor extends LitElement {
       hold_action: 'Azione pressione prolungata (Hold)',
       navigation_path: 'Percorso dashboard (/lovelace/...) · #hash Bubble Card · script/browser_mod',
       secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
-      extra_entities: 'Pillole entità aggiuntive nel popup (max 10)',
+      extra_entities:
+        this._resolvedType() === 'power_strip'
+          ? 'Prese della multipresa (vuoto = auto-rileva dallo stesso dispositivo)'
+          : 'Pillole entità aggiuntive nel popup (max 10)',
       outdoor_entity: 'Temperatura esterna',
       remote_device: 'Device ID trasmettitore (multi-dispositivo)',
       volume_up: 'Volume + (es. button.tv_vol_up o VolumeUp)',

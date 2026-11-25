@@ -85,6 +85,7 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
 export type M3EStatusPopupType =
   | 'auto'
   | 'selector'
+  | 'power_strip'
   | 'sensor'
   | 'climate'
   | 'remote'
