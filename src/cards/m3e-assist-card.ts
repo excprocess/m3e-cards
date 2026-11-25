@@ -1,6 +1,7 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
+import { guardDialogTouchMove } from '../utils/scroll-lock';
 import type { HassEntity, HomeAssistant, M3EAssistCardConfig } from '../types/home-assistant';
 
 @customElement('m3e-assist-card')
@@ -316,6 +317,7 @@ export class M3EAssistCard extends LitElement {
           e.preventDefault();
           this.closeModeSelector();
         }}
+        @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
       >
         ${this._selectorOpen && hasMode
           ? html`
@@ -491,6 +493,8 @@ export class M3EAssistCard extends LitElement {
         max-width: min(410px, calc(100vw - 24px));
         max-height: calc(100dvh - 24px);
         width: 100%;
+        overscroll-behavior: contain;
+        touch-action: none;
         color: var(--md-sys-color-on-surface, #1b1b1f);
       }
 
@@ -508,6 +512,8 @@ export class M3EAssistCard extends LitElement {
         gap: 14px;
         max-height: calc(100dvh - 24px);
         overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
         user-select: none;
         -webkit-user-select: none;

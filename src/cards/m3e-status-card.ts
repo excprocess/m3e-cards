@@ -13,6 +13,7 @@ import type {
 import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
+import { guardDialogTouchMove } from '../utils/scroll-lock';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 
@@ -2130,6 +2131,7 @@ export class M3EStatusCard extends LitElement {
           e.preventDefault();
           this.closePopup();
         }}
+        @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
       >
         ${this._popupOpen
           ? (() => {
@@ -2347,6 +2349,8 @@ export class M3EStatusCard extends LitElement {
         max-width: min(440px, calc(100vw - 24px));
         max-height: calc(100dvh - 24px);
         width: 100%;
+        overscroll-behavior: contain;
+        touch-action: none;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
 
@@ -2358,6 +2362,8 @@ export class M3EStatusCard extends LitElement {
         position: relative;
         overflow-y: auto;
         overflow-x: hidden;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         max-height: calc(100dvh - 24px);
         user-select: none;
         -webkit-user-select: none;

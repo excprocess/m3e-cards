@@ -3,6 +3,7 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/home-assistant';
 import { formatLastChanged } from '../utils/time';
+import { guardDialogTouchMove } from '../utils/scroll-lock';
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
@@ -752,7 +753,10 @@ export class M3ELightCard extends LitElement {
   }
 
   private _onCapsulePointerDown = (e: PointerEvent): void => {
-    if (this._isUnavailable || e.button !== 0 || !this._supportsBrightness) return;
+    if (this._isUnavailable || (e.pointerType === 'mouse' && e.button !== 0) || !this._supportsBrightness) {
+      return;
+    }
+    e.preventDefault();
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
     this._popupDragging = true;
@@ -762,6 +766,7 @@ export class M3ELightCard extends LitElement {
 
   private _onCapsulePointerMove = (e: PointerEvent): void => {
     if (!this._popupDragging) return;
+    e.preventDefault();
     const pct = this._computeVerticalPct(e.clientY, e.currentTarget as HTMLElement);
     if (pct !== this._popupDragPct) {
       this._popupDragPct = pct;
@@ -895,6 +900,7 @@ export class M3ELightCard extends LitElement {
         style="${colorVars}"
         @click=${this._onDialogBackdropClick}
         @cancel=${this._onDialogCancel}
+        @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
       >
         ${this._popupOpen
           ? html`
@@ -1281,6 +1287,8 @@ export class M3ELightCard extends LitElement {
         max-height: calc(100dvh - 24px);
         width: 100%;
         overflow: visible;
+        overscroll-behavior: contain;
+        touch-action: none;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
 
@@ -1298,6 +1306,8 @@ export class M3ELightCard extends LitElement {
         border-radius: 32px;
         max-height: calc(100dvh - 24px);
         overflow-y: auto;
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         padding: 20px 20px 24px;
         display: flex;
         flex-direction: column;
@@ -1649,6 +1659,9 @@ export class M3ELightCard extends LitElement {
         align-items: center;
         gap: 12px;
         overflow-x: auto;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
+        -webkit-overflow-scrolling: touch;
         padding: 4px 2px;
         scrollbar-width: none;
       }

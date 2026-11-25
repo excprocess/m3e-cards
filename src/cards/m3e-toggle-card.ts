@@ -5,6 +5,7 @@ import type { HassEntity, HomeAssistant, M3EToggleCardConfig } from '../types/ho
 import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
+import { guardDialogTouchMove } from '../utils/scroll-lock';
 
 const LONG_PRESS_MS = 420;
 
@@ -504,6 +505,7 @@ export class M3EToggleCard extends LitElement {
           e.preventDefault();
           this.closePopup();
         }}
+        @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
       >
         ${this._popupOpen
           ? html`
@@ -729,6 +731,8 @@ export class M3EToggleCard extends LitElement {
         max-width: min(420px, calc(100vw - 24px));
         max-height: calc(100dvh - 24px);
         width: 100%;
+        overscroll-behavior: contain;
+        touch-action: none;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
 
@@ -738,6 +742,8 @@ export class M3EToggleCard extends LitElement {
 
       .dialog-surface {
         background: var(--md-sys-color-surface, #131316);
+        overscroll-behavior: contain;
+        touch-action: pan-y;
         color: var(--md-sys-color-on-surface, #e3e2e6);
         user-select: none;
         -webkit-user-select: none;
