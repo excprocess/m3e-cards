@@ -123,4 +123,48 @@ export const m3eBaseStyles = css`
     padding: 10px 16px;
     gap: 12px;
   }
+
+  /* =========================================================================
+     SHARED GOOGLE HOME M3 OFFLINE STATE (unavailable / unknown)
+     Opaque muted disabled surface + muted text/icons + trailing warning badge
+     ========================================================================= */
+  ha-card.is-unavailable {
+    opacity: 1 !important;
+    cursor: not-allowed;
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface, #1b1b1f) 11%,
+      var(--md-sys-color-surface, #faf8ff)
+    ) !important;
+    box-shadow: none !important;
+  }
+
+  ha-card.is-unavailable .title,
+  ha-card.is-unavailable .subtitle,
+  ha-card.is-unavailable .tile-title,
+  ha-card.is-unavailable .tile-subtitle,
+  ha-card.is-unavailable .bulb-icon,
+  ha-card.is-unavailable .tile-icon,
+  ha-card.is-unavailable .scene-icon,
+  ha-card.is-unavailable .offline-badge {
+    color: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface, #1b1b1f) 46%,
+      transparent
+    ) !important;
+  }
+
+  .offline-badge {
+    flex: 0 0 auto;
+    margin-inline-start: auto;
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+  }
+
+  .offline-badge svg {
+    width: 22px;
+    height: 22px;
+  }
 `;

@@ -358,7 +358,7 @@ export class M3EToggleCard extends LitElement {
       ? this._config.icon_on?.trim() || undefined
       : this._config.icon_off?.trim() || this._config.icon_on?.trim() || undefined;
     const label = this._isUnavailable
-      ? 'Unavailable'
+      ? 'Offline'
       : isOn
         ? this._config.label_on || 'On'
         : this._config.label_off || 'Off';
@@ -398,6 +398,18 @@ export class M3EToggleCard extends LitElement {
             <span class="tile-title">${name}</span>
             <span class="tile-subtitle">${label}</span>
           </div>
+          ${this._isUnavailable
+            ? html`
+                <span class="offline-badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3ZM12 14a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm1 4h-2v-2h2v2Z"
+                    />
+                  </svg>
+                </span>
+              `
+            : nothing}
         </div>
       </ha-card>
 
