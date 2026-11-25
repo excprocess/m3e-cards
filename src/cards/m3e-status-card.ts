@@ -1227,12 +1227,56 @@ export class M3EStatusCard extends LitElement {
     const candidates = [this._entity, this._statusEntity].filter(Boolean) as HassEntity[];
     for (const ent of candidates) {
       const domain = ent.entity_id.split('.')[0];
-      const dc = String(ent.attributes.device_class ?? '').toLowerCase();
-      if (domain === 'light' || (domain === 'switch' && dc === 'outlet')) {
+      if (domain === 'light' || domain === 'switch' || domain === 'input_boolean') {
         return ent;
       }
     }
     return undefined;
+  }
+
+  private get _defaultRingStateLabel(): string {
+    const entity = this._entity ?? this._statusEntity;
+    if (!entity) return 'Offline';
+    const raw = String(entity.state ?? '').trim();
+    const low = raw.toLowerCase();
+    if (!raw || low === 'unavailable' || low === 'unknown') return 'Offline';
+
+    const domain = entity.entity_id.split('.')[0];
+    const dc = String(entity.attributes.device_class ?? '').toLowerCase();
+
+    if (domain === 'sensor') {
+      if (ISO_TIMESTAMP_RE.test(raw)) {
+        return formatDisplayValue(raw, 'auto');
+      }
+      const unit = entity.attributes.unit_of_measurement;
+      return unit ? `${raw}${unit}` : raw;
+    }
+
+    if (domain === 'binary_sensor') {
+      const isOn = low === 'on';
+      if (dc === 'door' || dc === 'window' || dc === 'opening' || dc === 'garage_door') {
+        return isOn ? 'Open' : 'Closed';
+      }
+      if (dc === 'motion' || dc === 'occupancy' || dc === 'presence') {
+        return isOn ? 'Detected' : 'Clear';
+      }
+      if (dc === 'lock') {
+        return isOn ? 'Unlocked' : 'Locked';
+      }
+      if (dc === 'connectivity' || dc === 'plug') {
+        return isOn ? 'Connected' : 'Disconnected';
+      }
+      if (dc === 'moisture' || dc === 'smoke' || dc === 'gas') {
+        return isOn ? 'Detected' : 'Clear';
+      }
+      return isOn ? 'On' : 'Off';
+    }
+
+    if (low === 'home') return 'Home';
+    if (low === 'not_home') return 'Away';
+    if (low === 'on') return 'On';
+    if (low === 'off') return 'Off';
+    return raw.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
   }
 
   private _togglePowerEntity(ent: HassEntity): void {
@@ -1262,19 +1306,26 @@ export class M3EStatusCard extends LitElement {
 
   private _renderSensorPopup(icon?: string) {
     const siblings = this._getSiblingSensors();
+    const hideRing = Boolean(this._toggleablePowerEntity);
 
     return html`
-      <div class="sensor-hero">
-        <div class="sensor-ring ${this._isActive ? 'is-active' : ''}">
-          <span class="sensor-ring-icon">${this._renderEntityIcon(icon)}</span>
-          <span class="sensor-ring-state">${this._stateLabel}</span>
-          <span class="sensor-ring-sub">
-            ${this._entity?.attributes.device_class
-              ? String(this._entity.attributes.device_class).replace(/^./, (c) => c.toUpperCase())
-              : 'Status'}
-          </span>
-        </div>
-      </div>
+      ${hideRing
+        ? nothing
+        : html`
+            <div class="sensor-hero">
+              <div class="sensor-ring ${this._isActive ? 'is-active' : ''}">
+                <span class="sensor-ring-icon">${this._renderEntityIcon(icon)}</span>
+                <span class="sensor-ring-state">${this._defaultRingStateLabel}</span>
+                <span class="sensor-ring-sub">
+                  ${this._entity?.attributes.device_class
+                    ? String(this._entity.attributes.device_class).replace(/^./, (c) =>
+                        c.toUpperCase(),
+                      )
+                    : 'Status'}
+                </span>
+              </div>
+            </div>
+          `}
 
       ${siblings.length > 0
         ? html`
