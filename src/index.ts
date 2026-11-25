@@ -3,6 +3,7 @@ import './cards/m3e-glance-card';
 import './cards/m3e-light-card';
 import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
+import './cards/m3e-media-bar-card';
 import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
@@ -15,6 +16,7 @@ export { M3EGlanceCard } from './cards/m3e-glance-card';
 export { M3ELightCard } from './cards/m3e-light-card';
 export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
+export { M3EMediaBarCard } from './cards/m3e-media-bar-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
@@ -30,6 +32,7 @@ export type {
   M3ELightCardConfig,
   M3ELightControlCardConfig,
   M3ELightGroupCardConfig,
+  M3EMediaBarCardConfig,
   M3EPeopleCardConfig,
   M3EPeopleItemConfig,
   M3ESceneCardConfig,
@@ -146,5 +149,13 @@ registerCard({
   name: 'Stack',
   description:
     'Google Home–style comparison card to list and compare multiple sensors side-by-side with customizable header icon and title.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-media-bar-card',
+  name: 'Media Bar',
+  description:
+    'Footer-ready Google Home–style media player bar with squircle artwork, auto-scrolling marquee metadata, Cast/Source selector, and Play/Pause button.',
   preview: true,
 });

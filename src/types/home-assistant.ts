@@ -200,6 +200,21 @@ export interface M3EStackCardConfig extends LovelaceCardConfig {
   items: M3EStackItemConfig[];
 }
 
+export interface M3EMediaBarCardConfig extends LovelaceCardConfig {
+  /** Primary media_player.* entity ID */
+  entity: string;
+  /** Optional additional media_player.* entities (auto-switches to active playing player & selectable via Cast button) */
+  entities?: string[];
+  /** Optional custom title override (defaults to active player's friendly_name) */
+  name?: string;
+  /** Show Cast / Output selector button (default: true when sources or multiple players are available) */
+  show_cast?: boolean;
+  /** Hide the footer bar when player is off/idle/unavailable (default: false) */
+  hide_when_inactive?: boolean;
+  /** Tap action on the bar body: more-info (default) or none */
+  tap_action?: 'more-info' | 'none';
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];

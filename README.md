@@ -139,6 +139,20 @@ items:
     name: Cucina motion sensor
 ```
 
+### 12. Media Bar (`custom:m3e-media-bar-card`)
+Barra media compatta pensata per il **footer** di Home Assistant in stile **Google Home**:
+- Miniatura copertina squircle (`52×52px`, `15px` radius) con fallback tonale nota musicale e fade al cambio brano.
+- Titolo del media player + metadati (`media_title · media_artist`) con **marquee automatico continuo** (con dissolvenza ai bordi) attivato solo quando il testo supera la larghezza disponibile.
+- Pulsante **Cast / Output** (selettore sorgenti `source_list` e/o switch tra più `media_player.*` configurati in un dialog M3 Expressive) + pulsante **Play / Pause** squircle (`52×52px`) con feedback tattile.
+- Opzione `hide_when_inactive` per nascondere automaticamente la barra quando il player è spento/inattivo.
+
+```yaml
+type: custom:m3e-media-bar-card
+entity: media_player.salotto_speaker
+show_cast: true
+hide_when_inactive: false
+```
+
 ---
 
 ## Installazione
