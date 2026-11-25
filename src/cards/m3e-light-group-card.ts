@@ -484,16 +484,16 @@ export class M3ELightGroupCard extends LitElement {
         position: relative;
         z-index: 1;
         min-height: 76px;
-        padding: 14px 16px 14px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px;
       }
 
       .group-icon {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -510,9 +510,9 @@ export class M3ELightGroupCard extends LitElement {
 
       .group-icon ha-icon,
       .group-icon svg {
-        width: 26px;
-        height: 26px;
-        --mdc-icon-size: 26px;
+        width: 24px;
+        height: 24px;
+        --mdc-icon-size: 24px;
       }
 
       .meta {

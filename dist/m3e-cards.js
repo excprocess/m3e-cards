@@ -728,8 +728,8 @@ const B = M`
   ha-card.style-compact .tile-content,
   ha-card.style-compact .tile-inner {
     min-height: 56px;
-    padding: 10px 16px;
-    gap: 12px;
+    padding: 8px 10px 8px 12px;
+    gap: 8px;
   }
 
   /* =========================================================================
@@ -3069,18 +3069,18 @@ O.styles = [
         z-index: 1;
         height: 100%;
         min-height: 84px;
-        padding: 16px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         pointer-events: none;
       }
 
       /* Bare lightbulb icon — no container box */
       .bulb-icon {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -3099,12 +3099,13 @@ O.styles = [
 
       .bulb-icon ha-icon,
       .bulb-icon svg {
-        width: 26px;
-        height: 26px;
-        --mdc-icon-size: 26px;
+        width: 24px;
+        height: 24px;
+        --mdc-icon-size: 24px;
       }
 
       .meta {
+        flex: 1 1 auto;
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -3112,23 +3113,28 @@ O.styles = [
       }
 
       .title {
-        font-size: var(--md-sys-typescale-title-medium-size, 15px);
+        font-size: var(--md-sys-typescale-title-medium-size, 14.5px);
         font-weight: var(--md-sys-typescale-title-medium-weight, 600);
-        line-height: 20px;
-        letter-spacing: 0.1px;
+        line-height: 18px;
+        letter-spacing: 0.05px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
         transition: color var(--m3e-spring-effects-default);
       }
 
       .subtitle {
         font-size: var(--md-sys-typescale-body-medium-size, 13px);
         font-weight: 500;
-        line-height: 18px;
+        line-height: 17px;
         font-variant-numeric: tabular-nums;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         transition: color var(--m3e-spring-effects-default);
       }
 
@@ -4328,16 +4334,16 @@ Y.styles = [
         position: relative;
         z-index: 1;
         min-height: 76px;
-        padding: 14px 16px 14px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px;
       }
 
       .group-icon {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -4354,9 +4360,9 @@ Y.styles = [
 
       .group-icon ha-icon,
       .group-icon svg {
-        width: 26px;
-        height: 26px;
-        --mdc-icon-size: 26px;
+        width: 24px;
+        height: 24px;
+        --mdc-icon-size: 24px;
       }
 
       .meta {
@@ -8893,17 +8899,17 @@ ot.styles = [
         z-index: 1;
         height: 100%;
         min-height: 84px;
-        padding: 16px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         pointer-events: none;
       }
 
       .scene-icon {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface, #e3e2e6);
@@ -8932,9 +8938,9 @@ ot.styles = [
 
       .scene-icon ha-icon,
       .scene-icon svg {
-        width: 26px;
-        height: 26px;
-        --mdc-icon-size: 26px;
+        width: 24px;
+        height: 24px;
+        --mdc-icon-size: 24px;
       }
 
       .tile-meta {
@@ -8946,21 +8952,26 @@ ot.styles = [
       }
 
       .tile-title {
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 600;
-        line-height: 20px;
+        line-height: 18px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
         transition: color var(--m3e-spring-effects-default);
       }
 
       .tile-subtitle {
         font-size: 13px;
         font-weight: 500;
-        line-height: 18px;
+        line-height: 17px;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         transition: color var(--m3e-spring-effects-default);
       }
 
@@ -11498,16 +11509,16 @@ C.styles = [
         z-index: 1;
         height: 100%;
         min-height: 84px;
-        padding: 16px 18px 16px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px;
       }
 
       .tile-icon {
         flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -11534,21 +11545,26 @@ C.styles = [
       }
 
       .tile-title {
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 600;
-        line-height: 20px;
+        line-height: 18px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
       }
 
       .tile-subtitle {
         font-size: 13px;
         font-weight: 500;
-        line-height: 18px;
+        line-height: 17px;
         font-variant-numeric: tabular-nums;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .status-tile.is-active .tile-title,
@@ -11559,8 +11575,8 @@ C.styles = [
 
       .tile-chevron {
         flex: 0 0 auto;
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -11568,8 +11584,8 @@ C.styles = [
       }
 
       .tile-chevron svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
       }
 
       /* =====================================================================
@@ -13798,17 +13814,17 @@ G.styles = [
         z-index: 1;
         height: 100%;
         min-height: 84px;
-        padding: 16px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 10px;
         pointer-events: none;
       }
 
       .tile-icon {
         flex: 0 0 auto;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -13821,12 +13837,13 @@ G.styles = [
 
       .tile-icon ha-icon,
       .tile-icon svg {
-        width: 26px;
-        height: 26px;
-        --mdc-icon-size: 26px;
+        width: 24px;
+        height: 24px;
+        --mdc-icon-size: 24px;
       }
 
       .tile-meta {
+        flex: 1 1 auto;
         min-width: 0;
         display: flex;
         flex-direction: column;
@@ -13834,20 +13851,25 @@ G.styles = [
       }
 
       .tile-title {
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 600;
-        line-height: 20px;
+        line-height: 18px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
       }
 
       .tile-subtitle {
         font-size: 13px;
         font-weight: 500;
-        line-height: 18px;
+        line-height: 17px;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .toggle-tile.is-on .tile-title,

@@ -147,8 +147,8 @@ export const m3eBaseStyles = css`
   ha-card.style-compact .tile-content,
   ha-card.style-compact .tile-inner {
     min-height: 56px;
-    padding: 10px 16px;
-    gap: 12px;
+    padding: 8px 10px 8px 12px;
+    gap: 8px;
   }
 
   /* =========================================================================

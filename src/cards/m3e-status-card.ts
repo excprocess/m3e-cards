@@ -2391,16 +2391,16 @@ export class M3EStatusCard extends LitElement {
         z-index: 1;
         height: 100%;
         min-height: 84px;
-        padding: 16px 18px 16px 20px;
+        padding: 12px 12px 12px 14px;
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px;
       }
 
       .tile-icon {
         flex: 0 0 auto;
-        width: 26px;
-        height: 26px;
+        width: 24px;
+        height: 24px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -2427,21 +2427,26 @@ export class M3EStatusCard extends LitElement {
       }
 
       .tile-title {
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 600;
-        line-height: 20px;
+        line-height: 18px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
+        word-break: break-word;
       }
 
       .tile-subtitle {
         font-size: 13px;
         font-weight: 500;
-        line-height: 18px;
+        line-height: 17px;
         font-variant-numeric: tabular-nums;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .status-tile.is-active .tile-title,
@@ -2452,8 +2457,8 @@ export class M3EStatusCard extends LitElement {
 
       .tile-chevron {
         flex: 0 0 auto;
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         display: grid;
         place-items: center;
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
@@ -2461,8 +2466,8 @@ export class M3EStatusCard extends LitElement {
       }
 
       .tile-chevron svg {
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
       }
 
       /* =====================================================================
