@@ -162,7 +162,8 @@ export class M3EToggleCard extends LitElement {
   }
 
   private get _isOn(): boolean {
-    return this._entity?.state === 'on';
+    const s = this._entity?.state;
+    return s === 'on' || s === 'open' || s === 'unlocked';
   }
 
   private get _isUnavailable(): boolean {
@@ -179,16 +180,45 @@ export class M3EToggleCard extends LitElement {
 
   private _toggle(): void {
     if (!this.hass || !this._config || this._isUnavailable) return;
-    const domain = this._config.entity.split('.')[0];
-    this.hass.callService(domain, 'toggle', { entity_id: this._config.entity });
+    const entityId = this._config.entity;
+    const domain = entityId.split('.')[0];
+
+    if (domain === 'lock') {
+      this.hass.callService('lock', this._isOn ? 'lock' : 'unlock', { entity_id: entityId });
+      return;
+    }
+    if (domain === 'cover') {
+      this.hass.callService('cover', this._isOn ? 'close_cover' : 'open_cover', {
+        entity_id: entityId,
+      });
+      return;
+    }
+    if (['switch', 'light', 'input_boolean', 'fan', 'automation'].includes(domain)) {
+      this.hass.callService(domain, this._isOn ? 'turn_off' : 'turn_on', {
+        entity_id: entityId,
+      });
+      return;
+    }
+    this.hass.callService('homeassistant', 'toggle', { entity_id: entityId });
   }
 
   private _setState(turnOn: boolean): void {
     if (!this.hass || !this._config || this._isUnavailable) return;
     if (turnOn === this._isOn) return;
-    const domain = this._config.entity.split('.')[0];
+    const entityId = this._config.entity;
+    const domain = entityId.split('.')[0];
+    if (domain === 'lock') {
+      this.hass.callService('lock', turnOn ? 'unlock' : 'lock', { entity_id: entityId });
+      return;
+    }
+    if (domain === 'cover') {
+      this.hass.callService('cover', turnOn ? 'open_cover' : 'close_cover', {
+        entity_id: entityId,
+      });
+      return;
+    }
     this.hass.callService(domain, turnOn ? 'turn_on' : 'turn_off', {
-      entity_id: this._config.entity,
+      entity_id: entityId,
     });
   }
 
@@ -280,10 +310,15 @@ export class M3EToggleCard extends LitElement {
     this.openPopup();
   }
 
+  private _downX = 0;
+  private _downY = 0;
+
   private _onTilePointerDown = (e: PointerEvent): void => {
-    if (this._isUnavailable || e.button !== 0) return;
+    if (this._isUnavailable || (e.pointerType === 'mouse' && e.button !== 0)) return;
     this._pressed = true;
     this._longPressTriggered = false;
+    this._downX = e.clientX;
+    this._downY = e.clientY;
     this._clearLongPress();
     this._longPressTimer = window.setTimeout(() => {
       this._longPressTriggered = true;
@@ -292,17 +327,32 @@ export class M3EToggleCard extends LitElement {
     }, LONG_PRESS_MS);
   };
 
+  private _onTilePointerMove = (e: PointerEvent): void => {
+    if (!this._pressed) return;
+    if (Math.hypot(e.clientX - this._downX, e.clientY - this._downY) > 10) {
+      this._clearLongPress();
+      this._pressed = false;
+    }
+  };
+
   private _onTilePointerUp = (): void => {
     this._clearLongPress();
-    if (!this._longPressTriggered && this._pressed) {
-      this._toggle();
-    }
     this._pressed = false;
   };
 
   private _onTilePointerCancel = (): void => {
     this._clearLongPress();
     this._pressed = false;
+  };
+
+  private _onTileClick = (): void => {
+    this._clearLongPress();
+    this._pressed = false;
+    if (this._longPressTriggered) {
+      this._longPressTriggered = false;
+      return;
+    }
+    this._toggle();
   };
 
   private _onSwitchPointerDown = (e: PointerEvent): void => {
@@ -402,11 +452,15 @@ export class M3EToggleCard extends LitElement {
         aria-checked=${String(isOn)}
         aria-label="${name}, ${label}"
         @pointerdown=${this._onTilePointerDown}
+        @pointermove=${this._onTilePointerMove}
         @pointerup=${this._onTilePointerUp}
         @pointerleave=${this._onTilePointerCancel}
         @pointercancel=${this._onTilePointerCancel}
+        @click=${this._onTileClick}
         @contextmenu=${(e: MouseEvent) => {
           e.preventDefault();
+          this._clearLongPress();
+          this._longPressTriggered = true;
           this._handleHoldAction();
         }}
         @keydown=${(e: KeyboardEvent) => {
