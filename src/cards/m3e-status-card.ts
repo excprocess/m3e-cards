@@ -11,6 +11,7 @@ import type {
   M3ESubtitleFormat,
 } from '../types/home-assistant';
 import { executeNavigationTarget } from '../utils/navigation';
+import { formatLastChanged } from '../utils/time';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 
@@ -425,7 +426,13 @@ export class M3EStatusCard extends LitElement {
     const hasCustomSource = Boolean(
       this._config?.subtitle_entity?.trim() || this._config?.subtitle_attribute?.trim(),
     );
-    if (hasCustomSource && (!this._config?.subtitle_only_when_active || this._isActive)) {
+    const vis =
+      this._config?.subtitle_visibility ??
+      (this._config?.subtitle_only_when_active ? 'on' : 'both');
+    const shouldShowCustom =
+      vis === 'both' || (vis === 'on' && this._isActive) || (vis === 'off' && !this._isActive);
+
+    if (hasCustomSource && shouldShowCustom) {
       const source = this._config?.subtitle_entity?.trim()
         ? this.hass?.states[this._config.subtitle_entity.trim()]
         : entity;
@@ -1812,6 +1819,9 @@ export class M3EStatusCard extends LitElement {
         popupType !== 'none');
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
+    const lastChanged = this._popupOpen
+      ? formatLastChanged(this._statusEntity?.last_changed)
+      : null;
 
     return html`
       <ha-card
@@ -1884,7 +1894,12 @@ export class M3EStatusCard extends LitElement {
                       />
                     </svg>
                   </button>
-                  <span class="dialog-title">${name}</span>
+                  <div class="dialog-title-wrap">
+                    <span class="dialog-title">${name}</span>
+                    ${lastChanged
+                      ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                      : nothing}
+                  </div>
                 </header>
 
                 ${popupType === 'sensor' || popupType === 'custom'
@@ -2097,14 +2112,28 @@ export class M3EStatusCard extends LitElement {
         gap: 12px;
       }
 
-      .dialog-title {
+      .dialog-title-wrap {
         flex: 1 1 auto;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .dialog-title {
         font-size: 20px;
         font-weight: 500;
+        line-height: 24px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .dialog-last-changed {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.85;
       }
 
       .icon-btn {

@@ -3,6 +3,7 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3EToggleCardConfig } from '../types/home-assistant';
 import { executeNavigationTarget } from '../utils/navigation';
+import { formatLastChanged } from '../utils/time';
 
 const LONG_PRESS_MS = 420;
 
@@ -363,6 +364,7 @@ export class M3EToggleCard extends LitElement {
         : this._config.label_off || 'Off';
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
+    const lastChanged = this._popupOpen ? formatLastChanged(entity?.last_changed) : null;
 
     return html`
       <ha-card
@@ -426,7 +428,12 @@ export class M3EToggleCard extends LitElement {
                       />
                     </svg>
                   </button>
-                  <span class="dialog-title">${name}</span>
+                  <div class="dialog-title-wrap">
+                    <span class="dialog-title">${name}</span>
+                    ${lastChanged
+                      ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                      : nothing}
+                  </div>
                 </header>
 
                 <div class="switch-stage">
@@ -645,14 +652,28 @@ export class M3EToggleCard extends LitElement {
         gap: 12px;
       }
 
-      .dialog-title {
+      .dialog-title-wrap {
         flex: 1 1 auto;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .dialog-title {
         font-size: 20px;
         font-weight: 500;
+        line-height: 24px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .dialog-last-changed {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.85;
       }
 
       .icon-btn {

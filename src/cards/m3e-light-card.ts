@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/home-assistant';
+import { formatLastChanged } from '../utils/time';
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
@@ -814,6 +815,7 @@ export class M3ELightCard extends LitElement {
     const colorVars = this._computeColorVars();
     const matchedPreset = this._matchedPresetId;
     const scenes = this._popupOpen ? this._getAvailableScenes() : [];
+    const lastChanged = this._popupOpen ? formatLastChanged(entity?.last_changed) : null;
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
 
@@ -872,7 +874,12 @@ export class M3ELightCard extends LitElement {
                       />
                     </svg>
                   </button>
-                  <span class="dialog-title">${name}</span>
+                  <div class="dialog-title-wrap">
+                    <span class="dialog-title">${name}</span>
+                    ${lastChanged
+                      ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                      : nothing}
+                  </div>
                   <button
                     type="button"
                     class="power-btn ${isOn ? 'is-on' : ''}"
@@ -1269,14 +1276,28 @@ export class M3ELightCard extends LitElement {
         gap: 12px;
       }
 
-      .dialog-title {
+      .dialog-title-wrap {
         flex: 1 1 auto;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+
+      .dialog-title {
         font-size: 20px;
         font-weight: 500;
+        line-height: 24px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .dialog-last-changed {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.85;
       }
 
       .icon-btn,

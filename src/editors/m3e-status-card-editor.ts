@@ -119,6 +119,32 @@ export class M3EStatusCardEditor extends LitElement {
       schema.push({ name: 'navigation_path', selector: { text: {} } });
     }
 
+    const attrEntityId =
+      this._config?.subtitle_entity?.trim() || this._config?.entity || '';
+
+    const attributeSelector = {
+      name: 'subtitle_attribute',
+      selector: {
+        attribute: {
+          entity_id: attrEntityId,
+        },
+      },
+    };
+
+    const visibilitySelector = {
+      name: 'subtitle_visibility',
+      selector: {
+        select: {
+          mode: 'dropdown',
+          options: [
+            { value: 'both', label: 'Sempre (sia On che Off)' },
+            { value: 'on', label: 'Solo quando acceso / attivo (On)' },
+            { value: 'off', label: 'Solo quando spento / inattivo (Off)' },
+          ],
+        },
+      },
+    };
+
     const formatSelector = {
       name: 'subtitle_format',
       selector: {
@@ -138,7 +164,8 @@ export class M3EStatusCardEditor extends LitElement {
     if (type === 'custom') {
       schema.push(
         { name: 'subtitle_entity', selector: { entity: {} } },
-        { name: 'subtitle_attribute', selector: { text: {} } },
+        attributeSelector,
+        visibilitySelector,
         formatSelector,
         {
           type: 'grid',
@@ -148,7 +175,6 @@ export class M3EStatusCardEditor extends LitElement {
             { name: 'subtitle_suffix', selector: { text: {} } },
           ],
         },
-        { name: 'subtitle_only_when_active', selector: { boolean: {} } },
         { name: 'active_state', selector: { text: {} } },
         {
           type: 'grid',
@@ -162,6 +188,8 @@ export class M3EStatusCardEditor extends LitElement {
       );
     } else if (type === 'sensor') {
       schema.push(
+        attributeSelector,
+        visibilitySelector,
         formatSelector,
         { name: 'active_state', selector: { text: {} } },
         {
@@ -221,12 +249,12 @@ export class M3EStatusCardEditor extends LitElement {
       active_state: 'Stati attivi personalizzati (es. on,home,detected)',
       label_active: 'Testo stato attivo',
       label_inactive: 'Testo stato inattivo',
-      subtitle_entity: 'Entità per testo stato (es. prossima sveglia)',
-      subtitle_attribute: 'Attributo da mostrare come stato (opzionale)',
+      subtitle_entity: 'Entità per testo stato (opzionale)',
+      subtitle_attribute: 'Attributo del dispositivo da mostrare come stato',
+      subtitle_visibility: 'Quando mostrare lo stato/attributo scelto',
       subtitle_format: 'Formato testo / orario',
       subtitle_prefix: 'Prefisso testo stato (es. Sveglia: )',
       subtitle_suffix: 'Suffisso testo stato',
-      subtitle_only_when_active: 'Mostra testo personalizzato solo quando attiva',
       popup_type: 'Tipo card / Schermata popup',
       tap_action: 'Azione al tocco (Tap)',
       hold_action: 'Azione pressione prolungata (Hold)',
