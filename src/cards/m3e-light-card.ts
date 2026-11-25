@@ -5,7 +5,6 @@ import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/hom
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
-const SERVICE_THROTTLE_MS = 100;
 
 interface LightPreset {
   id: string;
@@ -141,7 +140,6 @@ export class M3ELightCard extends LitElement {
   private _hasMoved = false;
   private _longPressTriggered = false;
   private _longPressTimer: number | null = null;
-  private _lastServiceCall = 0;
   private _prevEntityState?: HassEntity;
 
   public setConfig(config: M3ELightCardConfig): void {
@@ -249,13 +247,31 @@ export class M3ELightCard extends LitElement {
     return null;
   }
 
+  private get _supportsColorTemp(): boolean {
+    const modes = this._entity?.attributes.supported_color_modes;
+    if (!Array.isArray(modes)) return false;
+    return modes.includes('color_temp');
+  }
+
+  private get _supportsRgb(): boolean {
+    const modes = this._entity?.attributes.supported_color_modes;
+    if (!Array.isArray(modes)) return false;
+    return modes.some((m) => ['rgb', 'rgbw', 'rgbww', 'hs', 'xy'].includes(m));
+  }
+
   private get _presets(): LightPreset[] {
+    if (!this._supportsRgb && !this._supportsColorTemp) return [];
+
     const entityId = this._config?.entity ?? '';
     const collected: LightPreset[] = [];
     const seen = new Set<string>();
+    const minK = Number(this._entity?.attributes.min_color_temp_kelvin ?? 2000);
+    const maxK = Number(this._entity?.attributes.max_color_temp_kelvin ?? 6500);
 
     const pushUnique = (p: LightPreset) => {
-      const key = p.hex.toLowerCase();
+      // For color_temp-only bulbs, skip pure RGB presets that have no kelvin value
+      if (!this._supportsRgb && !p.kelvin) return;
+      const key = p.kelvin && !this._supportsRgb ? `k:${p.kelvin}` : p.hex.toLowerCase();
       if (seen.has(key)) return;
       seen.add(key);
       collected.push(p);
@@ -303,9 +319,16 @@ export class M3ELightCard extends LitElement {
       }
     }
 
-    // 4. Default Google Home warm/cool presets as fallback
+    // 4. Default presets filtered by bulb capabilities (and clamped to bulb kelvin range)
     for (const def of DEFAULT_PRESETS) {
-      pushUnique(def);
+      if (def.kelvin) {
+        if (def.kelvin >= minK - 200 && def.kelvin <= maxK + 200) {
+          const clampedK = Math.max(minK, Math.min(maxK, def.kelvin));
+          pushUnique({ ...def, kelvin: clampedK });
+        }
+      } else if (this._supportsRgb) {
+        pushUnique(def);
+      }
     }
 
     return collected;
@@ -347,11 +370,8 @@ export class M3ELightCard extends LitElement {
     `;
   }
 
-  private _emitBrightness(pct: number, force = false): void {
+  private _emitBrightness(pct: number): void {
     if (!this.hass || !this._config) return;
-    const now = performance.now();
-    if (!force && now - this._lastServiceCall < SERVICE_THROTTLE_MS) return;
-    this._lastServiceCall = now;
 
     if (pct <= 0) {
       this.hass.callService('light', 'turn_off', {
@@ -378,10 +398,11 @@ export class M3ELightCard extends LitElement {
     saveRecentPreset(this._config.entity, preset);
     const data: Record<string, unknown> = {
       entity_id: this._config.entity,
-      rgb_color: preset.rgb,
     };
-    if (preset.kelvin) {
+    if (preset.kelvin && this._supportsColorTemp) {
       data.color_temp_kelvin = preset.kelvin;
+    } else if (this._supportsRgb) {
+      data.rgb_color = preset.rgb;
     }
     this.hass.callService('light', 'turn_on', data);
   }
@@ -528,7 +549,6 @@ export class M3ELightCard extends LitElement {
     const pct = this._computeHorizontalPct(e.clientX, e.currentTarget as HTMLElement);
     if (pct !== this._dragPct) {
       this._dragPct = pct;
-      this._emitBrightness(pct, false);
     }
   };
 
@@ -538,7 +558,7 @@ export class M3ELightCard extends LitElement {
     this._clearLongPress();
     if (!this._longPressTriggered) {
       if (this._hasMoved && this._dragPct !== null) {
-        this._emitBrightness(this._dragPct, true);
+        this._emitBrightness(this._dragPct);
       } else {
         this._toggleLight();
       }
@@ -580,10 +600,10 @@ export class M3ELightCard extends LitElement {
       const step = e.shiftKey ? 10 : 5;
       if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
         e.preventDefault();
-        this._emitBrightness(Math.min(100, this._brightnessPct + step), true);
+        this._emitBrightness(Math.min(100, this._brightnessPct + step));
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
         e.preventDefault();
-        this._emitBrightness(Math.max(0, this._brightnessPct - step), true);
+        this._emitBrightness(Math.max(0, this._brightnessPct - step));
       }
     }
   };
@@ -606,7 +626,6 @@ export class M3ELightCard extends LitElement {
     this._popupDragging = true;
     const pct = this._computeVerticalPct(e.clientY, el);
     this._popupDragPct = pct;
-    this._emitBrightness(pct, false);
   };
 
   private _onCapsulePointerMove = (e: PointerEvent): void => {
@@ -614,7 +633,6 @@ export class M3ELightCard extends LitElement {
     const pct = this._computeVerticalPct(e.clientY, e.currentTarget as HTMLElement);
     if (pct !== this._popupDragPct) {
       this._popupDragPct = pct;
-      this._emitBrightness(pct, false);
     }
   };
 
@@ -625,7 +643,7 @@ export class M3ELightCard extends LitElement {
       el.releasePointerCapture(e.pointerId);
     }
     if (this._popupDragPct !== null) {
-      this._emitBrightness(this._popupDragPct, true);
+      this._emitBrightness(this._popupDragPct);
     }
     this._popupDragging = false;
     this._popupDragPct = null;
@@ -813,40 +831,44 @@ export class M3ELightCard extends LitElement {
                   </div>
                 </div>
 
-                <div class="swatch-bar" role="radiogroup" aria-label="Light color presets">
-                  <button
-                    type="button"
-                    class="palette-btn"
-                    title="Use Material You theme color"
-                    @click=${() => {
-                      this._selectedPresetId = null;
-                      this._toggleLight();
-                    }}
-                    aria-label="Color presets"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"
-                      />
-                    </svg>
-                  </button>
+                ${this._presets.length > 0
+                  ? html`
+                      <div class="swatch-bar" role="radiogroup" aria-label="Light color presets">
+                        <button
+                          type="button"
+                          class="palette-btn"
+                          title="Use Material You theme color"
+                          @click=${() => {
+                            this._selectedPresetId = null;
+                            this._toggleLight();
+                          }}
+                          aria-label="Color presets"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"
+                            />
+                          </svg>
+                        </button>
 
-                  ${this._presets.map(
-                    (preset) => html`
-                      <button
-                        type="button"
-                        class="color-swatch ${isOn && matchedPreset === preset.id ? 'selected' : ''}"
-                        style="background: ${preset.hex};"
-                        role="radio"
-                        aria-checked=${String(isOn && matchedPreset === preset.id)}
-                        aria-label=${preset.label}
-                        title=${preset.label}
-                        @click=${() => this._selectPreset(preset)}
-                      ></button>
-                    `,
-                  )}
-                </div>
+                        ${this._presets.map(
+                          (preset) => html`
+                            <button
+                              type="button"
+                              class="color-swatch ${isOn && matchedPreset === preset.id ? 'selected' : ''}"
+                              style="background: ${preset.hex};"
+                              role="radio"
+                              aria-checked=${String(isOn && matchedPreset === preset.id)}
+                              aria-label=${preset.label}
+                              title=${preset.label}
+                              @click=${() => this._selectPreset(preset)}
+                            ></button>
+                          `,
+                        )}
+                      </div>
+                    `
+                  : nothing}
               </div>
             `
           : nothing}

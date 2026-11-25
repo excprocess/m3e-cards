@@ -63,6 +63,7 @@ export class M3EStatusCard extends LitElement {
   // Media volume slider interaction state
   @state() private _volDragging = false;
   @state() private _volPct: number | null = null;
+  private _volPendingTimer: number | null = null;
 
   @query('dialog.status-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.status-tile') private _tileEl?: HTMLElement;
@@ -92,6 +93,7 @@ export class M3EStatusCard extends LitElement {
     return {
       schema: [
         { name: 'entity', required: true, selector: { entity: {} } },
+        { name: 'status_entity', selector: { entity: {} } },
         { name: 'name', selector: { text: {} } },
         {
           type: 'grid',
@@ -143,6 +145,7 @@ export class M3EStatusCard extends LitElement {
         },
         { name: 'secondary_entity', selector: { entity: {} } },
         { name: 'outdoor_entity', selector: { entity: { domain: 'sensor' } } },
+        { name: 'remote_device', selector: { text: {} } },
         {
           type: 'expandable',
           title: 'Pulsanti Telecomando (Entità button/script o comandi remote)',
@@ -166,6 +169,7 @@ export class M3EStatusCard extends LitElement {
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Entità principale',
+          status_entity: 'Entità stato dispositivo (opzionale, es. per telecomandi)',
           name: 'Nome personalizzato',
           icon_active: 'Icona stato attivo',
           icon_inactive: 'Icona stato inattivo',
@@ -176,6 +180,7 @@ export class M3EStatusCard extends LitElement {
           tap_action: 'Azione al tocco',
           secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
           outdoor_entity: 'Temperatura esterna (per Clima)',
+          remote_device: 'Device ID trasmettitore (per remote multi-dispositivo)',
           volume_up: 'Volume + (es. button.tv_vol_up o VolumeUp)',
           volume_down: 'Volume − (es. button.tv_vol_down o VolumeDown)',
           mute: 'Mute',
@@ -230,6 +235,7 @@ export class M3EStatusCard extends LitElement {
     if (changedProps.has('hass') && this._config && this.hass) {
       const watched = [
         this._config.entity,
+        this._config.status_entity,
         this._config.secondary_entity,
         this._config.outdoor_entity,
         ...this._getSiblingEntityIds(),
@@ -254,9 +260,37 @@ export class M3EStatusCard extends LitElement {
     return this.hass.states[this._config.entity];
   }
 
+  /** Entity used to compute active/inactive state & subtitle (defaults to primary entity). */
+  private get _statusEntity(): HassEntity | undefined {
+    if (!this.hass || !this._config) return undefined;
+    if (this._config.status_entity) {
+      return this.hass.states[this._config.status_entity] ?? this._entity;
+    }
+    return this._entity;
+  }
+
+  /**
+   * Resolves the media_player entity for Media popups (auto-discovers sibling media_player.*
+   * on the same device_id when the card is configured with an Android TV remote.* entity).
+   */
+  private get _mediaEntity(): HassEntity | undefined {
+    if (!this.hass || !this._config) return undefined;
+    if (this._config.entity.startsWith('media_player.')) return this._entity;
+    const deviceId = this.hass.entities?.[this._config.entity]?.device_id;
+    if (deviceId && this.hass.entities) {
+      for (const [id, entry] of Object.entries(this.hass.entities)) {
+        if (entry.device_id === deviceId && id.startsWith('media_player.')) {
+          const st = this.hass.states[id];
+          if (st) return st;
+        }
+      }
+    }
+    return this._entity;
+  }
+
   /**
    * Auto-discovers sibling sensor entities belonging to the exact same Home Assistant device_id
-   * (e.g. humidity on a thermometer device, or temperature on a motion sensor device).
+   * (e.g. humidity on a thermometer device, or temperature/illuminance/battery on a motion sensor).
    */
   private _getSiblingEntityIds(): string[] {
     if (!this.hass?.entities || !this._config) return [];
@@ -266,7 +300,11 @@ export class M3EStatusCard extends LitElement {
 
     const siblings: string[] = [];
     for (const [id, entry] of Object.entries(this.hass.entities)) {
-      if (id !== primaryId && entry.device_id === deviceId && id.startsWith('sensor.')) {
+      if (
+        id !== primaryId &&
+        entry.device_id === deviceId &&
+        (id.startsWith('sensor.') || id.startsWith('media_player.'))
+      ) {
         siblings.push(id);
       }
     }
@@ -320,7 +358,10 @@ export class M3EStatusCard extends LitElement {
     if (cfg !== 'auto') return cfg;
     const id = this._config?.entity ?? '';
     if (id.startsWith('climate.')) return 'climate';
-    if (id.startsWith('remote.')) return 'remote';
+    if (id.startsWith('remote.')) {
+      // Android TV / Apple TV remotes with a sibling media_player default to remote unless user picks media
+      return 'remote';
+    }
     if (id.startsWith('media_player.')) {
       const dc = String(this._entity?.attributes.device_class ?? '');
       return dc === 'tv' ? 'remote' : 'media';
@@ -329,7 +370,8 @@ export class M3EStatusCard extends LitElement {
   }
 
   private get _isActive(): boolean {
-    const stateStr = String(this._entity?.state ?? '').toLowerCase();
+    const entity = this._statusEntity;
+    const stateStr = String(entity?.state ?? '').toLowerCase();
     if (!stateStr || stateStr === 'unavailable' || stateStr === 'unknown') return false;
 
     if (this._config?.active_state?.trim()) {
@@ -340,8 +382,7 @@ export class M3EStatusCard extends LitElement {
       return allowed.includes(stateStr);
     }
 
-    // Numeric sensors (e.g. temperature) are highlighted when valid if popup is sensor
-    if (this._config?.entity.startsWith('sensor.') && !Number.isNaN(Number(stateStr))) {
+    if (entity?.entity_id.startsWith('sensor.') && !Number.isNaN(Number(stateStr))) {
       return true;
     }
 
@@ -349,7 +390,7 @@ export class M3EStatusCard extends LitElement {
   }
 
   private get _stateLabel(): string {
-    const entity = this._entity;
+    const entity = this._statusEntity;
     if (!entity) return 'Unavailable';
     const raw = entity.state;
     if (raw === 'unavailable' || raw === 'unknown') return 'Unavailable';
@@ -367,7 +408,6 @@ export class M3EStatusCard extends LitElement {
     if (domain === 'sensor') {
       const unit = entity.attributes.unit_of_measurement;
       const primaryText = unit ? `${raw}${unit}` : raw;
-      // If this is a thermometer and the same device has a humidity sensor, show it neatly!
       const isTemp =
         entity.attributes.device_class === 'temperature' ||
         unit === '°C' ||
@@ -600,18 +640,26 @@ export class M3EStatusCard extends LitElement {
         return;
       }
       // Treat as remote.send_command command name
-      this.hass.callService('remote', 'send_command', {
+      const payload: Record<string, unknown> = {
         entity_id: this._config.entity,
         command: binding,
-      });
+      };
+      if (this._config.remote_device?.trim()) {
+        payload.device = this._config.remote_device.trim();
+      }
+      this.hass.callService('remote', 'send_command', payload);
       return;
     }
 
     if (this._config.entity.startsWith('remote.')) {
-      this.hass.callService('remote', 'send_command', {
+      const payload: Record<string, unknown> = {
         entity_id: this._config.entity,
         command: defaultCommand ?? key,
-      });
+      };
+      if (this._config.remote_device?.trim()) {
+        payload.device = this._config.remote_device.trim();
+      }
+      this.hass.callService('remote', 'send_command', payload);
       return;
     }
 
@@ -650,15 +698,19 @@ export class M3EStatusCard extends LitElement {
      MEDIA VOLUME PILL INTERACTION
      ========================================================================= */
   private get _mediaVolumePct(): number {
-    if (this._volDragging && this._volPct !== null) return this._volPct;
-    const v = this._entity?.attributes.volume_level;
-    return typeof v === 'number' ? Math.round(v * 100) : 40;
+    if (this._volPct !== null) return this._volPct;
+    const v = this._mediaEntity?.attributes.volume_level;
+    return typeof v === 'number' ? Math.round(v * 100) : 0;
   }
 
   private _onVolPointerDown = (e: PointerEvent): void => {
     if (e.button !== 0) return;
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
+    if (this._volPendingTimer !== null) {
+      window.clearTimeout(this._volPendingTimer);
+      this._volPendingTimer = null;
+    }
     this._volDragging = true;
     this._updateVolFromPointer(e.clientX, el, false);
   };
@@ -674,19 +726,45 @@ export class M3EStatusCard extends LitElement {
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     this._updateVolFromPointer(e.clientX, el, true);
     this._volDragging = false;
-    this._volPct = null;
+    // Keep optimistic percentage briefly until HA pushes updated volume_level
+    this._volPendingTimer = window.setTimeout(() => {
+      this._volPct = null;
+      this._volPendingTimer = null;
+    }, 900);
   };
 
   private _updateVolFromPointer(clientX: number, el: HTMLElement, commit: boolean): void {
     const rect = el.getBoundingClientRect();
+    if (rect.width <= 0) return;
     const pct = Math.round(Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * 100);
     this._volPct = pct;
-    if (commit && this.hass && this._config) {
+    const media = this._mediaEntity;
+    if (commit && this.hass && media) {
       this.hass.callService('media_player', 'volume_set', {
-        entity_id: this._config.entity,
-        volume_level: pct / 100,
+        entity_id: media.entity_id,
+        volume_level: Number((pct / 100).toFixed(2)),
       });
     }
+  }
+
+  private _callMediaService(service: string, extra: Record<string, unknown> = {}): void {
+    const media = this._mediaEntity;
+    if (!this.hass || !media) return;
+    this.hass.callService('media_player', service, {
+      entity_id: media.entity_id,
+      ...extra,
+    });
+  }
+
+  private _openMoreInfo(entityId: string): void {
+    this.closePopup();
+    this.dispatchEvent(
+      new CustomEvent('hass-more-info', {
+        bubbles: true,
+        composed: true,
+        detail: { entityId },
+      }),
+    );
   }
 
   private _callEntityService(service: string, extra: Record<string, unknown> = {}): void {
@@ -726,6 +804,45 @@ export class M3EStatusCard extends LitElement {
   /* =========================================================================
      POPUP VARIANT RENDERERS (Hero Top + Modular Trait Stack Bottom)
      ========================================================================= */
+  private _cleanSiblingLabel(sec: HassEntity): string {
+    const dc = String(sec.attributes.device_class ?? '');
+    const rawName = sec.attributes.friendly_name || '';
+    const primaryName =
+      this._config?.name || this._entity?.attributes.friendly_name || '';
+
+    if (rawName && primaryName) {
+      const lowerRaw = rawName.toLowerCase();
+      const lowerPrimary = primaryName.toLowerCase().trim();
+      if (lowerRaw.startsWith(lowerPrimary) && rawName.length > primaryName.length) {
+        const stripped = rawName
+          .slice(primaryName.length)
+          .replace(/^[\s\-–—:]+/, '')
+          .trim();
+        if (stripped) return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+      }
+    }
+
+    if (rawName) return rawName;
+    return dc ? dc.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : 'Sensor';
+  }
+
+  private _renderSiblingIcon(sec: HassEntity) {
+    if (typeof customElements !== 'undefined' && customElements.get('ha-state-icon')) {
+      return html`<ha-state-icon class="mini-ha-icon" .hass=${this.hass} .stateObj=${sec}></ha-state-icon>`;
+    }
+    const dc = String(sec.attributes.device_class ?? '');
+    if (dc === 'humidity') {
+      return html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69Z"/></svg>`;
+    }
+    if (dc === 'illuminance') {
+      return html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm-1-5h2v3h-2V2Zm0 17h2v3h-2v-3ZM2 11h3v2H2v-2Zm17 0h3v2h-3v-2ZM4.93 6.34l1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12Zm10.61 10.61 1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12ZM17.66 4.93l1.41 1.41-2.12 2.12-1.41-1.41 2.12-2.12ZM6.34 19.07l-1.41-1.41 2.12-2.12 1.41 1.41-2.12 2.12Z"/></svg>`;
+    }
+    if (dc === 'battery') {
+      return html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M15.67 4H14V2h-4v2H8.33A1.33 1.33 0 0 0 7 5.33v15.33A1.34 1.34 0 0 0 8.33 22h7.33A1.34 1.34 0 0 0 17 20.67V5.33A1.33 1.33 0 0 0 15.67 4Z"/></svg>`;
+    }
+    return html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0Zm-3-9a1 1 0 0 1 1 1v4h-2V5a1 1 0 0 1 1-1Z"/></svg>`;
+  }
+
   private _renderSensorPopup(icon?: string) {
     const siblings = this._getSiblingSensors();
 
@@ -746,15 +863,12 @@ export class M3EStatusCard extends LitElement {
         ? html`
             <div class="modular-stack">
               ${siblings.map((sec) => {
-                const dc = String(sec.attributes.device_class ?? '');
-                const label = sec.attributes.friendly_name || (dc ? dc.replace(/^./, (c) => c.toUpperCase()) : 'Sensor');
+                const label = this._cleanSiblingLabel(sec);
                 const val = `${sec.state}${sec.attributes.unit_of_measurement ?? ''}`;
                 return html`
                   <div class="info-pill">
                     <span class="info-pill-left">
-                      ${dc === 'humidity'
-                        ? html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69Z"/></svg>`
-                        : html`<svg viewBox="0 0 24 24" class="mini-svg"><path fill="currentColor" d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0Zm-3-9a1 1 0 0 1 1 1v4h-2V5a1 1 0 0 1 1-1Z"/></svg>`}
+                      ${this._renderSiblingIcon(sec)}
                       <span>${label}</span>
                     </span>
                     <span class="info-pill-val">${val}</span>
@@ -1197,7 +1311,7 @@ export class M3EStatusCard extends LitElement {
   }
 
   private _renderMediaPopup() {
-    const entity = this._entity;
+    const entity = this._mediaEntity;
     const isPlaying = entity?.state === 'playing';
     const isIdle = !entity || entity.state === 'idle' || entity.state === 'off';
     const mediaTitle = String(entity?.attributes.media_title ?? (isIdle ? 'Nothing playing' : 'Paused'));
@@ -1226,7 +1340,7 @@ export class M3EStatusCard extends LitElement {
                   type="button"
                   class="media-play-fab"
                   aria-label=${isPlaying ? 'Pause' : 'Play'}
-                  @click=${() => this._callEntityService('media_play_pause')}
+                  @click=${() => this._callMediaService('media_play_pause')}
                 >
                   ${isPlaying ? '⏸' : '▶'}
                 </button>
@@ -1238,18 +1352,18 @@ export class M3EStatusCard extends LitElement {
           <button
             type="button"
             class="scrubber-btn"
-            @click=${() => this._callEntityService('media_previous_track')}
+            @click=${() => this._callMediaService('media_previous_track')}
           >
             ⏮
           </button>
           <div class="scrubber-track">
-            <div class="scrubber-fill" style="width: ${isIdle ? 50 : 28}%"></div>
-            <span class="scrubber-dot" style="left: ${isIdle ? 50 : 28}%"></span>
+            <div class="scrubber-fill" style="width: ${isIdle ? 0 : 28}%"></div>
+            ${!isIdle ? html`<span class="scrubber-dot" style="left: 28%"></span>` : nothing}
           </div>
           <button
             type="button"
             class="scrubber-btn"
-            @click=${() => this._callEntityService('media_next_track')}
+            @click=${() => this._callMediaService('media_next_track')}
           >
             ⏭
           </button>
@@ -1284,28 +1398,42 @@ export class M3EStatusCard extends LitElement {
           </div>
         </div>
 
-        <!-- Shape Coding: Full Pill (9999px) Tonal Primary for Active Stop Casting -->
+        <!-- Primary action pill (Stop when active, Turn on when off) -->
         ${!isIdle
           ? html`
               <button
                 type="button"
                 class="primary-action-pill"
-                @click=${() => this._callEntityService('turn_off')}
+                @click=${() => this._callMediaService('media_stop')}
               >
                 Stop casting
               </button>
             `
-          : nothing}
+          : entity?.state === 'off'
+            ? html`
+                <button
+                  type="button"
+                  class="primary-action-pill"
+                  @click=${() => this._callMediaService('turn_on')}
+                >
+                  Turn on
+                </button>
+              `
+            : nothing}
 
-        <!-- Shape Coding: 20px Rounded Rectangle Neutral for Secondary Actions -->
-        <button
-          type="button"
-          class="secondary-action-card"
-          @click=${() => this._callEntityService('media_play_pause')}
-        >
-          <span>${isIdle ? 'Cast my audio' : appName ? `Open ${appName}` : 'Open remote'}</span>
-          <span>↗</span>
-        </button>
+        <!-- Secondary action: opens native Home Assistant Media Browser / More Info -->
+        ${entity
+          ? html`
+              <button
+                type="button"
+                class="secondary-action-card"
+                @click=${() => this._openMoreInfo(entity.entity_id)}
+              >
+                <span>Media &amp; Controls</span>
+                <span>↗</span>
+              </button>
+            `
+          : nothing}
       </div>
     `;
   }
@@ -1631,6 +1759,15 @@ export class M3EStatusCard extends LitElement {
         flex: 0 0 auto;
       }
 
+      .mini-ha-icon {
+        --mdc-icon-size: 20px;
+        width: 20px;
+        height: 20px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+      }
+
       /* =====================================================================
          VARIANT 1: SENSOR HERO + TELEMETRY PILL
          ===================================================================== */
@@ -1953,15 +2090,17 @@ export class M3EStatusCard extends LitElement {
 
       .mode-sheet {
         width: 100%;
+        max-height: 78%;
         background: var(--md-sys-color-surface-container, #1e1f26);
         border-radius: 28px 28px 0 0;
-        padding: 16px 16px 24px;
+        padding: 16px 16px 20px;
         display: flex;
         flex-direction: column;
         gap: 12px;
       }
 
       .mode-sheet-header {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         gap: 8px;
@@ -1970,6 +2109,11 @@ export class M3EStatusCard extends LitElement {
       }
 
       .mode-sheet-list {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        max-height: 52vh;
+        padding-bottom: 6px;
         display: flex;
         flex-direction: column;
         gap: 10px;

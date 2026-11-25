@@ -96,6 +96,8 @@ export interface M3ERemoteButtonsConfig {
 export interface M3EStatusCardConfig extends LovelaceCardConfig {
   entity: string;
   name?: string;
+  /** Optional linked entity used to determine active/inactive status (e.g. smart plug or ping sensor for a remote) */
+  status_entity?: string;
   /** Icon shown when the entity is in an active state */
   icon_active?: string;
   /** Icon shown when the entity is in an inactive state */
@@ -114,6 +116,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   outdoor_entity?: string;
   /** Primary tap behavior: open popup (default) or toggle entity */
   tap_action?: 'popup' | 'toggle';
+  /** Optional target device ID for multi-device remote transmitters (remote.send_command device parameter) */
+  remote_device?: string;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */
   remote_buttons?: M3ERemoteButtonsConfig;
 }
