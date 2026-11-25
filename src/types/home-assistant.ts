@@ -46,6 +46,8 @@ export interface HomeAssistant {
     service: string,
     serviceData?: Record<string, unknown>,
   ): Promise<void> | void;
+  callWS?<T = unknown>(msg: Record<string, unknown>): Promise<T>;
+  callApi?<T = unknown>(method: string, path: string): Promise<T>;
   themes?: {
     darkMode?: boolean;
     theme?: string;
