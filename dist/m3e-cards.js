@@ -7332,6 +7332,11 @@ let y = class extends $ {
       return l`
                 <div class="dialog-surface">
                   <header class="dialog-header">
+                    ${u}
+                    <div class="dialog-title-wrap">
+                      <span class="dialog-title">${t}</span>
+                      ${a ? l`<span class="dialog-last-changed">${a}</span>` : p}
+                    </div>
                     ${c ? l`
                           <button
                             type="button"
@@ -7343,12 +7348,7 @@ let y = class extends $ {
                           >
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
-                        ` : u}
-                    <div class="dialog-title-wrap">
-                      <span class="dialog-title">${t}</span>
-                      ${a ? l`<span class="dialog-last-changed">${a}</span>` : p}
-                    </div>
-                    ${c ? u : p}
+                        ` : p}
                   </header>
 
                   ${r === "selector" ? this._renderSelectorPopup() : r === "sensor" || r === "custom" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}

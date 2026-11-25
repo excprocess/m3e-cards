@@ -2157,6 +2157,13 @@ export class M3EStatusCard extends LitElement {
               return html`
                 <div class="dialog-surface">
                   <header class="dialog-header">
+                    ${closeBtn}
+                    <div class="dialog-title-wrap">
+                      <span class="dialog-title">${name}</span>
+                      ${lastChanged
+                        ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                        : nothing}
+                    </div>
                     ${powerEnt
                       ? html`
                           <button
@@ -2170,14 +2177,7 @@ export class M3EStatusCard extends LitElement {
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
                         `
-                      : closeBtn}
-                    <div class="dialog-title-wrap">
-                      <span class="dialog-title">${name}</span>
-                      ${lastChanged
-                        ? html`<span class="dialog-last-changed">${lastChanged}</span>`
-                        : nothing}
-                    </div>
-                    ${powerEnt ? closeBtn : nothing}
+                      : nothing}
                   </header>
 
                   ${popupType === 'selector'

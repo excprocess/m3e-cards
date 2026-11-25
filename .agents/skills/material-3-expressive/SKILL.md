@@ -34,6 +34,10 @@ For the complete list of CSS tokens exposed by `material-you-utilities` and Mate
      - `secondary-container` ↔ `on-secondary-container`
      - `tertiary-container` ↔ `on-tertiary-container`
    - Never hardcode hex colors or opacity-hacked text colors that break under Medium/High contrast (`contrast > 0`).
+5. **MAX PRIORITY — Strict Cross-Card Visual & Spatial Consistency:**
+   - Every card and popup in this suite MUST share the exact same spatial grammar, geometry, typography, and control placement as existing sibling cards (check `m3e-light-card`, `m3e-status-card`, `m3e-toggle-card`, `m3e-glance-card`, `m3e-people-card` before designing or modifying any UI).
+   - **Popup Header Order (MANDATORY):** Always place the **`×` Close button on the top-left**, the **Title + Last Changed in the middle**, and any **Power / On-Off toggle or primary header action on the top-right** (matching `m3e-light-card` and Google Home). Never invert left/right control placement between popups.
+   - **Shared Design Language:** Mirror corner radii (`28px` default / `9999px` pill), spacing, icon badge dimensions (`46px` Glance/People circles, `22–24px` icons), and M3 Expressive motion curves across all cards.
 
 ---
 
