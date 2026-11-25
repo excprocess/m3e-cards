@@ -1223,6 +1223,27 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private get _toggleablePowerEntity(): HassEntity | undefined {
+    const candidates = [this._entity, this._statusEntity].filter(Boolean) as HassEntity[];
+    for (const ent of candidates) {
+      const domain = ent.entity_id.split('.')[0];
+      const dc = String(ent.attributes.device_class ?? '').toLowerCase();
+      if (domain === 'light' || (domain === 'switch' && dc === 'outlet')) {
+        return ent;
+      }
+    }
+    return undefined;
+  }
+
+  private _togglePowerEntity(ent: HassEntity): void {
+    if (!this.hass) return;
+    const domain = ent.entity_id.split('.')[0];
+    const isOn = ent.state === 'on';
+    this.hass.callService(domain, isOn ? 'turn_off' : 'turn_on', {
+      entity_id: ent.entity_id,
+    });
+  }
+
   private _openEntityMoreInfo(entityId: string): void {
     const dialog = this._dialogEl;
     if (dialog?.open) {
@@ -2060,41 +2081,66 @@ export class M3EStatusCard extends LitElement {
         }}
       >
         ${this._popupOpen
-          ? html`
-              <div class="dialog-surface">
-                <header class="dialog-header">
-                  <button
-                    type="button"
-                    class="icon-btn"
-                    @click=${() => this.closePopup()}
-                    aria-label="Close"
-                  >
-                    <svg viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
-                      />
-                    </svg>
-                  </button>
-                  <div class="dialog-title-wrap">
-                    <span class="dialog-title">${name}</span>
-                    ${lastChanged
-                      ? html`<span class="dialog-last-changed">${lastChanged}</span>`
-                      : nothing}
-                  </div>
-                </header>
+          ? (() => {
+              const powerEnt =
+                popupType === 'sensor' || popupType === 'custom'
+                  ? this._toggleablePowerEntity
+                  : undefined;
+              const powerOn = powerEnt?.state === 'on';
+              const closeBtn = html`
+                <button
+                  type="button"
+                  class="icon-btn"
+                  @click=${() => this.closePopup()}
+                  aria-label="Close"
+                >
+                  <svg viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+                    />
+                  </svg>
+                </button>
+              `;
 
-                ${popupType === 'selector'
-                  ? this._renderSelectorPopup()
-                  : popupType === 'sensor' || popupType === 'custom'
-                    ? this._renderSensorPopup(icon)
-                    : popupType === 'climate'
-                      ? this._renderClimatePopup()
-                      : popupType === 'remote'
-                        ? this._renderRemotePopup()
-                        : this._renderMediaPopup()}
-              </div>
-            `
+              return html`
+                <div class="dialog-surface">
+                  <header class="dialog-header">
+                    ${powerEnt
+                      ? html`
+                          <button
+                            type="button"
+                            class="m3-header-switch ${powerOn ? 'is-on' : ''}"
+                            role="switch"
+                            aria-checked=${String(powerOn)}
+                            aria-label=${powerOn ? 'Spegni' : 'Accendi'}
+                            @click=${() => this._togglePowerEntity(powerEnt)}
+                          >
+                            <span class="m3-header-switch-thumb" aria-hidden="true"></span>
+                          </button>
+                        `
+                      : closeBtn}
+                    <div class="dialog-title-wrap">
+                      <span class="dialog-title">${name}</span>
+                      ${lastChanged
+                        ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                        : nothing}
+                    </div>
+                    ${powerEnt ? closeBtn : nothing}
+                  </header>
+
+                  ${popupType === 'selector'
+                    ? this._renderSelectorPopup()
+                    : popupType === 'sensor' || popupType === 'custom'
+                      ? this._renderSensorPopup(icon)
+                      : popupType === 'climate'
+                        ? this._renderClimatePopup()
+                        : popupType === 'remote'
+                          ? this._renderRemotePopup()
+                          : this._renderMediaPopup()}
+                </div>
+              `;
+            })()
           : nothing}
       </dialog>
     `;
@@ -2341,6 +2387,55 @@ export class M3EStatusCard extends LitElement {
       .icon-btn svg {
         width: 22px;
         height: 22px;
+      }
+
+      /* Material 3 Expressive Header Toggle Switch (for outlet / light in sensor popup) */
+      .m3-header-switch {
+        position: relative;
+        flex: 0 0 52px;
+        width: 52px;
+        height: 32px;
+        padding: 0;
+        border-radius: 9999px;
+        border: 2px solid var(--md-sys-color-outline, #8e9099);
+        background: var(--md-sys-color-surface-container-highest, #2f313a);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          border-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .m3-header-switch.is-on {
+        background: var(--md-sys-color-primary, #bac3ff);
+        border-color: var(--md-sys-color-primary, #bac3ff);
+      }
+
+      .m3-header-switch:active {
+        transform: scale(0.95);
+      }
+
+      .m3-header-switch-thumb {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--md-sys-color-outline, #8e9099);
+        transform: translateX(6px);
+        transition:
+          transform var(--m3e-spring-bouncy),
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast),
+          background-color var(--m3e-spring-effects-fast);
+      }
+
+      .m3-header-switch.is-on .m3-header-switch-thumb {
+        width: 24px;
+        height: 24px;
+        background: var(--md-sys-color-on-primary, #1f2a56);
+        transform: translateX(22px);
       }
 
       .modular-stack {
