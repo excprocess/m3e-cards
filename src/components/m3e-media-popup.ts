@@ -5,6 +5,9 @@ import type { HassEntity, HomeAssistant } from '../types/home-assistant';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { renderMediaBrandBadge } from '../utils/media-brand';
+import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
+
+const SUPPORT_VOLUME_SET = 4;
 
 function formatClock(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
@@ -33,6 +36,7 @@ export class M3EMediaPopup extends LitElement {
   @state() private _scrubPct: number | null = null;
   @state() private _volDragging = false;
   @state() private _volPct: number | null = null;
+  @state() private _palette: ArtworkPalette | null = null;
 
   @query('dialog.media-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.dialog-surface') private _dialogSurfaceEl?: HTMLDivElement;
@@ -41,6 +45,8 @@ export class M3EMediaPopup extends LitElement {
 
   private _tickTimer: number | null = null;
   private _volPendingTimer: number | null = null;
+  private _lastVolSentAt = 0;
+  private _lastArtworkUrl = '';
   private _lastTrackKey = '';
   private _pendingTrackDir: 'next' | 'prev' = 'next';
 
@@ -93,6 +99,18 @@ export class M3EMediaPopup extends LitElement {
         this._animateTrackTransition(this._pendingTrackDir);
       }
       this._lastTrackKey = trackKey;
+
+      const artUrl = String(entity.attributes.entity_picture ?? '').trim();
+      if (artUrl !== this._lastArtworkUrl) {
+        this._lastArtworkUrl = artUrl;
+        if (artUrl) {
+          void extractArtworkPalette(artUrl).then((pal) => {
+            if (this._lastArtworkUrl === artUrl) this._palette = pal;
+          });
+        } else {
+          this._palette = null;
+        }
+      }
     } else {
       this._lastTrackKey = '';
     }
@@ -258,7 +276,13 @@ export class M3EMediaPopup extends LitElement {
   private _onVolMove = (e: PointerEvent): void => {
     if (!this._volDragging) return;
     e.preventDefault();
-    this._volPct = Math.round(this._pctFromX(e.clientX, e.currentTarget as HTMLElement));
+    const nextPct = Math.round(this._pctFromX(e.clientX, e.currentTarget as HTMLElement));
+    this._volPct = nextPct;
+    const now = Date.now();
+    if (now - this._lastVolSentAt >= 120) {
+      this._lastVolSentAt = now;
+      this._call('volume_set', { volume_level: Number((nextPct / 100).toFixed(2)) });
+    }
   };
 
   private _onVolUp = (e: PointerEvent): void => {
@@ -322,10 +346,23 @@ export class M3EMediaPopup extends LitElement {
       ? (entity!.attributes.source_list as string[])
       : [];
     const currentSource = String(entity?.attributes.source ?? '');
+    const isUnavailable = !entity || stateStr === 'unavailable' || stateStr === 'unknown';
+    const features = Number(entity?.attributes.supported_features ?? 0);
+    const supportsVolume =
+      !isUnavailable &&
+      (features === 0 ||
+        (features & SUPPORT_VOLUME_SET) !== 0 ||
+        typeof entity?.attributes.volume_level === 'number');
+    const hasCastOptions = sourceList.length > 0 || allPlayers.length > 1;
+    const displayVol = isMuted ? 0 : vol;
+    const paletteVars = this._palette
+      ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};`
+      : '';
 
     return html`
       <dialog
         class="media-dialog"
+        style=${paletteVars}
         @click=${(e: MouseEvent) => {
           if (e.target === this._dialogEl) this.close();
         }}
@@ -517,62 +554,98 @@ export class M3EMediaPopup extends LitElement {
                   </button>
                 </div>
 
-                <!-- M3 Expressive Large Native Volume Slider -->
-                <div
-                  class="volume-pill ${this._volDragging ? 'is-dragging' : ''} ${isMuted ? 'is-muted' : ''}"
-                  role="slider"
-                  aria-label="Volume"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                  aria-valuenow=${vol}
-                  @pointerdown=${this._onVolDown}
-                  @pointermove=${this._onVolMove}
-                  @pointerup=${this._onVolUp}
-                  @pointercancel=${this._onVolUp}
-                >
-                  <div class="volume-fill" style="width: ${isMuted ? 0 : vol}%;">
-                    <span class="volume-handle" aria-hidden="true"></span>
-                  </div>
-                  <div class="volume-stop-dot" aria-hidden="true"></div>
-                  <div class="volume-content">
-                    <button
-                      type="button"
-                      class="mute-btn"
-                      aria-label=${isMuted ? 'Riattiva audio' : 'Muto'}
-                      @pointerdown=${(e: Event) => e.stopPropagation()}
-                      @click=${(e: Event) => {
-                        e.stopPropagation();
-                        this._call('volume_mute', { is_volume_muted: !isMuted });
-                      }}
-                    >
-                      <svg viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d=${isMuted || vol === 0
-                            ? 'M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z'
-                            : vol < 50
-                              ? 'M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z'
-                              : 'M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z'}
-                        />
-                      </svg>
-                    </button>
-                    <span class="volume-pct">${isMuted ? 'Muted' : `${vol}%`}</span>
-                  </div>
-                </div>
+                <!-- Authentic M3 Expressive Volume Slider (50px Pill Track + Gap + Vertical Handle + Stop Dot) -->
+                ${supportsVolume
+                  ? html`
+                      <div class="m3-vol-row">
+                        <button
+                          type="button"
+                          class="m3-mute-btn ${isMuted ? 'is-muted' : ''}"
+                          aria-label=${isMuted ? 'Riattiva audio' : 'Muto'}
+                          @click=${() =>
+                            this._call('volume_mute', { is_volume_muted: !isMuted })}
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              fill="currentColor"
+                              d=${isMuted || vol === 0
+                                ? 'M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z'
+                                : vol < 50
+                                  ? 'M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z'
+                                  : 'M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z'}
+                            />
+                          </svg>
+                        </button>
 
-                <!-- Output / Cast Pill Button -->
+                        <div
+                          class="m3-vol-track ${this._volDragging ? 'is-dragging' : ''}"
+                          role="slider"
+                          aria-label="Volume"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          aria-valuenow=${displayVol}
+                          @pointerdown=${this._onVolDown}
+                          @pointermove=${this._onVolMove}
+                          @pointerup=${this._onVolUp}
+                          @pointercancel=${this._onVolUp}
+                        >
+                          ${this._volDragging
+                            ? html`<span class="m3-vol-tooltip" style="left: ${displayVol}%;">${displayVol}%</span>`
+                            : nothing}
+                          <div
+                            class="m3-vol-active"
+                            style="width: max(0px, calc(${displayVol}% - 6px));"
+                          ></div>
+                          <div class="m3-vol-handle" style="left: ${displayVol}%;"></div>
+                          <div
+                            class="m3-vol-inactive"
+                            style="left: calc(${displayVol}% + 6px);"
+                          >
+                            ${displayVol < 96
+                              ? html`<span class="m3-vol-stop" aria-hidden="true"></span>`
+                              : nothing}
+                          </div>
+                        </div>
+
+                        <span class="m3-vol-readout">${isMuted ? 'Muto' : `${vol}%`}</span>
+                      </div>
+                    `
+                  : nothing}
+
+                <!-- M3 Expressive Compact Pill Source / Output Selector -->
                 <button
                   type="button"
-                  class="cast-pill-btn"
-                  @click=${() => (this._castSheetOpen = true)}
+                  class="cast-pill-btn ${isUnavailable ? 'is-disabled' : ''}"
+                  ?disabled=${isUnavailable}
+                  @click=${() => {
+                    if (hasCastOptions) {
+                      this._castSheetOpen = true;
+                    } else {
+                      this._openMoreInfo();
+                    }
+                  }}
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      fill="currentColor"
-                      d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
-                    />
-                  </svg>
-                  <span>${deviceName}</span>
+                  <span class="cast-pill-left">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
+                      />
+                    </svg>
+                    <span class="cast-pill-label">
+                      ${currentSource ? `${deviceName} · ${currentSource}` : deviceName}
+                    </span>
+                  </span>
+                  ${hasCastOptions
+                    ? html`
+                        <svg viewBox="0 0 24 24" class="cast-pill-chevron" aria-hidden="true">
+                          <path
+                            fill="currentColor"
+                            d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"
+                          />
+                        </svg>
+                      `
+                    : nothing}
                 </button>
 
                 <!-- Inline Cast / Source Bottom Sheet (Screen 2) -->
@@ -685,20 +758,32 @@ export class M3EMediaPopup extends LitElement {
                             })}
                           </div>
 
-                          <!-- Sources (if exposed by active player) -->
+                          <!-- Sources (M3 Expressive Filter Chips with Checkmark & Shape Morph) -->
                           ${sourceList.length > 0
                             ? html`
                                 <div class="cast-section-label">Sorgenti</div>
-                                <div class="source-chips">
+                                <div class="source-chips" role="radiogroup" aria-label="Sorgenti">
                                   ${sourceList.map((src) => {
                                     const active = src === currentSource;
                                     return html`
                                       <button
                                         type="button"
                                         class="source-chip ${active ? 'is-selected' : ''}"
+                                        role="radio"
+                                        aria-checked=${String(active)}
                                         @click=${() => this._selectSource(src)}
                                       >
-                                        ${src}
+                                        ${active
+                                          ? html`
+                                              <svg viewBox="0 0 24 24" class="chip-check" aria-hidden="true">
+                                                <path
+                                                  fill="currentColor"
+                                                  d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"
+                                                />
+                                              </svg>
+                                            `
+                                          : nothing}
+                                        <span>${src}</span>
                                       </button>
                                     `;
                                   })}
@@ -1185,143 +1270,213 @@ export class M3EMediaPopup extends LitElement {
         height: 30px;
       }
 
-      /* M3 Expressive Large Native Volume Slider (72px height + handle + stop dot) */
-      .volume-pill {
-        position: relative;
-        height: 72px;
-        border-radius: 24px;
-        overflow: hidden;
+      /* =====================================================================
+         M3 EXPRESSIVE VOLUME SLIDER (50px Pill Track + Gap + Vertical Handle + Stop Dot)
+         ===================================================================== */
+      .m3-vol-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .m3-mute-btn {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        border: 0;
+        border-radius: 50%;
         background: var(--md-sys-color-surface-container-high, #24252d);
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        padding: 0;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .m3-mute-btn:hover {
+        background: color-mix(in srgb, currentColor 10%, var(--md-sys-color-surface-container-high, #24252d));
+      }
+
+      .m3-mute-btn.is-muted {
+        background: var(--md-sys-color-error-container, #93000a);
+        color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .m3-mute-btn:active {
+        transform: scale(0.92);
+      }
+
+      .m3-mute-btn svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .m3-vol-track {
+        position: relative;
+        flex: 1 1 auto;
+        height: 50px;
+        display: flex;
+        align-items: center;
         cursor: ew-resize;
         touch-action: none;
         user-select: none;
-        transition: transform var(--m3e-spring-spatial-fast);
       }
 
-      .volume-pill.is-dragging {
-        transform: scaleY(1.03);
-      }
-
-      .volume-fill {
+      .m3-vol-active {
         position: absolute;
-        inset-block: 0;
         left: 0;
-        min-width: 0;
-        background: var(--md-sys-color-primary-container, #364067);
-        border-radius: 24px 12px 12px 24px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        padding-right: 8px;
-        transition: width 160ms cubic-bezier(0.2, 0, 0, 1);
+        top: 50%;
+        height: 24px;
+        transform: translateY(-50%);
+        border-radius: 9999px 6px 6px 9999px;
+        background: var(--mp-accent, var(--md-sys-color-primary, #bac3ff));
+        pointer-events: none;
+        transition: width 140ms cubic-bezier(0.2, 0, 0, 1);
       }
 
-      .volume-pill.is-dragging .volume-fill {
+      .m3-vol-track.is-dragging .m3-vol-active {
         transition: none;
       }
 
-      .volume-handle {
-        width: 4px;
-        height: 28px;
-        border-radius: 9999px;
-        background: var(--md-sys-color-on-primary-container, #dce2ff);
-        opacity: 0.72;
-        flex-shrink: 0;
-        transition:
-          height var(--m3e-spring-spatial-fast),
-          opacity 150ms ease;
-      }
-
-      .volume-pill.is-dragging .volume-handle {
-        height: 36px;
-        opacity: 1;
-      }
-
-      .volume-stop-dot {
+      .m3-vol-handle {
         position: absolute;
-        right: 16px;
+        top: 50%;
+        width: 5px;
+        height: 36px;
+        border-radius: 9999px;
+        transform: translate(-50%, -50%);
+        background: var(--mp-accent, var(--md-sys-color-primary, #bac3ff));
+        pointer-events: none;
+        transition:
+          left 140ms cubic-bezier(0.2, 0, 0, 1),
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+      }
+
+      .m3-vol-track.is-dragging .m3-vol-handle {
+        transition:
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+        width: 4px;
+        height: 44px;
+      }
+
+      .m3-vol-inactive {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        height: 24px;
+        transform: translateY(-50%);
+        border-radius: 6px 9999px 9999px 6px;
+        background: var(--md-sys-color-surface-container-high, #282932);
+        pointer-events: none;
+        transition: left 140ms cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .m3-vol-track.is-dragging .m3-vol-inactive {
+        transition: none;
+      }
+
+      .m3-vol-stop {
+        position: absolute;
+        right: 9px;
         top: 50%;
         width: 4px;
         height: 4px;
         border-radius: 50%;
         transform: translateY(-50%);
-        background: var(--md-sys-color-on-surface-variant, #8e9099);
-        opacity: 0.55;
-        pointer-events: none;
+        background: var(--mp-accent, var(--md-sys-color-primary, #bac3ff));
+        opacity: 0.75;
       }
 
-      .volume-content {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        padding: 0 22px 0 14px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--md-sys-color-on-surface, #e3e2e6);
-        pointer-events: none;
-      }
-
-      .mute-btn {
-        pointer-events: auto;
-        width: 42px;
-        height: 42px;
-        border: 0;
-        border-radius: 50%;
-        background: transparent;
-        color: inherit;
-        display: grid;
-        place-items: center;
-        cursor: pointer;
-      }
-
-      .mute-btn:hover {
-        background: color-mix(in srgb, currentColor 10%, transparent);
-      }
-
-      .mute-btn svg {
-        width: 24px;
-        height: 24px;
-      }
-
-      .volume-pct {
-        font-size: 16px;
+      .m3-vol-tooltip {
+        position: absolute;
+        bottom: calc(100% + 4px);
+        transform: translateX(-50%);
+        padding: 5px 12px;
+        border-radius: 9999px;
+        background: var(--md-sys-color-inverse-surface, #e3e2e6);
+        color: var(--md-sys-color-inverse-on-surface, #1b1b1f);
+        font-size: 13px;
         font-weight: 600;
         font-variant-numeric: tabular-nums;
+        pointer-events: none;
+        animation: m3e-fade-in 120ms ease;
       }
 
-      /* Output / Cast Pill Button */
+      .m3-vol-readout {
+        flex: 0 0 42px;
+        text-align: right;
+        font-size: 14px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+      }
+
+      /* M3 Expressive Compact Pill Source / Output Selector */
       .cast-pill-btn {
         width: 100%;
-        height: 58px;
-        border: 0;
+        height: 50px;
+        padding: 0 18px 0 20px;
+        border: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant, #44464f) 55%, transparent);
         border-radius: 9999px;
         background: var(--md-sys-color-surface-container-high, #24252d);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         font: inherit;
-        font-size: 15px;
+        font-size: 14.5px;
         font-weight: 500;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
         gap: 10px;
         cursor: pointer;
         transition:
-          background-color var(--m3e-spring-effects-fast),
-          transform var(--m3e-spring-spatial-fast);
+          background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+          transform 180ms cubic-bezier(0.2, 0, 0, 1);
       }
 
-      .cast-pill-btn:hover {
-        background: var(--md-sys-color-surface-container-highest, #2f313a);
+      .cast-pill-btn:hover:not(:disabled) {
+        background: color-mix(in srgb, currentColor 8%, var(--md-sys-color-surface-container-high, #24252d));
       }
 
-      .cast-pill-btn:active {
+      .cast-pill-btn:active:not(:disabled) {
         transform: scale(0.98);
       }
 
-      .cast-pill-btn svg {
+      .cast-pill-btn.is-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+
+      .cast-pill-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+
+      .cast-pill-left svg {
         width: 20px;
         height: 20px;
+        flex-shrink: 0;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+      }
+
+      .cast-pill-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .cast-pill-chevron {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
       }
 
       /* =====================================================================
@@ -1560,27 +1715,41 @@ export class M3EMediaPopup extends LitElement {
       }
 
       .source-chip {
-        padding: 8px 14px;
-        border-radius: 9999px;
-        border: 0;
-        background: var(--md-sys-color-surface-container-high, #25262e);
+        height: 38px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid var(--md-sys-color-outline-variant, #44464f);
+        background: transparent;
         color: var(--md-sys-color-on-surface, #e3e2e6);
         font: inherit;
         font-size: 13.5px;
         font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         cursor: pointer;
         transition:
-          background-color var(--m3e-spring-effects-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color 180ms cubic-bezier(0.2, 0, 0, 1),
+          border-color 180ms cubic-bezier(0.2, 0, 0, 1),
           transform var(--m3e-spring-spatial-fast);
       }
 
       .source-chip.is-selected {
-        background: var(--md-sys-color-primary-container, #364067);
-        color: var(--md-sys-color-on-primary-container, #dce2ff);
+        border-radius: 9999px;
+        border-color: transparent;
+        background: var(--md-sys-color-secondary-container, #364067);
+        color: var(--md-sys-color-on-secondary-container, #dce2ff);
       }
 
       .source-chip:active {
         transform: scale(0.95);
+      }
+
+      .chip-check {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
       }
 
       .cast-sheet-footer {
