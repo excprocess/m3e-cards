@@ -29,9 +29,16 @@ export interface HassEntityRegistryEntry {
   };
 }
 
+export interface HassDeviceRegistryEntry {
+  id: string;
+  name?: string | null;
+  name_by_user?: string | null;
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   entities?: Record<string, HassEntityRegistryEntry>;
+  devices?: Record<string, HassDeviceRegistryEntry>;
   callService(
     domain: string,
     service: string,

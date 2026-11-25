@@ -358,13 +358,12 @@ export class M3EStatusCard extends LitElement {
     if (cfg !== 'auto') return cfg;
     const id = this._config?.entity ?? '';
     if (id.startsWith('climate.')) return 'climate';
+    if (id.startsWith('media_player.')) return 'media';
     if (id.startsWith('remote.')) {
-      // Android TV / Apple TV remotes with a sibling media_player default to remote unless user picks media
+      // If the same device has a media_player (e.g. Android TV / Chromecast), prefer the Media popup
+      const media = this._mediaEntity;
+      if (media && media.entity_id.startsWith('media_player.')) return 'media';
       return 'remote';
-    }
-    if (id.startsWith('media_player.')) {
-      const dc = String(this._entity?.attributes.device_class ?? '');
-      return dc === 'tv' ? 'remote' : 'media';
     }
     return 'sensor';
   }
@@ -806,24 +805,56 @@ export class M3EStatusCard extends LitElement {
      ========================================================================= */
   private _cleanSiblingLabel(sec: HassEntity): string {
     const dc = String(sec.attributes.device_class ?? '');
-    const rawName = sec.attributes.friendly_name || '';
-    const primaryName =
-      this._config?.name || this._entity?.attributes.friendly_name || '';
+    const rawName = (sec.attributes.friendly_name || '').trim();
+    if (!rawName) {
+      return dc ? dc.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : 'Sensor';
+    }
 
-    if (rawName && primaryName) {
-      const lowerRaw = rawName.toLowerCase();
-      const lowerPrimary = primaryName.toLowerCase().trim();
-      if (lowerRaw.startsWith(lowerPrimary) && rawName.length > primaryName.length) {
-        const stripped = rawName
-          .slice(primaryName.length)
-          .replace(/^[\s\-–—:]+/, '')
-          .trim();
-        if (stripped) return stripped.charAt(0).toUpperCase() + stripped.slice(1);
+    const stripPrefix = (text: string, prefix: string): string | null => {
+      const p = prefix.trim();
+      if (!p || text.length <= p.length) return null;
+      if (text.toLowerCase().startsWith(p.toLowerCase())) {
+        const rest = text.slice(p.length).replace(/^[\s\-–—:]+/, '').trim();
+        if (rest) return rest.charAt(0).toUpperCase() + rest.slice(1);
+      }
+      return null;
+    };
+
+    // 1. Try exact HA Device Registry name (name_by_user or name)
+    const deviceId = this.hass?.entities?.[sec.entity_id]?.device_id;
+    const dev = deviceId ? this.hass?.devices?.[deviceId] : undefined;
+    for (const candidate of [
+      dev?.name_by_user,
+      dev?.name,
+      this._config?.name,
+      this._entity?.attributes.friendly_name,
+    ]) {
+      if (candidate) {
+        const cleaned = stripPrefix(rawName, candidate);
+        if (cleaned) return cleaned;
       }
     }
 
-    if (rawName) return rawName;
-    return dc ? dc.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()) : 'Sensor';
+    // 2. Fallback: strip longest common word prefix with primary entity friendly_name
+    const primaryName = (this._entity?.attributes.friendly_name || '').trim();
+    if (primaryName) {
+      const aWords = primaryName.split(/\s+/);
+      const bWords = rawName.split(/\s+/);
+      let i = 0;
+      while (
+        i < aWords.length &&
+        i < bWords.length - 1 &&
+        aWords[i].toLowerCase() === bWords[i].toLowerCase()
+      ) {
+        i++;
+      }
+      if (i > 0) {
+        const rest = bWords.slice(i).join(' ').replace(/^[\s\-–—:]+/, '').trim();
+        if (rest) return rest.charAt(0).toUpperCase() + rest.slice(1);
+      }
+    }
+
+    return rawName;
   }
 
   private _renderSiblingIcon(sec: HassEntity) {
@@ -1686,7 +1717,8 @@ export class M3EStatusCard extends LitElement {
         padding: 0;
         border: 0;
         background: transparent;
-        max-width: min(410px, calc(100vw - 24px));
+        max-width: min(440px, calc(100vw - 24px));
+        max-height: calc(100dvh - 24px);
         width: 100%;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
@@ -1697,7 +1729,9 @@ export class M3EStatusCard extends LitElement {
 
       .dialog-surface {
         position: relative;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: calc(100dvh - 24px);
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
@@ -1706,6 +1740,20 @@ export class M3EStatusCard extends LitElement {
         flex-direction: column;
         gap: 18px;
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
+      }
+
+      @media (max-width: 600px) {
+        dialog.status-dialog {
+          margin: auto 0 0 0;
+          max-width: 100vw;
+          max-height: 94dvh;
+        }
+
+        .dialog-surface {
+          border-radius: 28px 28px 0 0;
+          max-height: 94dvh;
+          padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+        }
       }
 
       .dialog-header {
@@ -1778,8 +1826,8 @@ export class M3EStatusCard extends LitElement {
       }
 
       .sensor-ring {
-        width: 236px;
-        height: 236px;
+        width: clamp(190px, 52vw, 236px);
+        height: clamp(190px, 52vw, 236px);
         border-radius: 50%;
         border: 22px solid var(--md-sys-color-surface-container-high, #24252d);
         display: flex;
@@ -1857,8 +1905,8 @@ export class M3EStatusCard extends LitElement {
 
       .dial-container {
         position: relative;
-        width: 264px;
-        height: 264px;
+        width: clamp(216px, 60vw, 264px);
+        height: clamp(216px, 60vw, 264px);
         touch-action: none;
         user-select: none;
         cursor: grab;

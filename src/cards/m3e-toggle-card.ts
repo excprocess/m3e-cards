@@ -535,7 +535,8 @@ export class M3EToggleCard extends LitElement {
         padding: 0;
         border: 0;
         background: transparent;
-        max-width: min(390px, calc(100vw - 24px));
+        max-width: min(420px, calc(100vw - 24px));
+        max-height: calc(100dvh - 24px);
         width: 100%;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
@@ -548,11 +549,27 @@ export class M3EToggleCard extends LitElement {
         background: var(--md-sys-color-surface, #131316);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
+        max-height: calc(100dvh - 24px);
+        overflow-y: auto;
         padding: 20px 20px 32px;
         display: flex;
         flex-direction: column;
-        gap: 28px;
+        gap: 24px;
         box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
+      }
+
+      @media (max-width: 600px) {
+        dialog.toggle-dialog {
+          margin: auto 0 0 0;
+          max-width: 100vw;
+          max-height: 94dvh;
+        }
+
+        .dialog-surface {
+          border-radius: 28px 28px 0 0;
+          max-height: 94dvh;
+          padding: 18px 16px calc(28px + env(safe-area-inset-bottom, 0px));
+        }
       }
 
       .dialog-header {
