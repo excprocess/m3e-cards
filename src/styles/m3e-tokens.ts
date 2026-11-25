@@ -67,7 +67,7 @@ export const m3eBaseStyles = css`
     border-style: solid;
     border-width: var(--ha-card-border-width, 0px);
     border-color: var(--ha-card-border-color, transparent);
-    border-radius: var(--ha-card-border-radius, var(--m3e-corner-xl));
+    border-radius: var(--m3e-card-border-radius, 18px);
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
       background-color var(--m3e-spring-effects-default),

@@ -648,7 +648,7 @@ const ft = q`
     border-style: solid;
     border-width: var(--ha-card-border-width, 0px);
     border-color: var(--ha-card-border-color, transparent);
-    border-radius: var(--ha-card-border-radius, var(--m3e-corner-xl));
+    border-radius: var(--m3e-card-border-radius, 18px);
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
       background-color var(--m3e-spring-effects-default),
@@ -2846,7 +2846,7 @@ _.styles = [
         cursor: pointer;
         user-select: none;
         outline: none;
-        border-radius: var(--ha-card-border-radius, 28px);
+        border-radius: var(--m3e-card-border-radius, 18px);
         transition:
           border-radius var(--m3e-spring-bouncy),
           transform var(--m3e-spring-spatial-fast),
@@ -4106,7 +4106,7 @@ w.styles = [
         cursor: pointer;
         user-select: none;
         outline: none;
-        border-radius: var(--ha-card-border-radius, 28px);
+        border-radius: var(--m3e-card-border-radius, 18px);
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
