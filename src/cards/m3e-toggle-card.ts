@@ -349,6 +349,48 @@ export class M3EToggleCard extends LitElement {
     `;
   }
 
+  private _getPowerSiblings(): HassEntity[] {
+    if (!this.hass?.entities || !this._config) return [];
+    const primaryId = this._config.entity;
+    const deviceId = this.hass.entities[primaryId]?.device_id;
+    if (!deviceId) return [];
+
+    const powerClasses = ['power', 'energy', 'current', 'voltage'];
+    const found: HassEntity[] = [];
+    for (const [id, entry] of Object.entries(this.hass.entities)) {
+      if (id === primaryId || entry.device_id !== deviceId || !id.startsWith('sensor.')) continue;
+      const st = this.hass.states[id];
+      if (!st || st.state === 'unavailable' || st.state === 'unknown') continue;
+      const dc = String(st.attributes.device_class ?? '');
+      if (powerClasses.includes(dc)) found.push(st);
+    }
+    found.sort(
+      (a, b) =>
+        powerClasses.indexOf(String(a.attributes.device_class ?? '')) -
+        powerClasses.indexOf(String(b.attributes.device_class ?? '')),
+    );
+    return found;
+  }
+
+  private _cleanSiblingLabel(sec: HassEntity): string {
+    const raw = (sec.attributes.friendly_name || '').trim();
+    const deviceId = this.hass?.entities?.[sec.entity_id]?.device_id;
+    const dev = deviceId ? this.hass?.devices?.[deviceId] : undefined;
+    for (const prefix of [
+      dev?.name_by_user,
+      dev?.name,
+      this._config?.name,
+      this._entity?.attributes.friendly_name,
+    ]) {
+      const p = prefix?.trim();
+      if (p && raw.length > p.length && raw.toLowerCase().startsWith(p.toLowerCase())) {
+        const rest = raw.slice(p.length).replace(/^[\s\-–—:]+/, '').trim();
+        if (rest) return rest.charAt(0).toUpperCase() + rest.slice(1);
+      }
+    }
+    return raw || String(sec.attributes.device_class ?? 'Sensor');
+  }
+
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
@@ -366,6 +408,7 @@ export class M3EToggleCard extends LitElement {
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const lastChanged = this._popupOpen ? formatLastChanged(entity?.last_changed) : null;
+    const powerSiblings = this._popupOpen ? this._getPowerSiblings() : [];
 
     return html`
       <ha-card
@@ -478,6 +521,33 @@ export class M3EToggleCard extends LitElement {
 
                   <span class="switch-readout">${label}</span>
                 </div>
+
+                ${powerSiblings.length > 0
+                  ? html`
+                      <div class="telemetry-stack">
+                        ${powerSiblings.map(
+                          (sec) => html`
+                            <div class="info-pill">
+                              <span class="info-pill-left">
+                                ${typeof customElements !== 'undefined' &&
+                                customElements.get('ha-state-icon')
+                                  ? html`<ha-state-icon
+                                      class="mini-ha-icon"
+                                      .hass=${this.hass}
+                                      .stateObj=${sec}
+                                    ></ha-state-icon>`
+                                  : nothing}
+                                <span>${this._cleanSiblingLabel(sec)}</span>
+                              </span>
+                              <span class="info-pill-val">
+                                ${sec.state}${sec.attributes.unit_of_measurement ?? ''}
+                              </span>
+                            </div>
+                          `,
+                        )}
+                      </div>
+                    `
+                  : nothing}
               </div>
             `
           : nothing}
@@ -783,6 +853,46 @@ export class M3EToggleCard extends LitElement {
         font-size: 24px;
         font-weight: 500;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .telemetry-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .info-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 18px;
+        border-radius: 22px;
+        background: var(--md-sys-color-surface-container-high, #24252d);
+        font-size: 14px;
+      }
+
+      .info-pill-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        line-height: 20px;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .mini-ha-icon {
+        --mdc-icon-size: 20px;
+        width: 20px;
+        height: 20px;
+        line-height: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .info-pill-val {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
       }
     `,
   ];

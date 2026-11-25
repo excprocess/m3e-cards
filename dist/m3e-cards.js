@@ -3055,7 +3055,20 @@ let b = class extends E {
       const r = this.hass.states[this._config.secondary_entity];
       r && (t.push(r), e.add(r.entity_id));
     }
-    const i = ["temperature", "humidity", "illuminance", "battery"], s = this._getSiblingEntityIds().map((r) => this.hass.states[r]).filter((r) => !!r && !e.has(r.entity_id));
+    const i = [
+      "power",
+      "energy",
+      "current",
+      "voltage",
+      "temperature",
+      "humidity",
+      "illuminance",
+      "pressure",
+      "atmospheric_pressure",
+      "co2",
+      "pm25",
+      "battery"
+    ], s = this._getSiblingEntityIds().map((r) => this.hass.states[r]).filter((r) => !!r && !e.has(r.entity_id));
     s.sort((r, o) => {
       const n = i.indexOf(String(r.attributes.device_class ?? "")), a = i.indexOf(String(o.attributes.device_class ?? ""));
       return (n === -1 ? 99 : n) - (a === -1 ? 99 : a);
@@ -5470,9 +5483,41 @@ let M = class extends E {
       </svg>
     `;
   }
+  _getPowerSiblings() {
+    if (!this.hass?.entities || !this._config) return [];
+    const t = this._config.entity, e = this.hass.entities[t]?.device_id;
+    if (!e) return [];
+    const i = ["power", "energy", "current", "voltage"], s = [];
+    for (const [r, o] of Object.entries(this.hass.entities)) {
+      if (r === t || o.device_id !== e || !r.startsWith("sensor.")) continue;
+      const n = this.hass.states[r];
+      if (!n || n.state === "unavailable" || n.state === "unknown") continue;
+      const a = String(n.attributes.device_class ?? "");
+      i.includes(a) && s.push(n);
+    }
+    return s.sort(
+      (r, o) => i.indexOf(String(r.attributes.device_class ?? "")) - i.indexOf(String(o.attributes.device_class ?? ""))
+    ), s;
+  }
+  _cleanSiblingLabel(t) {
+    const e = (t.attributes.friendly_name || "").trim(), i = this.hass?.entities?.[t.entity_id]?.device_id, s = i ? this.hass?.devices?.[i] : void 0;
+    for (const r of [
+      s?.name_by_user,
+      s?.name,
+      this._config?.name,
+      this._entity?.attributes.friendly_name
+    ]) {
+      const o = r?.trim();
+      if (o && e.length > o.length && e.toLowerCase().startsWith(o.toLowerCase())) {
+        const n = e.slice(o.length).replace(/^[\s\-–—:]+/, "").trim();
+        if (n) return n.charAt(0).toUpperCase() + n.slice(1);
+      }
+    }
+    return e || String(t.attributes.device_class ?? "Sensor");
+  }
   render() {
     if (!this._config) return u;
-    const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._isOn, s = i ? this._config.icon_on?.trim() || void 0 : this._config.icon_off?.trim() || this._config.icon_on?.trim() || void 0, r = this._isUnavailable ? "Offline" : i ? this._config.label_on || "On" : this._config.label_off || "Off", o = `style-${this._config.card_style ?? "default"}`, n = this._popupOpen ? Ot(t?.last_changed) : null;
+    const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._isOn, s = i ? this._config.icon_on?.trim() || void 0 : this._config.icon_off?.trim() || this._config.icon_on?.trim() || void 0, r = this._isUnavailable ? "Offline" : i ? this._config.label_on || "On" : this._config.label_off || "Off", o = `style-${this._config.card_style ?? "default"}`, n = this._popupOpen ? Ot(t?.last_changed) : null, a = this._popupOpen ? this._getPowerSiblings() : [];
     return c`
       <ha-card
         class="toggle-tile ${o} ${i ? "is-on" : "is-off"} ${this._pressed ? "is-pressed" : ""} ${this._isUnavailable ? "is-unavailable" : ""}"
@@ -5484,11 +5529,11 @@ let M = class extends E {
         @pointerup=${this._onTilePointerUp}
         @pointerleave=${this._onTilePointerCancel}
         @pointercancel=${this._onTilePointerCancel}
-        @contextmenu=${(a) => {
-      a.preventDefault(), this._handleHoldAction();
+        @contextmenu=${(l) => {
+      l.preventDefault(), this._handleHoldAction();
     }}
-        @keydown=${(a) => {
-      a.key === " " || a.key === "Enter" ? (a.preventDefault(), this._toggle()) : (a.key === "o" || a.key === "O") && (a.preventDefault(), this.openPopup());
+        @keydown=${(l) => {
+      l.key === " " || l.key === "Enter" ? (l.preventDefault(), this._toggle()) : (l.key === "o" || l.key === "O") && (l.preventDefault(), this.openPopup());
     }}
       >
         <div class="state-layer" aria-hidden="true"></div>
@@ -5513,11 +5558,11 @@ let M = class extends E {
 
       <dialog
         class="toggle-dialog"
-        @click=${(a) => {
-      a.target === this._dialogEl && this.closePopup();
+        @click=${(l) => {
+      l.target === this._dialogEl && this.closePopup();
     }}
-        @cancel=${(a) => {
-      a.preventDefault(), this.closePopup();
+        @cancel=${(l) => {
+      l.preventDefault(), this.closePopup();
     }}
       >
         ${this._popupOpen ? c`
@@ -5552,8 +5597,8 @@ let M = class extends E {
                     @pointerdown=${this._onSwitchPointerDown}
                     @pointerup=${this._onSwitchPointerUp}
                     @pointercancel=${() => this._dragStartY = null}
-                    @keydown=${(a) => {
-      (a.key === " " || a.key === "Enter") && (a.preventDefault(), this._toggle());
+                    @keydown=${(l) => {
+      (l.key === " " || l.key === "Enter") && (l.preventDefault(), this._toggle());
     }}
                   >
                     <div class="switch-thumb">
@@ -5568,6 +5613,28 @@ let M = class extends E {
 
                   <span class="switch-readout">${r}</span>
                 </div>
+
+                ${a.length > 0 ? c`
+                      <div class="telemetry-stack">
+                        ${a.map(
+      (l) => c`
+                            <div class="info-pill">
+                              <span class="info-pill-left">
+                                ${typeof customElements < "u" && customElements.get("ha-state-icon") ? c`<ha-state-icon
+                                      class="mini-ha-icon"
+                                      .hass=${this.hass}
+                                      .stateObj=${l}
+                                    ></ha-state-icon>` : u}
+                                <span>${this._cleanSiblingLabel(l)}</span>
+                              </span>
+                              <span class="info-pill-val">
+                                ${l.state}${l.attributes.unit_of_measurement ?? ""}
+                              </span>
+                            </div>
+                          `
+    )}
+                      </div>
+                    ` : u}
               </div>
             ` : u}
       </dialog>
@@ -5872,6 +5939,46 @@ M.styles = [
         font-size: 24px;
         font-weight: 500;
         color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .telemetry-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .info-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 18px;
+        border-radius: 22px;
+        background: var(--md-sys-color-surface-container-high, #24252d);
+        font-size: 14px;
+      }
+
+      .info-pill-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        line-height: 20px;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      .mini-ha-icon {
+        --mdc-icon-size: 20px;
+        width: 20px;
+        height: 20px;
+        line-height: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+      }
+
+      .info-pill-val {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
       }
     `
 ];

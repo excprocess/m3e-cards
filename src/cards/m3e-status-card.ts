@@ -352,7 +352,20 @@ export class M3EStatusCard extends LitElement {
       }
     }
 
-    const preferredClasses = ['temperature', 'humidity', 'illuminance', 'battery'];
+    const preferredClasses = [
+      'power',
+      'energy',
+      'current',
+      'voltage',
+      'temperature',
+      'humidity',
+      'illuminance',
+      'pressure',
+      'atmospheric_pressure',
+      'co2',
+      'pm25',
+      'battery',
+    ];
     const siblings = this._getSiblingEntityIds()
       .map((id) => this.hass!.states[id])
       .filter((e): e is HassEntity => Boolean(e) && !seen.has(e.entity_id));
