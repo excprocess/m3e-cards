@@ -614,7 +614,6 @@ export class M3EToggleCard extends LitElement {
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),

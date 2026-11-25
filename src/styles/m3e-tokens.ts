@@ -70,7 +70,7 @@ export const m3eBaseStyles = css`
     border-style: solid;
     border-width: var(--ha-card-border-width, 0px);
     border-color: var(--ha-card-border-color, transparent);
-    border-radius: var(--m3e-card-border-radius, 28px);
+    border-radius: var(--m3e-card-border-radius, var(--ha-card-border-radius, 28px));
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
       background-color var(--m3e-spring-effects-default),
@@ -80,17 +80,20 @@ export const m3eBaseStyles = css`
 
   /* =========================================================================
      SHARED MATERIAL 3 EXPRESSIVE TILE / PILL DESIGN VARIANTS
-     All variants strictly inherit --ha-card-* & --md-sys-color-* from M3Y.
+     All variants strictly inherit --ha-card-* & --md-sys-color-* from M3Y
+     and keep --ha-card-border-radius in sync with border-radius.
      ========================================================================= */
 
   /* 1. Full Stadium Pill (Android QS / M3 Expressive Pill) */
   ha-card.style-pill {
+    --ha-card-border-radius: var(--m3e-corner-full);
     border-radius: var(--m3e-corner-full);
   }
 
-  /* 2. Google Home Morph (28px standard inactive <-> full round pill active) */
+  /* 2. Google Home Morph (28px/HA standard inactive <-> full round pill active) */
   ha-card.style-morph {
-    border-radius: 28px;
+    --ha-card-border-radius: var(--m3e-card-border-radius, 28px);
+    border-radius: var(--m3e-card-border-radius, 28px);
     transition:
       border-radius 520ms linear(
         0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
@@ -104,11 +107,13 @@ export const m3eBaseStyles = css`
 
   ha-card.style-morph.is-on,
   ha-card.style-morph.is-active {
+    --ha-card-border-radius: var(--m3e-corner-full);
     border-radius: var(--m3e-corner-full);
   }
 
   /* 3. M3 Expressive Dynamic Shape Morph (20px inactive <-> full pill active) */
   ha-card.style-expressive {
+    --ha-card-border-radius: 20px;
     border-radius: 20px;
     transition:
       border-radius 520ms linear(
@@ -123,16 +128,19 @@ export const m3eBaseStyles = css`
 
   ha-card.style-expressive.is-on,
   ha-card.style-expressive.is-active {
+    --ha-card-border-radius: var(--m3e-corner-full);
     border-radius: var(--m3e-corner-full);
   }
 
   ha-card.style-expressive.is-pressed {
+    --ha-card-border-radius: 14px;
     border-radius: 14px;
   }
 
-  /* 3. Compact M3 Tile (56px height / 18px corners for dense 1-row Sections) */
+  /* 4. Compact M3 Tile (56px height / 18px corners for dense 1-row Sections) */
   ha-card.style-compact {
     min-height: 56px;
+    --ha-card-border-radius: 18px;
     border-radius: 18px;
   }
 

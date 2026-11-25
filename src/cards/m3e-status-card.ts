@@ -2218,7 +2218,6 @@ export class M3EStatusCard extends LitElement {
         -webkit-user-select: none;
         -webkit-touch-callout: none;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 28px);
         transition:
           border-radius var(--m3e-spring-bouncy),
           transform var(--m3e-spring-spatial-fast),

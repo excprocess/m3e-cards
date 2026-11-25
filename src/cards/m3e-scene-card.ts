@@ -283,7 +283,6 @@ export class M3ESceneCard extends LitElement {
         min-height: 84px;
         cursor: pointer;
         outline: none;
-        border-radius: var(--m3e-card-border-radius, 28px);
         --m3e-scene-bg: var(--md-sys-color-primary-container, #dbe1ff);
         --m3e-scene-fg: var(--md-sys-color-on-primary-container, #16306b);
         transition:
