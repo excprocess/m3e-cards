@@ -8,8 +8,62 @@ import type {
   M3ERemoteButtonsConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
+  M3ESubtitleFormat,
 } from '../types/home-assistant';
 import { executeNavigationTarget } from '../utils/navigation';
+
+const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+
+function formatDisplayValue(rawVal: string, format: M3ESubtitleFormat): string {
+  if (format === 'raw') return rawVal;
+  const trimmed = rawVal.trim();
+  if (!ISO_TIMESTAMP_RE.test(trimmed)) return rawVal;
+
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return rawVal;
+
+  const hhmm = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (format === 'time' || format === 'auto') {
+    return hhmm;
+  }
+
+  if (format === 'datetime') {
+    const now = new Date();
+    const sameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+    if (sameDay(date, now)) return `Oggi ${hhmm}`;
+    if (sameDay(date, tomorrow)) return `Domani ${hhmm}`;
+    if (sameDay(date, yesterday)) return `Ieri ${hhmm}`;
+    const dayStr = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    return `${dayStr} ${hhmm}`;
+  }
+
+  // format === 'relative'
+  const diffMs = date.getTime() - Date.now();
+  const future = diffMs >= 0;
+  const totalMin = Math.round(Math.abs(diffMs) / 60000);
+  if (totalMin < 1) return 'Ora';
+
+  const days = Math.floor(totalMin / 1440);
+  const hours = Math.floor((totalMin % 1440) / 60);
+  const mins = totalMin % 60;
+
+  let parts: string;
+  if (days > 0) {
+    parts = hours > 0 ? `${days}g ${hours}h` : `${days}g`;
+  } else if (hours > 0) {
+    parts = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  } else {
+    parts = `${mins}m`;
+  }
+
+  return future ? `Tra ${parts}` : `${parts} fa`;
+}
 
 type ClimateSheetKind = 'mode' | 'preset' | 'fan' | 'swing' | null;
 
@@ -103,6 +157,8 @@ export class M3EStatusCard extends LitElement {
   private _prevStates: Record<string, HassEntity | undefined> = {};
   private _longPressTimer: number | null = null;
   private _longPressTriggered = false;
+  private _relativeTimer: number | null = null;
+  @state() private _relativeTick = 0;
 
   public static getStubConfig(hass?: HomeAssistant): M3EStatusCardConfig {
     const entity = hass
@@ -134,13 +190,36 @@ export class M3EStatusCard extends LitElement {
       popup_type: 'auto',
       tap_action: 'popup',
       hold_action: 'popup',
+      subtitle_format: 'auto',
       ...config,
     };
+    this._syncRelativeTimer();
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this._syncRelativeTimer();
   }
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     this._clearLongPress();
+    if (this._relativeTimer !== null) {
+      window.clearInterval(this._relativeTimer);
+      this._relativeTimer = null;
+    }
+  }
+
+  private _syncRelativeTimer(): void {
+    const wantsRelative = this._config?.subtitle_format === 'relative';
+    if (wantsRelative && this._relativeTimer === null) {
+      this._relativeTimer = window.setInterval(() => {
+        this._relativeTick++;
+      }, 30000);
+    } else if (!wantsRelative && this._relativeTimer !== null) {
+      window.clearInterval(this._relativeTimer);
+      this._relativeTimer = null;
+    }
   }
 
   private _clearLongPress(): void {
@@ -170,7 +249,8 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_volPct') ||
       changedProps.has('_historyPoints') ||
       changedProps.has('_historyLoading') ||
-      changedProps.has('_historyHoverIdx')
+      changedProps.has('_historyHoverIdx') ||
+      changedProps.has('_relativeTick')
     ) {
       return true;
     }
@@ -339,6 +419,8 @@ export class M3EStatusCard extends LitElement {
     const raw = entity.state;
     if (raw === 'unavailable' || raw === 'unknown') return 'Unavailable';
 
+    const fmt: M3ESubtitleFormat = this._config?.subtitle_format ?? 'auto';
+
     // Custom subtitle from another entity and/or specific attribute
     const hasCustomSource = Boolean(
       this._config?.subtitle_entity?.trim() || this._config?.subtitle_attribute?.trim(),
@@ -360,9 +442,10 @@ export class M3EStatusCard extends LitElement {
           }
         }
         if (val !== undefined && val !== null && String(val).trim() !== '') {
+          const formatted = formatDisplayValue(String(val), fmt);
           const prefix = this._config?.subtitle_prefix ?? '';
           const suffix = this._config?.subtitle_suffix ?? '';
-          return `${prefix}${String(val)}${suffix}`;
+          return `${prefix}${formatted}${suffix}`;
         }
       }
     }
@@ -378,6 +461,9 @@ export class M3EStatusCard extends LitElement {
     }
 
     if (domain === 'sensor') {
+      if (ISO_TIMESTAMP_RE.test(raw.trim())) {
+        return formatDisplayValue(raw, fmt);
+      }
       const unit = entity.attributes.unit_of_measurement;
       const primaryText = unit ? `${raw}${unit}` : raw;
       const isTemp =
@@ -397,6 +483,10 @@ export class M3EStatusCard extends LitElement {
 
     if (domain === 'media_player') {
       return raw.charAt(0).toUpperCase() + raw.slice(1);
+    }
+
+    if (ISO_TIMESTAMP_RE.test(raw.trim())) {
+      return formatDisplayValue(raw, fmt);
     }
 
     return raw.charAt(0).toUpperCase() + raw.slice(1);

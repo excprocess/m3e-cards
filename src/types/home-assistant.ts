@@ -87,6 +87,7 @@ export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'med
 export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
 export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';
 export type M3ECardStyle = 'default' | 'pill' | 'expressive' | 'compact';
+export type M3ESubtitleFormat = 'auto' | 'relative' | 'time' | 'datetime' | 'raw';
 
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
@@ -141,6 +142,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   subtitle_prefix?: string;
   /** Optional text suffix after the custom subtitle value */
   subtitle_suffix?: string;
+  /** Timestamp / value display format: auto (HH:MM for ISO timestamps), relative (Tra 5h 40m), time (HH:MM), datetime (Oggi HH:MM), raw */
+  subtitle_format?: M3ESubtitleFormat;
   /** When true, show the custom subtitle only when the card is active (falls back to label_inactive/Off when inactive) */
   subtitle_only_when_active?: boolean;
   /** Popup screen variant to open on tap/hold */

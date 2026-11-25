@@ -119,10 +119,27 @@ export class M3EStatusCardEditor extends LitElement {
       schema.push({ name: 'navigation_path', selector: { text: {} } });
     }
 
+    const formatSelector = {
+      name: 'subtitle_format',
+      selector: {
+        select: {
+          mode: 'dropdown',
+          options: [
+            { value: 'auto', label: 'Automatico (HH:MM per orari ISO)' },
+            { value: 'relative', label: 'Relativo (es. Tra 5h 40m / 10m fa)' },
+            { value: 'time', label: 'Orario (HH:MM)' },
+            { value: 'datetime', label: 'Giorno + Orario (es. Oggi 19:35)' },
+            { value: 'raw', label: 'Testo originale (non formattato)' },
+          ],
+        },
+      },
+    };
+
     if (type === 'custom') {
       schema.push(
         { name: 'subtitle_entity', selector: { entity: {} } },
         { name: 'subtitle_attribute', selector: { text: {} } },
+        formatSelector,
         {
           type: 'grid',
           name: '',
@@ -145,6 +162,7 @@ export class M3EStatusCardEditor extends LitElement {
       );
     } else if (type === 'sensor') {
       schema.push(
+        formatSelector,
         { name: 'active_state', selector: { text: {} } },
         {
           type: 'grid',
@@ -205,6 +223,7 @@ export class M3EStatusCardEditor extends LitElement {
       label_inactive: 'Testo stato inattivo',
       subtitle_entity: 'Entità per testo stato (es. prossima sveglia)',
       subtitle_attribute: 'Attributo da mostrare come stato (opzionale)',
+      subtitle_format: 'Formato testo / orario',
       subtitle_prefix: 'Prefisso testo stato (es. Sveglia: )',
       subtitle_suffix: 'Suffisso testo stato',
       subtitle_only_when_active: 'Mostra testo personalizzato solo quando attiva',
