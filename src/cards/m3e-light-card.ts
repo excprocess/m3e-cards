@@ -1443,6 +1443,10 @@ export class M3ELightCard extends LitElement {
         width: 20px;
         height: 20px;
         --mdc-icon-size: 20px;
+        line-height: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         flex: 0 0 auto;
       }
 

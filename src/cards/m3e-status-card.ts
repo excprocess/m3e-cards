@@ -2194,8 +2194,10 @@ export class M3EStatusCard extends LitElement {
         --mdc-icon-size: 20px;
         width: 20px;
         height: 20px;
-        display: inline-grid;
-        place-items: center;
+        line-height: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         flex: 0 0 auto;
       }
 
@@ -2261,6 +2263,7 @@ export class M3EStatusCard extends LitElement {
         display: flex;
         align-items: center;
         gap: 12px;
+        line-height: 20px;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
 
