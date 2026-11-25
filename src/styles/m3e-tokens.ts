@@ -77,4 +77,50 @@ export const m3eBaseStyles = css`
       border-color var(--m3e-spring-effects-default),
       box-shadow var(--m3e-spring-effects-default);
   }
+
+  /* =========================================================================
+     SHARED MATERIAL 3 EXPRESSIVE TILE / PILL DESIGN VARIANTS
+     All variants strictly inherit --ha-card-* & --md-sys-color-* from M3Y.
+     ========================================================================= */
+
+  /* 1. Full Stadium Pill (Android QS / M3 Expressive Pill) */
+  ha-card.style-pill {
+    border-radius: var(--m3e-corner-full);
+  }
+
+  /* 2. M3 Expressive Dynamic Shape Morph (20px inactive <-> full pill active) */
+  ha-card.style-expressive {
+    border-radius: 20px;
+    transition:
+      border-radius 520ms linear(
+        0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
+        1.038 56%, 0.992 71%, 1.005 86%, 1
+      ),
+      transform var(--m3e-spring-spatial-fast),
+      background-color var(--m3e-spring-effects-default),
+      border-color var(--m3e-spring-effects-default),
+      box-shadow var(--m3e-spring-effects-default);
+  }
+
+  ha-card.style-expressive.is-on,
+  ha-card.style-expressive.is-active {
+    border-radius: var(--m3e-corner-full);
+  }
+
+  ha-card.style-expressive.is-pressed {
+    border-radius: 14px;
+  }
+
+  /* 3. Compact M3 Tile (56px height / 18px corners for dense 1-row Sections) */
+  ha-card.style-compact {
+    min-height: 56px;
+    border-radius: 18px;
+  }
+
+  ha-card.style-compact .tile-content,
+  ha-card.style-compact .tile-inner {
+    min-height: 56px;
+    padding: 10px 16px;
+    gap: 12px;
+  }
 `;

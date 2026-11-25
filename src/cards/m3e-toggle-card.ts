@@ -48,6 +48,20 @@ export class M3EToggleCard extends LitElement {
         },
         { name: 'name', selector: { text: {} } },
         {
+          name: 'card_style',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'default', label: 'Google Home (Default 28px)' },
+                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+                { value: 'compact', label: 'Compatta (56px / 18px)' },
+              ],
+            },
+          },
+        },
+        {
           type: 'grid',
           name: '',
           schema: [
@@ -83,6 +97,7 @@ export class M3EToggleCard extends LitElement {
         const labels: Record<string, string> = {
           entity: 'Entità (switch, presa, input_boolean…)',
           name: 'Nome personalizzato',
+          card_style: 'Design della pillola (Material 3)',
           icon_on: 'Icona acceso (vuoto = standard Google Home)',
           icon_off: 'Icona spento (vuoto = standard Google Home)',
           label_on: 'Testo acceso (default: On)',
@@ -347,9 +362,11 @@ export class M3EToggleCard extends LitElement {
         ? this._config.label_on || 'On'
         : this._config.label_off || 'Off';
 
+    const styleClass = `style-${this._config.card_style ?? 'default'}`;
+
     return html`
       <ha-card
-        class="toggle-tile ${isOn ? 'is-on' : 'is-off'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
+        class="toggle-tile ${styleClass} ${isOn ? 'is-on' : 'is-off'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
         role="switch"
         tabindex="0"
         aria-checked=${String(isOn)}

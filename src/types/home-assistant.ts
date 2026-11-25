@@ -78,12 +78,15 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
   favorite_colors?: M3ELightColorPreset[];
   /** Optional scene entities linked to this light (in addition to auto-discovered Hue/device/area scenes) */
   scenes?: string[];
+  /** Material 3 Expressive tile shape style: default (28px), pill (full stadium), expressive (morphs 20px <-> pill), compact (56px / 18px) */
+  card_style?: M3ECardStyle;
 }
 
 export type M3EStatusPopupType = 'auto' | 'sensor' | 'climate' | 'remote' | 'media' | 'none';
 
 export type M3EHoldAction = 'popup' | 'more-info' | 'navigate' | 'none';
 export type M3ETapAction = 'popup' | 'toggle' | 'navigate' | 'more-info' | 'none';
+export type M3ECardStyle = 'default' | 'pill' | 'expressive' | 'compact';
 
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
@@ -96,6 +99,8 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
   hold_action?: M3EHoldAction;
   /** Dashboard path (/lovelace/...), Bubble Card hash (#popup), or script.* / browser_mod.* service */
   navigation_path?: string;
+  /** Material 3 Expressive tile shape style */
+  card_style?: M3ECardStyle;
 }
 
 export interface M3ERemoteButtonsConfig {

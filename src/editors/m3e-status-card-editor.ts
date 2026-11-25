@@ -40,6 +40,20 @@ export class M3EStatusCardEditor extends LitElement {
       { name: 'entity', required: true, selector: { entity: {} } },
       { name: 'name', selector: { text: {} } },
       {
+        name: 'card_style',
+        selector: {
+          select: {
+            mode: 'dropdown',
+            options: [
+              { value: 'default', label: 'Google Home (Default 28px)' },
+              { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+              { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+              { value: 'compact', label: 'Compatta (56px / 18px)' },
+            ],
+          },
+        },
+      },
+      {
         name: 'popup_type',
         selector: {
           select: {
@@ -158,6 +172,7 @@ export class M3EStatusCardEditor extends LitElement {
       entity: 'Entità principale',
       status_entity: 'Entità stato dispositivo (opzionale)',
       name: 'Nome personalizzato',
+      card_style: 'Design della pillola (Material 3)',
       icon_active: 'Icona attivo (vuoto = standard Google Home)',
       icon_inactive: 'Icona inattivo (vuoto = standard Google Home)',
       active_state: 'Stati attivi personalizzati (es. on,home,detected)',

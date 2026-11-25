@@ -1692,9 +1692,11 @@ export class M3EStatusCard extends LitElement {
         this._config.tap_action !== 'none' &&
         popupType !== 'none');
 
+    const styleClass = `style-${this._config.card_style ?? 'default'}`;
+
     return html`
       <ha-card
-        class="status-tile ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''}"
+        class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''}"
         role="button"
         tabindex="0"
         aria-label="${name}, ${this._stateLabel}"

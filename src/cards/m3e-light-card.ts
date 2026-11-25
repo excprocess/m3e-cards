@@ -103,6 +103,20 @@ export class M3ELightCard extends LitElement {
         { name: 'entity', required: true, selector: { entity: { domain: 'light' } } },
         { name: 'name', selector: { text: {} } },
         { name: 'icon', selector: { icon: {} } },
+        {
+          name: 'card_style',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'default', label: 'Google Home (Default 28px)' },
+                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+                { value: 'compact', label: 'Compatta (56px / 18px)' },
+              ],
+            },
+          },
+        },
         { name: 'use_light_color', selector: { boolean: {} } },
         { name: 'allow_drag_off', selector: { boolean: {} } },
         { name: 'scenes', selector: { entity: { domain: 'scene', multiple: true } } },
@@ -111,7 +125,8 @@ export class M3ELightCard extends LitElement {
         const labels: Record<string, string> = {
           entity: 'Entità luce',
           name: 'Nome personalizzato',
-          icon: 'Icona personalizzata',
+          icon: 'Icona personalizzata (vuoto = standard Google Home)',
+          card_style: 'Design della pillola (Material 3)',
           use_light_color: 'Usa colore reale della luce',
           allow_drag_off: 'Spegni trascinando a 0%',
           scenes: 'Scene collegate (opzionale, oltre a quelle rilevate dal dispositivo/stanza)',
@@ -800,9 +815,11 @@ export class M3ELightCard extends LitElement {
     const matchedPreset = this._matchedPresetId;
     const scenes = this._popupOpen ? this._getAvailableScenes() : [];
 
+    const styleClass = `style-${this._config.card_style ?? 'default'}`;
+
     return html`
       <ha-card
-        class="tile-card ${isOn ? 'is-on' : 'is-off'} ${this._dragging ? 'is-dragging' : ''} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
+        class="tile-card ${styleClass} ${isOn ? 'is-on' : 'is-off'} ${this._dragging ? 'is-dragging' : ''} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
         style="${colorVars} --fill-pct: ${isOn ? pct : 0}%;"
         role="slider"
         tabindex="0"
