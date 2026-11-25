@@ -101,6 +101,34 @@ export interface M3EAssistCardConfig extends LovelaceCardConfig {
   start_listening?: boolean;
 }
 
+export type M3EGlanceTapAction = 'more-info' | 'toggle' | 'navigate' | 'none';
+
+export interface M3EGlanceItemConfig {
+  /** Home Assistant entity ID */
+  entity: string;
+  /** Custom bottom label (defaults to entity friendly_name) */
+  name?: string;
+  /** Optional attribute to display as the primary top value (defaults to entity state) */
+  attribute?: string;
+  /** Optional secondary attribute appended after " • " on the bottom label (e.g. AQI • Moderate) */
+  secondary_attribute?: string;
+  /** Optional custom MDI icon override (empty = auto M3 / Google Home SVG) */
+  icon?: string;
+  /** Optional unit/suffix override (e.g. "°" instead of "°C") */
+  unit?: string;
+  /** Action on tap: more-info (default), toggle, navigate, none */
+  tap_action?: M3EGlanceTapAction;
+  /** Target path / Bubble hash / script.* when tap_action is navigate */
+  navigation_path?: string;
+}
+
+export interface M3EGlanceCardConfig extends LovelaceCardConfig {
+  /** Ordered list of glance items displayed in the horizontal strip */
+  items: M3EGlanceItemConfig[];
+  /** Transparent background blending with dashboard (default: true). Set false to wrap in ha-card surface. */
+  transparent?: boolean;
+}
+
 export interface M3ELightControlCardConfig extends LovelaceCardConfig {
   /** Optional list of light entities/groups. Leave empty to control ALL lights in Home Assistant. */
   entities?: string[];
