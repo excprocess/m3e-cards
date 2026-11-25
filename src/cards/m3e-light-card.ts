@@ -15,6 +15,10 @@ interface LightPreset {
   kelvin?: number;
 }
 
+type LightSceneItem =
+  | { kind: 'scene'; id: string; label: string; entity: HassEntity }
+  | { kind: 'effect'; id: string; label: string; effect: string };
+
 const DEFAULT_PRESETS: LightPreset[] = [
   { id: 'warm-gold', label: 'Candle', hex: '#FFE066', rgb: [255, 224, 102], kelvin: 2200 },
   { id: 'warm-amber', label: 'Warm', hex: '#FFE68A', rgb: [255, 230, 138], kelvin: 2700 },
@@ -408,9 +412,15 @@ export class M3ELightCard extends LitElement {
     }
   }
 
-  private _getAvailableScenes(): HassEntity[] {
+  /**
+   * Collects scenes/effects strictly belonging to this light device:
+   * 1. Manually configured scenes in card settings
+   * 2. scene.* entities sharing the exact same device_id (e.g. Philips Hue Room/Zone Controls)
+   * 3. Built-in light effects from entity.attributes.effect_list (e.g. Scene, Music, Off)
+   */
+  private _getAvailableScenes(): LightSceneItem[] {
     if (!this.hass || !this._config) return [];
-    const results: HassEntity[] = [];
+    const results: LightSceneItem[] = [];
     const seen = new Set<string>();
 
     const addScene = (id: string) => {
@@ -418,7 +428,12 @@ export class M3ELightCard extends LitElement {
       const st = this.hass?.states[id];
       if (!st || !id.startsWith('scene.')) return;
       seen.add(id);
-      results.push(st);
+      results.push({
+        kind: 'scene',
+        id,
+        label: this._cleanSceneName(st),
+        entity: st,
+      });
     };
 
     // 1. Manually configured scenes from GUI/YAML
@@ -428,30 +443,32 @@ export class M3ELightCard extends LitElement {
       }
     }
 
-    // 2. Auto-discovered scenes linked to the same device_id, Hue group_name, or area_id
+    // 2. Strictly same device_id scenes (e.g. Philips Hue Room/Zone Controls)
     const primaryId = this._config.entity;
-    const primaryEntry = this.hass.entities?.[primaryId];
-    const deviceId = primaryEntry?.device_id ?? null;
-    const areaId =
-      primaryEntry?.area_id ??
-      (deviceId ? this.hass.devices?.[deviceId]?.area_id ?? null : null);
-    const primaryFriendly = (this._entity?.attributes.friendly_name || '').trim().toLowerCase();
+    const deviceId = this.hass.entities?.[primaryId]?.device_id ?? null;
+    if (deviceId && this.hass.entities) {
+      for (const [id, entry] of Object.entries(this.hass.entities)) {
+        if (id.startsWith('scene.') && entry.device_id === deviceId) {
+          addScene(id);
+        }
+      }
+    }
 
-    for (const [id, st] of Object.entries(this.hass.states)) {
-      if (!id.startsWith('scene.') || seen.has(id)) continue;
-      const entry = this.hass.entities?.[id];
-      const sceneDeviceId = entry?.device_id ?? null;
-      const sceneAreaId =
-        entry?.area_id ??
-        (sceneDeviceId ? this.hass.devices?.[sceneDeviceId]?.area_id ?? null : null);
-      const groupName = String(st.attributes.group_name ?? '').trim().toLowerCase();
-
-      const sameDevice = Boolean(deviceId && sceneDeviceId === deviceId);
-      const sameHueGroup = Boolean(primaryFriendly && groupName && groupName === primaryFriendly);
-      const sameArea = Boolean(areaId && sceneAreaId === areaId);
-
-      if (sameDevice || sameHueGroup || sameArea) {
-        addScene(id);
+    // 3. Built-in light effect_list (e.g. Scene, Music, Off, etc.)
+    const effectList = this._entity?.attributes.effect_list;
+    if (Array.isArray(effectList)) {
+      for (const rawEff of effectList) {
+        const eff = String(rawEff ?? '').trim();
+        if (!eff) continue;
+        const key = `effect:${eff}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        results.push({
+          kind: 'effect',
+          id: key,
+          label: eff.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()),
+          effect: eff,
+        });
       }
     }
 
@@ -480,12 +497,19 @@ export class M3ELightCard extends LitElement {
     return raw;
   }
 
-  private _activateScene(scene: HassEntity): void {
-    if (!this.hass) return;
-    this._activeSceneId = scene.entity_id;
-    this.hass.callService('scene', 'turn_on', {
-      entity_id: scene.entity_id,
-    });
+  private _activateSceneItem(item: LightSceneItem): void {
+    if (!this.hass || !this._config) return;
+    this._activeSceneId = item.id;
+    if (item.kind === 'scene') {
+      this.hass.callService('scene', 'turn_on', {
+        entity_id: item.entity.entity_id,
+      });
+    } else {
+      this.hass.callService('light', 'turn_on', {
+        entity_id: this._config.entity,
+        effect: item.effect,
+      });
+    }
     this._scenesSheetOpen = false;
   }
 
@@ -1033,24 +1057,29 @@ export class M3ELightCard extends LitElement {
                             <span>Scene</span>
                           </div>
                           <div class="scenes-sheet-list">
-                            ${scenes.map((scene) => {
-                              const selected = this._activeSceneId === scene.entity_id;
+                            ${scenes.map((item) => {
+                              const currentEffect = String(this._entity?.attributes.effect ?? '');
+                              const selected =
+                                item.kind === 'effect'
+                                  ? currentEffect.toLowerCase() === item.effect.toLowerCase()
+                                  : this._activeSceneId === item.id;
                               return html`
                                 <button
                                   type="button"
                                   class="scene-option ${selected ? 'selected' : ''}"
-                                  @click=${() => this._activateScene(scene)}
+                                  @click=${() => this._activateSceneItem(item)}
                                 >
                                   <span class="scene-option-left">
-                                    ${typeof customElements !== 'undefined' &&
+                                    ${item.kind === 'scene' &&
+                                    typeof customElements !== 'undefined' &&
                                     customElements.get('ha-state-icon')
                                       ? html`<ha-state-icon
                                           class="scene-ha-icon"
                                           .hass=${this.hass}
-                                          .stateObj=${scene}
+                                          .stateObj=${item.entity}
                                         ></ha-state-icon>`
                                       : html`<svg viewBox="0 0 24 24" class="scene-svg"><path fill="currentColor" d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"/></svg>`}
-                                    <span>${this._cleanSceneName(scene)}</span>
+                                    <span>${item.label}</span>
                                   </span>
                                   ${selected ? html`<span>✓</span>` : nothing}
                                 </button>
