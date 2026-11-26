@@ -1107,7 +1107,17 @@ export class M3EStatusCard extends LitElement {
     if (iconName && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${iconName}></ha-icon>`;
     }
-    return renderM3EntityIcon(this._statusEntity ?? this._entity, this._isActive, this._resolvedPopupType);
+    const targetEnt = this._statusEntity ?? this._entity;
+    if (this._config?.use_entity_icon && targetEnt && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${targetEnt}></ha-state-icon>`;
+      }
+      const attrIcon = targetEnt.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
+    }
+    return renderM3EntityIcon(targetEnt, this._isActive, this._resolvedPopupType);
   }
 
   /* =========================================================================

@@ -84,7 +84,14 @@ export class M3ESceneCard extends LitElement {
                 },
               },
             },
-            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'use_entity_icon', selector: { boolean: {} } },
+                { name: 'hide_state', selector: { boolean: {} } },
+              ],
+            },
             {
               name: 'state_content',
               selector: { ui_state_content: { allow_name: false } },
@@ -98,6 +105,7 @@ export class M3ESceneCard extends LitElement {
         const labels: Record<string, string> = {
           entity: 'Scena, Script o Pulsante',
           name: 'Nome',
+          use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
           hide_state: 'Nascondi stato',
           state_content: 'Contenuto stato (stato / attributi)',
           subtitle: 'Sottotitolo opzionale',
@@ -195,6 +203,15 @@ export class M3ESceneCard extends LitElement {
   private _renderIcon(customIcon: string | undefined, activated: boolean) {
     if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${customIcon}></ha-icon>`;
+    }
+    if (this._config?.use_entity_icon && this._entity && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${this._entity}></ha-state-icon>`;
+      }
+      const attrIcon = this._entity.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
     }
 
     // Google Home Scene Sparkles: outlined when idle -> filled when activated

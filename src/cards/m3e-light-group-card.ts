@@ -76,7 +76,14 @@ export class M3ELightGroupCard extends LitElement {
                 },
               },
             },
-            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'use_entity_icon', selector: { boolean: {} } },
+                { name: 'hide_state', selector: { boolean: {} } },
+              ],
+            },
             {
               name: 'state_content',
               selector: { ui_state_content: { allow_name: false } },
@@ -100,6 +107,7 @@ export class M3ELightGroupCard extends LitElement {
           entity: 'Gruppo luci (entità light con luci figlie)',
           name: 'Nome',
           icon: 'Icona personalizzata (vuoto = lampade Google Home)',
+          use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
           hide_state: 'Nascondi stato',
           state_content: 'Contenuto stato (stato / attributi)',
           compact: 'Modalità compatta (mezza larghezza con popup)',
@@ -332,6 +340,15 @@ export class M3ELightGroupCard extends LitElement {
   private _renderGroupIcon(customIcon?: string) {
     if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${customIcon}></ha-icon>`;
+    }
+    if (this._config?.use_entity_icon && this._groupEntity && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${this._groupEntity}></ha-state-icon>`;
+      }
+      const attrIcon = this._groupEntity.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
     }
     // Google Home multi-light group icon (floor lamp + pendant)
     return html`

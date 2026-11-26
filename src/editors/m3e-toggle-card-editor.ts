@@ -80,7 +80,14 @@ export class M3EToggleCardEditor extends LitElement {
           { name: 'icon_off', selector: { icon: {} } },
         ],
       },
-      { name: 'hide_state', selector: { boolean: {} } },
+      {
+        type: 'grid',
+        name: '',
+        schema: [
+          { name: 'use_entity_icon', selector: { boolean: {} } },
+          { name: 'hide_state', selector: { boolean: {} } },
+        ],
+      },
     ];
 
     if (!this._config?.hide_state) {
@@ -161,6 +168,7 @@ export class M3EToggleCardEditor extends LitElement {
       card_style: 'Design della pillola (Material 3)',
       icon_on: 'Icona acceso (vuoto = standard Google Home)',
       icon_off: 'Icona spento (vuoto = standard Google Home)',
+      use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
       hide_state: 'Nascondi stato',
       state_content: 'Contenuto stato (stato / attributi)',
       label_on: 'Testo acceso (default: On)',

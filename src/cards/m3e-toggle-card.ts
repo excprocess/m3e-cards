@@ -300,6 +300,15 @@ export class M3EToggleCard extends LitElement {
     if (iconName && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${iconName}></ha-icon>`;
     }
+    if (this._config?.use_entity_icon && this._entity && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${this._entity}></ha-state-icon>`;
+      }
+      const attrIcon = this._entity.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
+    }
     return renderM3EntityIcon(this._entity, this._isOn);
   }
 

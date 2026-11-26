@@ -84,6 +84,8 @@ export interface M3ELightCardConfig extends LovelaceCardConfig {
   icon?: string;
   /** Hide the secondary state/brightness line on the tile (default: false) */
   hide_state?: boolean;
+  /** Use Home Assistant's native entity icon (ha-state-icon) instead of the default Google Home SVG */
+  use_entity_icon?: boolean;
   /** Native Home Assistant state content selector (state, last_changed, or entity attributes) */
   state_content?: StateContentConfig;
   /** Use the light's actual rgb_color / color_temp_kelvin when ON (default: true). Set false to always use Material You theme primary. */
@@ -262,6 +264,8 @@ export interface M3ELightGroupCardConfig extends LovelaceCardConfig {
   icon?: string;
   /** Hide the secondary state line on the tile (default: false) */
   hide_state?: boolean;
+  /** Use Home Assistant's native entity icon (ha-state-icon) instead of the default Google Home SVG */
+  use_entity_icon?: boolean;
   /** Native Home Assistant state content selector */
   state_content?: StateContentConfig;
   /** Start expanded by default (default: false) */
@@ -279,6 +283,8 @@ export interface M3ESceneCardConfig extends LovelaceCardConfig {
   name?: EntityNameConfig;
   /** Hide the secondary state/subtitle line on the tile (default: false) */
   hide_state?: boolean;
+  /** Use Home Assistant's native entity icon (ha-state-icon) instead of the default Google Home SVG */
+  use_entity_icon?: boolean;
   /** Native Home Assistant state content selector */
   state_content?: StateContentConfig;
   /** Optional resting subtitle (leave empty for clean centered title) */
@@ -300,6 +306,8 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
   label_off?: string;
   /** Hide the secondary state line on the tile (default: false) */
   hide_state?: boolean;
+  /** Use Home Assistant's native entity icon (ha-state-icon) instead of the default Google Home SVG */
+  use_entity_icon?: boolean;
   /** Native Home Assistant state content selector */
   state_content?: StateContentConfig;
   /** Action on long-press: open M3E popup (default), native HA more-info, navigate/Bubble/Browser Mod, or none */
@@ -336,6 +344,7 @@ export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   badge_style?: M3EStatusBadgeStyle;
   name?: EntityNameConfig;
   icon?: string;
+  use_entity_icon?: boolean;
   hide_state?: boolean;
   state_content?: StateContentConfig;
   active_state?: string;
@@ -351,6 +360,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   show_entity_picture?: boolean;
   /** Hide the secondary state/subtitle line on the tile (default: false) */
   hide_state?: boolean;
+  /** Use Home Assistant's native entity icon (ha-state-icon) instead of the default Google Home SVG */
+  use_entity_icon?: boolean;
   /** Native Home Assistant state content selector (state, last_changed, or entity attributes) */
   state_content?: StateContentConfig;
   /** Optional linked entity used to determine active/inactive status (e.g. smart plug or ping sensor for a remote) */

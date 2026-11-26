@@ -108,10 +108,11 @@ export class M3EStatusBadge extends LitElement {
               type: 'grid',
               name: '',
               schema: [
+                { name: 'use_entity_icon', selector: { boolean: {} } },
                 { name: 'hide_state', selector: { boolean: {} } },
-                { name: 'alert_color', selector: { boolean: {} } },
               ],
             },
+            { name: 'alert_color', selector: { boolean: {} } },
             {
               name: 'state_content',
               selector: { ui_state_content: { allow_name: false } },
@@ -149,6 +150,7 @@ export class M3EStatusBadge extends LitElement {
           badge_style: 'Stile Badge (Material 3 Expressive)',
           name: 'Nome',
           icon: 'Icona personalizzata (vuoto = automatica)',
+          use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
           hide_state: 'Nascondi stato',
           alert_color: 'Usa colore di avviso/errore quando attivo',
           state_content: 'Contenuto stato (stato / attributi)',
@@ -255,6 +257,15 @@ export class M3EStatusBadge extends LitElement {
     const customIcon = this._config?.icon?.trim();
     if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${customIcon}></ha-icon>`;
+    }
+    if (this._config?.use_entity_icon && entity && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${entity}></ha-state-icon>`;
+      }
+      const attrIcon = entity.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
     }
     return renderM3EntityIcon(entity, isActive);
   }

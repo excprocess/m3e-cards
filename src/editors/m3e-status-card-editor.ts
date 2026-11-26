@@ -94,10 +94,11 @@ export class M3EStatusCardEditor extends LitElement {
         type: 'grid',
         name: '',
         schema: [
+          { name: 'use_entity_icon', selector: { boolean: {} } },
           { name: 'show_entity_picture', selector: { boolean: {} } },
-          { name: 'hide_state', selector: { boolean: {} } },
         ],
       },
+      { name: 'hide_state', selector: { boolean: {} } },
     ];
 
     if (!this._config?.hide_state) {
@@ -352,6 +353,7 @@ export class M3EStatusCardEditor extends LitElement {
       status_entity: 'Entità stato dispositivo (opzionale)',
       name: 'Nome',
       card_style: 'Design della pillola (Material 3)',
+      use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
       show_entity_picture: 'Mostra entity picture (1:1 sfumata)',
       hide_state: 'Nascondi stato',
       state_content: 'Contenuto stato (stato / attributi)',

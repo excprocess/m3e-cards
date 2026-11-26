@@ -64,6 +64,14 @@ export const m3eBaseStyles = css`
     box-sizing: border-box;
   }
 
+  ha-state-icon {
+    --mdc-icon-size: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+  }
+
   ha-card {
     display: block;
     position: relative;

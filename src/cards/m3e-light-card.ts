@@ -136,7 +136,14 @@ export class M3ELightCard extends LitElement {
                 },
               },
             },
-            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'use_entity_icon', selector: { boolean: {} } },
+                { name: 'hide_state', selector: { boolean: {} } },
+              ],
+            },
             {
               name: 'state_content',
               selector: { ui_state_content: { allow_name: false } },
@@ -161,6 +168,7 @@ export class M3ELightCard extends LitElement {
           name: 'Nome',
           icon: 'Icona personalizzata (vuoto = standard Google Home)',
           card_style: 'Design della pillola (Material 3)',
+          use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
           hide_state: 'Nascondi stato',
           state_content: 'Contenuto stato (stato / attributi)',
           use_light_color: 'Usa colore reale della luce',
@@ -773,6 +781,15 @@ export class M3ELightCard extends LitElement {
     // Only use <ha-icon> when the user explicitly configured a custom icon in card settings
     if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
       return html`<ha-icon .icon=${customIcon}></ha-icon>`;
+    }
+    if (this._config?.use_entity_icon && this._entity && typeof customElements !== 'undefined') {
+      if (customElements.get('ha-state-icon')) {
+        return html`<ha-state-icon .hass=${this.hass} .stateObj=${this._entity}></ha-state-icon>`;
+      }
+      const attrIcon = this._entity.attributes.icon;
+      if (attrIcon && customElements.get('ha-icon')) {
+        return html`<ha-icon .icon=${attrIcon}></ha-icon>`;
+      }
     }
     return isOn
       ? html`
