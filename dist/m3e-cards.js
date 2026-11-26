@@ -16303,50 +16303,62 @@ S.styles = [
         inset-block: 0;
         inset-inline-start: 0;
         height: 100%;
-        width: 112px;
-        max-width: 54%;
+        width: 136px;
+        max-width: 64%;
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
         -webkit-mask-image: linear-gradient(
           to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.96) 54%,
-          rgba(0, 0, 0, 0.55) 76%,
+          rgba(0, 0, 0, 0.94) 28%,
+          rgba(0, 0, 0, 0.74) 48%,
+          rgba(0, 0, 0, 0.44) 66%,
+          rgba(0, 0, 0, 0.18) 82%,
+          rgba(0, 0, 0, 0.05) 92%,
           rgba(0, 0, 0, 0) 100%
         );
         mask-image: linear-gradient(
           to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.96) 54%,
-          rgba(0, 0, 0, 0.55) 76%,
+          rgba(0, 0, 0, 0.94) 28%,
+          rgba(0, 0, 0, 0.74) 48%,
+          rgba(0, 0, 0, 0.44) 66%,
+          rgba(0, 0, 0, 0.18) 82%,
+          rgba(0, 0, 0, 0.05) 92%,
           rgba(0, 0, 0, 0) 100%
         );
       }
 
       .status-tile.has-features.features-bottom .entity-picture-backdrop {
-        height: 98px;
+        height: 106px;
         bottom: auto;
         -webkit-mask-image:
           linear-gradient(
             to right,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 0.96) 54%,
-            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0.94) 28%,
+            rgba(0, 0, 0, 0.74) 48%,
+            rgba(0, 0, 0, 0.44) 66%,
+            rgba(0, 0, 0, 0.18) 82%,
+            rgba(0, 0, 0, 0.05) 92%,
             rgba(0, 0, 0, 0) 100%
           ),
           linear-gradient(
             to bottom,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 0.96) 56%,
-            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0.94) 36%,
+            rgba(0, 0, 0, 0.7) 56%,
+            rgba(0, 0, 0, 0.36) 74%,
+            rgba(0, 0, 0, 0.12) 88%,
             rgba(0, 0, 0, 0) 100%
           ),
           radial-gradient(
-            ellipse 106% 106% at 0% 0%,
+            ellipse 108% 108% at 0% 0%,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 1) 66%,
-            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0.96) 44%,
+            rgba(0, 0, 0, 0.62) 68%,
+            rgba(0, 0, 0, 0.22) 86%,
             rgba(0, 0, 0, 0) 100%
           );
         -webkit-mask-composite: source-in, source-in;
@@ -16354,22 +16366,28 @@ S.styles = [
           linear-gradient(
             to right,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 0.96) 54%,
-            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0.94) 28%,
+            rgba(0, 0, 0, 0.74) 48%,
+            rgba(0, 0, 0, 0.44) 66%,
+            rgba(0, 0, 0, 0.18) 82%,
+            rgba(0, 0, 0, 0.05) 92%,
             rgba(0, 0, 0, 0) 100%
           ),
           linear-gradient(
             to bottom,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 0.96) 56%,
-            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0.94) 36%,
+            rgba(0, 0, 0, 0.7) 56%,
+            rgba(0, 0, 0, 0.36) 74%,
+            rgba(0, 0, 0, 0.12) 88%,
             rgba(0, 0, 0, 0) 100%
           ),
           radial-gradient(
-            ellipse 106% 106% at 0% 0%,
+            ellipse 108% 108% at 0% 0%,
             rgba(0, 0, 0, 1) 0%,
-            rgba(0, 0, 0, 1) 66%,
-            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0.96) 44%,
+            rgba(0, 0, 0, 0.62) 68%,
+            rgba(0, 0, 0, 0.22) 86%,
             rgba(0, 0, 0, 0) 100%
           );
         mask-composite: intersect;
