@@ -149,16 +149,23 @@ export class M3EStatusCardEditor extends LitElement {
 
     if (type === 'custom') {
       schema.push(
-        { name: 'subtitle_entity', selector: { entity: {} } },
-        attributeSelector,
-        visibilitySelector,
-        formatSelector,
         {
-          type: 'grid',
-          name: '',
+          type: 'expandable',
+          title: 'Sottotitolo avanzato (altra entità / orari relativi)',
+          icon: 'mdi:clock-outline',
           schema: [
-            { name: 'subtitle_prefix', selector: { text: {} } },
-            { name: 'subtitle_suffix', selector: { text: {} } },
+            { name: 'subtitle_entity', selector: { entity: {} } },
+            attributeSelector,
+            visibilitySelector,
+            formatSelector,
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'subtitle_prefix', selector: { text: {} } },
+                { name: 'subtitle_suffix', selector: { text: {} } },
+              ],
+            },
           ],
         },
         { name: 'active_state', selector: { text: {} } },
@@ -175,9 +182,12 @@ export class M3EStatusCardEditor extends LitElement {
       );
     } else if (type === 'sensor') {
       schema.push(
-        attributeSelector,
-        visibilitySelector,
-        formatSelector,
+        {
+          type: 'expandable',
+          title: 'Sottotitolo avanzato (attributi / orari relativi)',
+          icon: 'mdi:clock-outline',
+          schema: [attributeSelector, visibilitySelector, formatSelector],
+        },
         { name: 'active_state', selector: { text: {} } },
         {
           type: 'grid',

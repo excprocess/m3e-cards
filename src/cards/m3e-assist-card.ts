@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import type { HassEntity, HomeAssistant, M3EAssistCardConfig } from '../types/home-assistant';
 
 @customElement('m3e-assist-card')
@@ -34,13 +35,27 @@ export class M3EAssistCard extends LitElement {
   public static getConfigForm() {
     return {
       schema: [
-        { name: 'placeholder', selector: { text: {} } },
         {
-          name: 'entity',
-          selector: { entity: { domain: ['input_select', 'select'] } },
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
+          schema: [
+            { name: 'placeholder', selector: { text: {} } },
+            {
+              name: 'entity',
+              selector: { entity: { domain: ['input_select', 'select'] } },
+            },
+          ],
         },
-        { name: 'start_listening', selector: { boolean: {} } },
-        { name: 'pipeline_id', selector: { text: {} } },
+        {
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            { name: 'start_listening', selector: { boolean: {} } },
+            { name: 'pipeline_id', selector: { text: {} } },
+          ],
+        },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
@@ -138,53 +153,13 @@ export class M3EAssistCard extends LitElement {
     const surface = this._dialogSurfaceEl;
     if (!dialog) return;
     if (!dialog.open) dialog.showModal();
-
-    if (surface) {
-      const isMobile = window.matchMedia('(max-width: 600px)').matches;
-      surface.animate(
-        isMobile
-          ? [
-              { transform: 'translateY(36px)', opacity: 0 },
-              { transform: 'translateY(0px)', opacity: 1 },
-            ]
-          : [
-              { transform: 'scale(0.92)', opacity: 0 },
-              { transform: 'scale(1)', opacity: 1 },
-            ],
-        { duration: 280, easing: 'cubic-bezier(0.2, 0.9, 0.2, 1)' },
-      );
-    }
+    animateDialogOpen(surface);
   }
 
   public closeModeSelector(): void {
-    const dialog = this._dialogEl;
-    const surface = this._dialogSurfaceEl;
-    if (!dialog || !dialog.open) {
+    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
       this._selectorOpen = false;
-      return;
-    }
-    if (surface) {
-      const isMobile = window.matchMedia('(max-width: 600px)').matches;
-      const anim = surface.animate(
-        isMobile
-          ? [
-              { transform: 'translateY(0px)', opacity: 1 },
-              { transform: 'translateY(28px)', opacity: 0 },
-            ]
-          : [
-              { transform: 'scale(1)', opacity: 1 },
-              { transform: 'scale(0.94)', opacity: 0 },
-            ],
-        { duration: 160, easing: 'cubic-bezier(0.4, 0, 1, 1)' },
-      );
-      anim.onfinish = () => {
-        dialog.close();
-        this._selectorOpen = false;
-      };
-    } else {
-      dialog.close();
-      this._selectorOpen = false;
-    }
+    });
   }
 
   private _selectOption(option: string): void {
@@ -397,7 +372,7 @@ export class M3EAssistCard extends LitElement {
       }
 
       .assist-bar.is-pressed {
-        transform: scale(0.985);
+        transform: scale(var(--m3e-press-scale-card, 0.978));
       }
 
       .assist-bar:focus-visible {

@@ -5,6 +5,14 @@ export interface ArtworkPalette {
   accent: string;
   /** High-contrast dark ink on top of accent */
   onAccent: string;
+  /** M3 Expressive Dark-mode tonal container derived from artwork hue */
+  containerDark: string;
+  /** High-contrast foreground on containerDark */
+  onContainerDark: string;
+  /** M3 Expressive Light-mode tonal container derived from artwork hue */
+  containerLight: string;
+  /** High-contrast foreground on containerLight */
+  onContainerLight: string;
 }
 
 const paletteCache = new Map<string, ArtworkPalette | null>();
@@ -89,11 +97,15 @@ export async function extractArtworkPalette(url: string): Promise<ArtworkPalette
         }
 
         // Monochrome / B&W artwork -> return sleek warm-neutral M3 palette
-        if (best.w < 1.5 || (pixelCount > 0 && totalSat / pixelCount < 8)) {
+        if (best.w < 0.7 || (pixelCount > 0 && totalSat / pixelCount < 5)) {
           const mono: ArtworkPalette = {
             scrim: 'hsl(240, 6%, 11%)',
-            accent: 'hsl(20, 14%, 91%)',
+            accent: 'hsl(28, 16%, 90%)',
             onAccent: 'hsl(240, 8%, 13%)',
+            containerDark: 'hsl(30, 8%, 22%)',
+            onContainerDark: 'hsl(30, 12%, 92%)',
+            containerLight: 'hsl(30, 14%, 89%)',
+            onContainerLight: 'hsl(30, 10%, 16%)',
           };
           paletteCache.set(url, mono);
           resolve(mono);
@@ -102,16 +114,25 @@ export async function extractArtworkPalette(url: string): Promise<ArtworkPalette
 
         let hue = (Math.atan2(best.hSin, best.hCos) * 180) / Math.PI;
         if (hue < 0) hue += 360;
+        const h = Math.round(hue);
         const avgSat = best.s / best.w;
 
         const scrimSat = Math.round(Math.max(18, Math.min(46, avgSat * 0.55)));
         const accentSat = Math.round(Math.max(42, Math.min(82, avgSat * 0.95)));
         const onAccentSat = Math.round(Math.max(28, Math.min(60, avgSat * 0.65)));
+        const darkContSat = Math.round(Math.max(22, Math.min(48, avgSat * 0.62)));
+        const darkOnSat = Math.round(Math.max(24, Math.min(72, avgSat * 0.78)));
+        const lightContSat = Math.round(Math.max(30, Math.min(74, avgSat * 0.82)));
+        const lightOnSat = Math.round(Math.max(28, Math.min(62, avgSat * 0.68)));
 
         const palette: ArtworkPalette = {
-          scrim: `hsl(${Math.round(hue)}, ${scrimSat}%, 12%)`,
-          accent: `hsl(${Math.round(hue)}, ${accentSat}%, 86%)`,
-          onAccent: `hsl(${Math.round(hue)}, ${onAccentSat}%, 14%)`,
+          scrim: `hsl(${h}, ${scrimSat}%, 12%)`,
+          accent: `hsl(${h}, ${accentSat}%, 86%)`,
+          onAccent: `hsl(${h}, ${onAccentSat}%, 14%)`,
+          containerDark: `hsl(${h}, ${darkContSat}%, 22%)`,
+          onContainerDark: `hsl(${h}, ${darkOnSat}%, 91%)`,
+          containerLight: `hsl(${h}, ${lightContSat}%, 88%)`,
+          onContainerLight: `hsl(${h}, ${lightOnSat}%, 16%)`,
         };
 
         paletteCache.set(url, palette);

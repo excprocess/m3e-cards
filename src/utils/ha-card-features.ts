@@ -33,6 +33,15 @@ declare global {
 let _featuresLoadPromise: Promise<boolean> | null = null;
 let _featuresEditorLoadPromise: Promise<boolean> | null = null;
 
+function waitForElement(tag: string, timeoutMs = 4000): Promise<boolean> {
+  if (typeof customElements === 'undefined') return Promise.resolve(false);
+  if (customElements.get(tag)) return Promise.resolve(true);
+  return Promise.race([
+    customElements.whenDefined(tag).then(() => true),
+    new Promise<boolean>((resolve) => window.setTimeout(() => resolve(Boolean(customElements.get(tag))), timeoutMs)),
+  ]);
+}
+
 /**
  * Ensures `<hui-card-features>` is registered in `customElements` by triggering
  * Home Assistant's lazy-loaded Tile card chunk if needed.
@@ -48,19 +57,23 @@ export async function ensureCardFeaturesLoaded(): Promise<boolean> {
           const helpers = await window.loadCardHelpers();
           await helpers.createCardElement({ type: 'tile', entity: '' });
         }
-        return Boolean(customElements.get('hui-card-features'));
+        await waitForElement('hui-tile-card', 3000);
+        return await waitForElement('hui-card-features', 3000);
       } catch {
-        return false;
+        return Boolean(customElements.get('hui-card-features'));
       }
     })();
   }
 
-  return _featuresLoadPromise;
+  const ok = await _featuresLoadPromise;
+  if (!ok) _featuresLoadPromise = null;
+  return ok;
 }
 
 /**
  * Ensures `<hui-card-features-editor>` and `<hui-sub-element-editor>` are registered
- * in `customElements` by loading the Tile card's native config editor chunk.
+ * in `customElements` by properly awaiting `hui-tile-card` upgrade before invoking
+ * its static `getConfigElement()`.
  */
 export async function ensureCardFeaturesEditorLoaded(): Promise<boolean> {
   if (typeof customElements === 'undefined') return false;
@@ -76,22 +89,25 @@ export async function ensureCardFeaturesEditorLoaded(): Promise<boolean> {
       try {
         if (window.loadCardHelpers) {
           const helpers = await window.loadCardHelpers();
-          const tileEl = await helpers.createCardElement({ type: 'tile', entity: '' });
-          const ctor = tileEl?.constructor as
-            | { getConfigElement?: () => Promise<HTMLElement> | HTMLElement }
-            | undefined;
-          if (ctor?.getConfigElement) {
-            await ctor.getConfigElement();
-          }
+          await helpers.createCardElement({ type: 'tile', entity: '' });
         }
-        return Boolean(customElements.get('hui-card-features-editor'));
+        await waitForElement('hui-tile-card', 3500);
+        const tileCtor = customElements.get('hui-tile-card') as
+          | { getConfigElement?: () => Promise<HTMLElement> | HTMLElement }
+          | undefined;
+        if (tileCtor?.getConfigElement) {
+          await tileCtor.getConfigElement();
+        }
+        return await waitForElement('hui-card-features-editor', 4000);
       } catch {
-        return false;
+        return Boolean(customElements.get('hui-card-features-editor'));
       }
     })();
   }
 
-  return _featuresEditorLoadPromise;
+  const ok = await _featuresEditorLoadPromise;
+  if (!ok) _featuresEditorLoadPromise = null;
+  return ok;
 }
 
 /**

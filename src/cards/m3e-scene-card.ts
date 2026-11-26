@@ -3,6 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ESceneCardConfig } from '../types/home-assistant';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import { t } from '../utils/i18n';
 
 const ACTIVATED_DURATION_MS = 2200;
 
@@ -231,7 +232,11 @@ export class M3ESceneCard extends LitElement {
     const accent = this._config.accent ?? 'primary';
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const restSub = this._config.subtitle?.trim() || '';
-    const baseSub = this._isUnavailable ? 'Offline' : this._activated ? 'Avviata' : restSub;
+    const baseSub = this._isUnavailable
+      ? t(this.hass, 'offline')
+      : this._activated
+        ? t(this.hass, 'started')
+        : restSub;
     const hideState = Boolean(this._config.hide_state);
     const stateContentVal =
       !hideState && !this._activated
@@ -334,11 +339,6 @@ export class M3ESceneCard extends LitElement {
 
       .scene-tile.is-pressed {
         transform: scale(0.965);
-      }
-
-      .scene-tile.is-unavailable {
-        opacity: 0.5;
-        cursor: not-allowed;
       }
 
       .scene-tile:focus-visible {

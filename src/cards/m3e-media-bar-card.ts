@@ -59,7 +59,7 @@ export class M3EMediaBarCard extends LitElement {
       entity: mpId ?? 'media_player.salotto_speaker',
       show_cast: true,
       hide_when_inactive: false,
-      tap_action: 'more-info',
+      tap_action: 'popup',
     };
   }
 
@@ -72,33 +72,44 @@ export class M3EMediaBarCard extends LitElement {
           selector: { entity: { domain: 'media_player' } },
         },
         {
-          name: 'entities',
-          selector: { entity: { domain: 'media_player', multiple: true } },
-        },
-        {
-          name: 'name',
-          selector: { text: {} },
-        },
-        {
-          type: 'grid',
-          name: '',
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
           schema: [
-            { name: 'show_cast', selector: { boolean: {} } },
-            { name: 'hide_when_inactive', selector: { boolean: {} } },
+            { name: 'name', selector: { text: {} } },
+            {
+              name: 'entities',
+              selector: { entity: { domain: 'media_player', multiple: true } },
+            },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'show_cast', selector: { boolean: {} } },
+                { name: 'hide_when_inactive', selector: { boolean: {} } },
+              ],
+            },
           ],
         },
         {
-          name: 'tap_action',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'popup', label: 'Apri popup Now Playing M3E' },
-                { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
-                { value: 'none', label: 'Nessuna azione' },
-              ],
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            {
+              name: 'tap_action',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'popup', label: 'Apri popup Now Playing M3E' },
+                    { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
+                    { value: 'none', label: 'Nessuna azione' },
+                  ],
+                },
+              },
             },
-          },
+          ],
         },
       ],
       computeLabel: (schema: { name: string }) => {
@@ -373,50 +384,62 @@ export class M3EMediaBarCard extends LitElement {
             </div>
           </div>
 
-          <!-- Right Slot: Cast / Output + Squircle Play/Pause -->
+          <!-- Right Slot: Cast / Output + Squircle Play/Pause (or Offline Badge) -->
           <div class="actions-col">
-            ${showCast
+            ${isUnavailable
               ? html`
+                  <span class="offline-badge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                      <path
+                        fill="currentColor"
+                        d="M4.47 21h15.06c1.54 0 2.5-1.67 1.73-3L13.73 4.99c-.77-1.33-2.69-1.33-3.46 0L2.74 18c-.77 1.33.19 3 1.73 3ZM12 14a1 1 0 0 1-1-1v-2a1 1 0 1 1 2 0v2a1 1 0 0 1-1 1Zm1 4h-2v-2h2v2Z"
+                      />
+                    </svg>
+                  </span>
+                `
+              : html`
+                  ${showCast
+                    ? html`
+                        <button
+                          type="button"
+                          class="cast-btn"
+                          aria-label="Sorgente o dispositivo"
+                          title="Sorgente / Output"
+                          @click=${(e: Event) => this._openCastDialog(e)}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
+                            />
+                          </svg>
+                        </button>
+                      `
+                    : nothing}
+
                   <button
                     type="button"
-                    class="cast-btn"
-                    aria-label="Sorgente o dispositivo"
-                    title="Sorgente / Output"
-                    @click=${(e: Event) => this._openCastDialog(e)}
+                    class="play-btn ${isPlaying ? 'is-playing' : ''}"
+                    aria-label=${isPlaying ? 'Pausa' : 'Riproduci'}
+                    @click=${(e: Event) => this._togglePlayPause(e)}
                   >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
-                      />
-                    </svg>
+                    ${isPlaying
+                      ? html`
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="6.5" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
+                            <rect x="13.7" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
+                          </svg>
+                        `
+                      : html`
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="M8 5.8v12.4c0 .86.94 1.38 1.66.92l9.7-6.2a1.09 1.09 0 0 0 0-1.84l-9.7-6.2C8.94 4.42 8 4.94 8 5.8Z"
+                            />
+                          </svg>
+                        `}
                   </button>
-                `
-              : nothing}
-
-            <button
-              type="button"
-              class="play-btn ${isPlaying ? 'is-playing' : ''}"
-              aria-label=${isPlaying ? 'Pausa' : 'Riproduci'}
-              ?disabled=${isUnavailable}
-              @click=${(e: Event) => this._togglePlayPause(e)}
-            >
-              ${isPlaying
-                ? html`
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <rect x="6.5" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
-                      <rect x="13.7" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
-                    </svg>
-                  `
-                : html`
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M8 5.8v12.4c0 .86.94 1.38 1.66.92l9.7-6.2a1.09 1.09 0 0 0 0-1.84l-9.7-6.2C8.94 4.42 8 4.94 8 5.8Z"
-                      />
-                    </svg>
-                  `}
-            </button>
+                `}
           </div>
         </div>
       </ha-card>

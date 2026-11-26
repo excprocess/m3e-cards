@@ -98,7 +98,7 @@ export class M3EMediaPlayerCard extends LitElement {
       entity: mpId ?? 'media_player.salotto_speaker',
       dynamic_color: true,
       show_device_chip: true,
-      tap_action: 'more-info',
+      tap_action: 'popup',
     };
   }
 
@@ -111,33 +111,44 @@ export class M3EMediaPlayerCard extends LitElement {
           selector: { entity: { domain: 'media_player' } },
         },
         {
-          name: 'entities',
-          selector: { entity: { domain: 'media_player', multiple: true } },
-        },
-        {
-          name: 'name',
-          selector: { text: {} },
-        },
-        {
-          type: 'grid',
-          name: '',
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
           schema: [
-            { name: 'dynamic_color', selector: { boolean: {} } },
-            { name: 'show_device_chip', selector: { boolean: {} } },
+            { name: 'name', selector: { text: {} } },
+            {
+              name: 'entities',
+              selector: { entity: { domain: 'media_player', multiple: true } },
+            },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'dynamic_color', selector: { boolean: {} } },
+                { name: 'show_device_chip', selector: { boolean: {} } },
+              ],
+            },
           ],
         },
         {
-          name: 'tap_action',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'popup', label: 'Apri popup Now Playing M3E' },
-                { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
-                { value: 'none', label: 'Nessuna azione' },
-              ],
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            {
+              name: 'tap_action',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'popup', label: 'Apri popup Now Playing M3E' },
+                    { value: 'more-info', label: 'Apri dettagli nativi HA (More-info)' },
+                    { value: 'none', label: 'Nessuna azione' },
+                  ],
+                },
+              },
             },
-          },
+          ],
         },
       ],
       computeLabel: (schema: { name: string }) => {

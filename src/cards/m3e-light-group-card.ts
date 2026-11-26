@@ -358,8 +358,8 @@ export class M3ELightGroupCard extends LitElement {
         ? `${avgPct}%`
         : isOn
           ? totalCount > 1
-            ? `${onCount} on • ${avgPct}%`
-            : `On • ${avgPct}%`
+            ? `${onCount} on · ${avgPct}%`
+            : `On · ${avgPct}%`
           : 'Off';
     const hideState = Boolean(this._config.hide_state);
     const stateContentVal =

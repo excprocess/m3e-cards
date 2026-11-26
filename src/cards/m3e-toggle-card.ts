@@ -12,6 +12,7 @@ import {
   stopFeatureEventPropagation,
 } from '../utils/ha-card-features';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import { t } from '../utils/i18n';
 import '../editors/m3e-toggle-card-editor';
 
 const LONG_PRESS_MS = 420;
@@ -476,6 +477,31 @@ export class M3EToggleCard extends LitElement {
                       ? html`<span class="dialog-last-changed">${lastChanged}</span>`
                       : nothing}
                   </div>
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    aria-label=${t(this.hass, 'history')}
+                    title=${t(this.hass, 'history_tooltip')}
+                    @click=${() => {
+                      const eid = this._config?.entity;
+                      if (!eid) return;
+                      this.closePopup();
+                      this.dispatchEvent(
+                        new CustomEvent('hass-more-info', {
+                          bubbles: true,
+                          composed: true,
+                          detail: { entityId: eid, view: 'history' },
+                        }),
+                      );
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                      />
+                    </svg>
+                  </button>
                 </header>
 
                 <div class="switch-stage">
@@ -575,11 +601,6 @@ export class M3EToggleCard extends LitElement {
 
       .toggle-tile.is-pressed {
         transform: scale(0.965);
-      }
-
-      .toggle-tile.is-unavailable {
-        opacity: 0.5;
-        cursor: not-allowed;
       }
 
       .toggle-tile:focus-visible {

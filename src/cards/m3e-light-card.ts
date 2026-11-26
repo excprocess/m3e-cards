@@ -6,6 +6,7 @@ import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import { t } from '../utils/i18n';
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
@@ -819,7 +820,7 @@ export class M3ELightCard extends LitElement {
         ? `${pct}%`
         : isOn
           ? this._supportsBrightness
-            ? `On • ${pct}%`
+            ? `On · ${pct}%`
             : 'On'
           : 'Off';
     const hideState = Boolean(this._config.hide_state);
@@ -910,19 +911,46 @@ export class M3ELightCard extends LitElement {
                       ? html`<span class="dialog-last-changed">${lastChanged}</span>`
                       : nothing}
                   </div>
-                  <button
-                    type="button"
-                    class="power-btn ${isOn ? 'is-on' : ''}"
-                    @click=${this._toggleLight}
-                    aria-label="${isOn ? 'Turn off' : 'Turn on'} ${name}"
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                      <path
-                        fill="currentColor"
-                        d="M13 3h-2v10h2V3Zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12a7 7 0 1 1-11.41-5.41L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83Z"
-                      />
-                    </svg>
-                  </button>
+                  <div class="header-actions">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      aria-label=${t(this.hass, 'history')}
+                      title=${t(this.hass, 'history_tooltip')}
+                      @click=${() => {
+                        const eid = this._config?.entity;
+                        if (!eid) return;
+                        this.closePopup();
+                        this.dispatchEvent(
+                          new CustomEvent('hass-more-info', {
+                            bubbles: true,
+                            composed: true,
+                            detail: { entityId: eid, view: 'history' },
+                          }),
+                        );
+                      }}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="power-btn ${isOn ? 'is-on' : ''}"
+                      @click=${this._toggleLight}
+                      aria-label="${isOn ? t(this.hass, 'turn_off') : t(this.hass, 'turn_on')} ${name}"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3h-2v10h2V3Zm4.83 2.17-1.42 1.42A6.92 6.92 0 0 1 19 12a7 7 0 1 1-11.41-5.41L6.17 5.17A8.93 8.93 0 0 0 3 12a9 9 0 0 0 18 0c0-2.74-1.23-5.18-3.17-6.83Z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </header>
 
                 <div class="capsule-stage">
@@ -1128,6 +1156,13 @@ export class M3ELightCard extends LitElement {
 
       .tile-card.is-pressed:not(.is-dragging) {
         transform: scale(var(--m3e-press-scale-tile, 0.965));
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
       }
 
       .tile-card:focus-visible {

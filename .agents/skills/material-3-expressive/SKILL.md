@@ -49,6 +49,12 @@ For the complete list of CSS tokens exposed by `material-you-utilities` and Mate
        - Half-width tiles (`6 cols`): `transform: scale(var(--m3e-press-scale-tile, 0.965))` with `transition: transform var(--m3e-spring-spatial-fast)`.
        - Full-width / wide cards (`12 cols`, marked with `.is-wide-card`): `transform: scale(var(--m3e-press-scale-card, 0.978))` with `transition: transform var(--m3e-spring-spatial-fast)`.
      - Never leave a large interactive card static on press while smaller sibling tiles bounce.
+   - **Native Panelized GUI Editors (MANDATORY on ALL cards & badges):**
+     - Every card/badge editor MUST organize settings into Home Assistant's native Tile-card expandable panel hierarchy right below the primary `entity` selector: **Content** (`mdi:text-short`), **Interactions** (`mdi:gesture-tap`), and (where supported) **Features** (`mdi:list-box`).
+     - Single-entity tile cards/badges MUST use HA's native `entity_name` selector (Composed/Custom), `hide_state` toggle, and `ui_state_content` selector.
+     - Never dump flat ungrouped fields in `getConfigForm()` when more than 2–3 options exist.
+   - **Automatic Localization (`src/utils/i18n.ts`):**
+     - Use English when `hass.language` is English (default), and Italian when `hass.language` starts with `'it'`. Never mix hardcoded IT and EN strings in the same popup or card.
 
 ---
 

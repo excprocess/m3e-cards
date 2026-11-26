@@ -6,6 +6,7 @@ import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { renderMediaBrandBadge } from '../utils/media-brand';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
+import { t } from '../utils/i18n';
 
 const SUPPORT_VOLUME_SET = 4;
 
@@ -401,7 +402,7 @@ export class M3EMediaPopup extends LitElement {
                     </svg>
                   </button>
 
-                  <span class="dialog-title">Now playing</span>
+                  <span class="dialog-title">${t(this.hass, 'now_playing')}</span>
 
                   <div class="header-right">
                     ${this._renderAppBadge(entity)}
@@ -409,8 +410,8 @@ export class M3EMediaPopup extends LitElement {
                       type="button"
                       class="icon-btn"
                       @click=${() => this._openMoreInfo('history')}
-                      aria-label="Cronologia attività"
-                      title="Cronologia attività Home Assistant"
+                      aria-label=${t(this.hass, 'history')}
+                      title=${t(this.hass, 'history_tooltip')}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path
@@ -423,8 +424,8 @@ export class M3EMediaPopup extends LitElement {
                       type="button"
                       class="icon-btn"
                       @click=${() => this._openMoreInfo()}
-                      aria-label="Altre opzioni"
-                      title="Dettagli Home Assistant"
+                      aria-label=${t(this.hass, 'more_options')}
+                      title=${t(this.hass, 'ha_details')}
                     >
                       <svg viewBox="0 0 24 24">
                         <path
@@ -789,8 +790,8 @@ export class M3EMediaPopup extends LitElement {
                           <!-- Sources (M3 Expressive Filter Chips with Checkmark & Shape Morph) -->
                           ${sourceList.length > 0
                             ? html`
-                                <div class="cast-section-label">Sorgenti</div>
-                                <div class="source-chips" role="radiogroup" aria-label="Sorgenti">
+                                <div class="cast-section-label">${t(this.hass, 'sources')}</div>
+                                <div class="source-chips" role="radiogroup" aria-label=${t(this.hass, 'sources')}>
                                   ${sourceList.map((src) => {
                                     const active = src === currentSource;
                                     return html`
@@ -829,14 +830,14 @@ export class M3EMediaPopup extends LitElement {
                                 this._castSheetOpen = false;
                               }}
                             >
-                              Stop casting
+                              ${t(this.hass, 'stop_casting')}
                             </button>
                             <button
                               type="button"
                               class="done-cast-btn"
                               @click=${() => (this._castSheetOpen = false)}
                             >
-                              Done
+                              ${t(this.hass, 'done')}
                             </button>
                           </div>
                         </div>

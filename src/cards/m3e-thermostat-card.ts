@@ -10,6 +10,7 @@ import type {
 } from '../types/home-assistant';
 import type { M3EStatusCard } from './m3e-status-card';
 import './m3e-status-card';
+import { t } from '../utils/i18n';
 
 @customElement('m3e-thermostat-card')
 export class M3EThermostatCard extends LitElement {
@@ -61,16 +62,24 @@ export class M3EThermostatCard extends LitElement {
           selector: { entity: { domain: 'climate' } },
         },
         {
-          name: 'name',
-          selector: { text: {} },
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
+          schema: [
+            { name: 'name', selector: { text: {} } },
+            { name: 'outdoor_entity', selector: { entity: { domain: 'sensor' } } },
+          ],
         },
         {
-          name: 'outdoor_entity',
-          selector: { entity: { domain: 'sensor' } },
-        },
-        {
-          name: 'step',
-          selector: { number: { min: 0.1, max: 2, step: 0.1, mode: 'box' } },
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            {
+              name: 'step',
+              selector: { number: { min: 0.1, max: 2, step: 0.1, mode: 'box' } },
+            },
+          ],
         },
       ],
       computeLabel: (schema: { name: string }) => {
@@ -307,13 +316,14 @@ export class M3EThermostatCard extends LitElement {
     const current = this._currentTemp;
     const hvacState = String(entity?.state ?? 'off').toLowerCase();
 
+    const indoorLbl = t(this.hass, 'indoor');
     const indoorText =
       current !== null
         ? hvacState === 'off'
-          ? `Off • Indoor ${this._formatTempNumber(current)}`
-          : `Indoor ${this._formatTempNumber(current)}`
+          ? `${t(this.hass, 'off')} · ${indoorLbl} ${this._formatTempNumber(current)}`
+          : `${indoorLbl} ${this._formatTempNumber(current)}`
         : hvacState === 'off'
-          ? 'Off'
+          ? t(this.hass, 'off')
           : hvacState.charAt(0).toUpperCase() + hvacState.slice(1);
 
     return html`

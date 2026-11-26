@@ -329,6 +329,21 @@ export interface M3ERemoteButtonsConfig {
   ch_down?: string;
 }
 
+export type M3EStatusBadgeStyle = 'glance' | 'split' | 'dot' | 'alert';
+
+export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
+  entity: string;
+  badge_style?: M3EStatusBadgeStyle;
+  name?: EntityNameConfig;
+  icon?: string;
+  hide_state?: boolean;
+  state_content?: StateContentConfig;
+  active_state?: string;
+  alert_color?: boolean;
+  tap_action?: 'more-info' | 'toggle' | 'navigate' | 'none';
+  navigation_path?: string;
+}
+
 export interface M3EStatusCardConfig extends LovelaceCardConfig {
   entity: string;
   name?: EntityNameConfig;

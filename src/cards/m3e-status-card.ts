@@ -21,6 +21,7 @@ import {
 } from '../utils/ha-card-features';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
+import { t } from '../utils/i18n';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
@@ -1695,7 +1696,7 @@ export class M3EStatusCard extends LitElement {
                 ${outdoor
                   ? html`
                       <div class="telemetry-row">
-                        <span>Outdoor temperature</span>
+                        <span>${t(this.hass, 'outdoor_temperature')}</span>
                         <strong>${outdoor.state}${outdoor.attributes.unit_of_measurement ?? '°'}</strong>
                       </div>
                     `
@@ -1946,7 +1947,7 @@ export class M3EStatusCard extends LitElement {
                 class="primary-action-pill"
                 @click=${() => this._callMediaService('media_stop')}
               >
-                Stop casting
+                ${t(this.hass, 'stop_casting')}
               </button>
             `
           : entity?.state === 'off'
@@ -1956,7 +1957,7 @@ export class M3EStatusCard extends LitElement {
                   class="primary-action-pill"
                   @click=${() => this._callMediaService('turn_on')}
                 >
-                  Turn on
+                  ${t(this.hass, 'turn_on')}
                 </button>
               `
             : nothing}
@@ -1969,7 +1970,7 @@ export class M3EStatusCard extends LitElement {
                 class="secondary-action-card"
                 @click=${() => this._openMediaControls(entity.entity_id)}
               >
-                <span>Media &amp; Controls</span>
+                <span>${t(this.hass, 'media_controls')}</span>
                 <span>↗</span>
               </button>
             `
@@ -2258,9 +2259,10 @@ export class M3EStatusCard extends LitElement {
 
     const artUrl = this._entityPictureUrl;
     const hasArt = Boolean(artUrl);
+    const isDark = this.hass?.themes?.darkMode !== false;
     const artStyle =
       hasArt && this._artPalette
-        ? `--art-accent: ${this._artPalette.accent}; --art-scrim: ${this._artPalette.scrim};`
+        ? `--art-bg: ${isDark ? this._artPalette.containerDark : this._artPalette.containerLight}; --art-fg: ${isDark ? this._artPalette.onContainerDark : this._artPalette.onContainerLight};`
         : '';
 
     return html`
@@ -2421,8 +2423,8 @@ export class M3EStatusCard extends LitElement {
                             <button
                               type="button"
                               class="icon-btn"
-                              aria-label="Cronologia attività"
-                              title="Cronologia attività Home Assistant"
+                              aria-label=${t(this.hass, 'history')}
+                              title=${t(this.hass, 'history_tooltip')}
                               @click=${() =>
                                 this._openMoreInfo(
                                   popupType === 'media' && this._mediaEntity
@@ -2525,26 +2527,30 @@ export class M3EStatusCard extends LitElement {
         padding: 8px 12px 8px 0;
       }
 
-      /* Left-side 1:1 dissolving Entity Picture (e.g. compact Media Player / Person tiles) */
+      /* Left-side 1:1 radially dissolving Entity Picture with M3E artwork-derived tonal surface */
       .status-tile.has-entity-picture {
-        background: color-mix(
-          in srgb,
-          var(--art-accent, var(--md-sys-color-primary-container, transparent)) 22%,
-          var(--ha-card-background, var(--md-sys-color-surface-container-low, #f3f3fa))
+        background: var(
+          --art-bg,
+          var(--md-sys-color-primary-container, var(--ha-card-background, #24252d))
         );
-        color: var(--md-sys-color-on-surface, #1b1b1f);
+        color: var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6));
       }
 
       .status-tile.has-entity-picture .tile-title {
-        color: var(--md-sys-color-on-surface, #1b1b1f);
+        color: var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6));
       }
 
-      .status-tile.has-entity-picture .tile-subtitle {
-        color: var(--md-sys-color-on-surface-variant, #444746);
+      .status-tile.has-entity-picture .tile-subtitle,
+      .status-tile.has-entity-picture .tile-chevron {
+        color: color-mix(
+          in srgb,
+          var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6)) 82%,
+          transparent
+        );
       }
 
       .status-tile.has-entity-picture .tile-inner {
-        padding-inline-start: 72px;
+        padding-inline-start: 78px;
       }
 
       .entity-picture-backdrop {
@@ -2552,21 +2558,23 @@ export class M3EStatusCard extends LitElement {
         inset-block: 0;
         inset-inline-start: 0;
         height: 100%;
-        aspect-ratio: 1 / 1;
-        max-width: 48%;
+        aspect-ratio: 1.08 / 1;
+        max-width: 52%;
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
-        -webkit-mask-image: linear-gradient(
-          to right,
+        -webkit-mask-image: radial-gradient(
+          ellipse 96% 120% at 24% 50%,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.92) 52%,
+          rgba(0, 0, 0, 0.94) 44%,
+          rgba(0, 0, 0, 0.45) 72%,
           rgba(0, 0, 0, 0) 100%
         );
-        mask-image: linear-gradient(
-          to right,
+        mask-image: radial-gradient(
+          ellipse 96% 120% at 24% 50%,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.92) 52%,
+          rgba(0, 0, 0, 0.94) 44%,
+          rgba(0, 0, 0, 0.45) 72%,
           rgba(0, 0, 0, 0) 100%
         );
       }
@@ -3580,96 +3588,6 @@ export class M3EStatusCard extends LitElement {
       .media-scrubber-row {
         position: relative;
         z-index: 1;
-      }
-
-      .media-app-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: var(--m3e-corner-full);
-        background: color-mix(in srgb, var(--md-sys-color-surface, #131316) 55%, transparent);
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .media-hero-mid {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .media-meta {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .media-title {
-        font-size: 18px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .media-artist {
-        font-size: 14px;
-        opacity: 0.85;
-      }
-
-      .media-play-fab {
-        flex: 0 0 48px;
-        width: 48px;
-        height: 48px;
-        border: 0;
-        border-radius: 50%;
-        background: var(--md-sys-color-primary-container, #e8e2d5);
-        color: var(--md-sys-color-on-primary-container, #1b1b1f);
-        font-size: 18px;
-        cursor: pointer;
-        display: grid;
-        place-items: center;
-      }
-
-      .media-scrubber-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .scrubber-btn {
-        border: 0;
-        background: transparent;
-        color: inherit;
-        font-size: 16px;
-        cursor: pointer;
-        padding: 4px;
-      }
-
-      .scrubber-track {
-        position: relative;
-        flex: 1;
-        height: 3px;
-        border-radius: 9999px;
-        background: color-mix(in srgb, currentColor 28%, transparent);
-      }
-
-      .scrubber-fill {
-        height: 100%;
-        border-radius: 9999px;
-        background: currentColor;
-      }
-
-      .scrubber-dot {
-        position: absolute;
-        top: 50%;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        background: currentColor;
-        transform: translate(-50%, -50%);
       }
 
       /* Full Pill Volume Slider */

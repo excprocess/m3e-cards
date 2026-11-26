@@ -8,6 +8,7 @@ import './cards/m3e-media-player-card';
 import './cards/m3e-people-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
+import './cards/m3e-status-badge';
 import './cards/m3e-status-card';
 import './cards/m3e-thermostat-card';
 import './cards/m3e-toggle-card';
@@ -22,6 +23,7 @@ export { M3EMediaPlayerCard } from './cards/m3e-media-player-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
+export { M3EStatusBadge } from './cards/m3e-status-badge';
 export { M3EStatusCard } from './cards/m3e-status-card';
 export { M3EThermostatCard } from './cards/m3e-thermostat-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
@@ -57,6 +59,7 @@ interface CustomCardEntry {
 declare global {
   interface Window {
     customCards?: CustomCardEntry[];
+    customBadges?: CustomCardEntry[];
   }
 }
 
@@ -64,6 +67,13 @@ function registerCard(entry: CustomCardEntry): void {
   window.customCards = window.customCards || [];
   if (!window.customCards.some((c) => c.type === entry.type)) {
     window.customCards.push(entry);
+  }
+}
+
+function registerBadge(entry: CustomCardEntry): void {
+  window.customBadges = window.customBadges || [];
+  if (!window.customBadges.some((c) => c.type === entry.type)) {
+    window.customBadges.push(entry);
   }
 }
 
@@ -170,3 +180,13 @@ registerCard({
     'Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.',
   preview: true,
 });
+
+const statusBadgeEntry: CustomCardEntry = {
+  type: 'm3e-status-badge',
+  name: 'Status Badge',
+  description:
+    'Compact Material 3 Expressive status badge (Glance Mini, Split Tonal Pill, Minimal Dot, Squircle Alert) for dashboard headers or compact grids.',
+  preview: true,
+};
+registerBadge(statusBadgeEntry);
+registerCard(statusBadgeEntry);
