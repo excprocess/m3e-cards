@@ -17,14 +17,33 @@ import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+const TIME_ONLY_RE = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
 function formatDisplayValue(rawVal: string, format: M3ESubtitleFormat): string {
   if (format === 'raw') return rawVal;
   const trimmed = rawVal.trim();
-  if (!ISO_TIMESTAMP_RE.test(trimmed)) return rawVal;
 
-  const date = new Date(trimmed);
-  if (Number.isNaN(date.getTime())) return rawVal;
+  let date: Date | null = null;
+  const timeMatch = TIME_ONLY_RE.exec(trimmed);
+  if (timeMatch) {
+    const h = Number(timeMatch[1]);
+    const m = Number(timeMatch[2]);
+    const s = Number(timeMatch[3] ?? '0');
+    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+      const now = new Date();
+      date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+      if (date.getTime() <= now.getTime()) {
+        date.setDate(date.getDate() + 1);
+      }
+    }
+  } else if (ISO_TIMESTAMP_RE.test(trimmed)) {
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) return rawVal;
 
   const hhmm = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   if (format === 'time' || format === 'auto') {
@@ -1353,7 +1372,13 @@ export class M3EStatusCard extends LitElement {
             <div class="modular-stack">
               ${siblings.map((sec) => {
                 const label = this._cleanSiblingLabel(sec);
-                const val = `${sec.state}${sec.attributes.unit_of_measurement ?? ''}`;
+                const rawSt = String(sec.state ?? '');
+                const val =
+                  rawSt === 'unavailable' || rawSt === 'unknown'
+                    ? 'Offline'
+                    : ISO_TIMESTAMP_RE.test(rawSt.trim()) || TIME_ONLY_RE.test(rawSt.trim())
+                      ? formatDisplayValue(rawSt, 'auto')
+                      : `${rawSt}${sec.attributes.unit_of_measurement ?? ''}`;
                 return html`
                   <button
                     type="button"

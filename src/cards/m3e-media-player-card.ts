@@ -219,7 +219,9 @@ export class M3EMediaPlayerCard extends LitElement {
     if (!entity || st === 'off' || st === 'idle' || st === 'unavailable' || st === 'unknown') {
       return '';
     }
-    return String(entity.attributes.entity_picture ?? '').trim();
+    return String(
+      entity.attributes.entity_picture_local || entity.attributes.entity_picture || '',
+    ).trim();
   }
 
   private get _duration(): number {

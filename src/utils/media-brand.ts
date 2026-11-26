@@ -30,10 +30,17 @@ const APP_TO_HA_BRAND: Array<[RegExp, string]> = [
   [/dlna/i, 'dlna_dmr'],
 ];
 
+const PLATFORM_ALIASES: Record<string, string> = {
+  spotifyplus: 'spotify',
+  spotcast: 'spotify',
+  alexa_media: 'alexa',
+};
+
 /**
  * Resolves the Home Assistant integration/brand domain dynamically from:
  * 1. Active app_name / source (when a cast/multi-source player is streaming a specific app)
  * 2. Home Assistant's entity registry `hass.entities[entity_id].platform` (e.g. spotify, alexa_media, music_assistant, sonos, cast...)
+ * 3. Entity icon / entity_id hint (e.g. mdi:spotify or media_player.spotify when platform is absent)
  */
 export function resolveMediaBrandDomain(
   hass: HomeAssistant | undefined,
@@ -41,9 +48,11 @@ export function resolveMediaBrandDomain(
 ): string | null {
   if (!entity) return null;
 
-  const platform = hass?.entities?.[entity.entity_id]?.platform?.trim().toLowerCase() || '';
+  const rawPlatform = hass?.entities?.[entity.entity_id]?.platform?.trim().toLowerCase() || '';
+  const platform = PLATFORM_ALIASES[rawPlatform] || rawPlatform;
   const appName = String(entity.attributes.app_name ?? '').trim();
   const source = String(entity.attributes.source ?? '').trim();
+  const icon = String(entity.attributes.icon ?? '').trim();
 
   // Check active app_name first (e.g. Spotify playing on a Cast speaker)
   if (appName) {
@@ -57,10 +66,11 @@ export function resolveMediaBrandDomain(
     return platform;
   }
 
-  // Fallback: infer from source name
-  if (source) {
+  // Fallback: infer from source, icon, or entity_id
+  for (const candidate of [source, icon, entity.entity_id]) {
+    if (!candidate) continue;
     for (const [re, domain] of APP_TO_HA_BRAND) {
-      if (re.test(source)) return domain;
+      if (re.test(candidate)) return domain;
     }
   }
 

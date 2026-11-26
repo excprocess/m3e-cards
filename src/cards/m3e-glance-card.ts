@@ -150,8 +150,8 @@ export class M3EGlanceCard extends LitElement {
       }
     }
 
-    // Trim long decimal numbers nicely
-    if (/^-?\d+\.\d{2,}$/.test(str)) {
+    // Trim trailing .0 or long decimal numbers nicely
+    if (/^-?\d+\.\d+$/.test(str)) {
       const num = Number(str);
       if (!Number.isNaN(num)) {
         return Number.isInteger(num) ? String(num) : num.toFixed(1);

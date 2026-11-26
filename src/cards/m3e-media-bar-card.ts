@@ -293,11 +293,17 @@ export class M3EMediaBarCard extends LitElement {
       this._config.entity;
     const meta = this._getMetadataText(entity);
     const artwork = !isInactive
-      ? String(entity?.attributes.entity_picture ?? '').trim()
+      ? String(entity?.attributes.entity_picture_local || entity?.attributes.entity_picture || '').trim()
       : '';
 
     const sourceList = Array.isArray(entity?.attributes.source_list)
-      ? (entity!.attributes.source_list as string[])
+      ? Array.from(
+          new Set(
+            (entity!.attributes.source_list as unknown[])
+              .map((s) => String(s ?? '').trim())
+              .filter(Boolean),
+          ),
+        )
       : [];
     const features = Number(entity?.attributes.supported_features ?? 0);
     const supportsSource = (features & SUPPORT_SELECT_SOURCE) !== 0 || sourceList.length > 0;

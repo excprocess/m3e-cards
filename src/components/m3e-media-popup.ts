@@ -100,7 +100,9 @@ export class M3EMediaPopup extends LitElement {
       }
       this._lastTrackKey = trackKey;
 
-      const artUrl = String(entity.attributes.entity_picture ?? '').trim();
+      const artUrl = String(
+        entity.attributes.entity_picture_local || entity.attributes.entity_picture || '',
+      ).trim();
       if (artUrl !== this._lastArtworkUrl) {
         this._lastArtworkUrl = artUrl;
         if (artUrl) {
@@ -329,7 +331,9 @@ export class M3EMediaPopup extends LitElement {
       String(entity?.attributes.media_artist ?? '').trim() ||
       String(entity?.attributes.media_album_name ?? '').trim() ||
       (isPlaying ? 'In riproduzione' : stateStr.charAt(0).toUpperCase() + stateStr.slice(1));
-    const artwork = String(entity?.attributes.entity_picture ?? '').trim();
+    const artwork = String(
+      entity?.attributes.entity_picture_local || entity?.attributes.entity_picture || '',
+    ).trim();
 
     const duration = this._duration;
     const pct = this._progressPct;
@@ -343,7 +347,13 @@ export class M3EMediaPopup extends LitElement {
       new Set([this.entityId, ...(this.playerIds ?? [])].filter(Boolean)),
     );
     const sourceList = Array.isArray(entity?.attributes.source_list)
-      ? (entity!.attributes.source_list as string[])
+      ? Array.from(
+          new Set(
+            (entity!.attributes.source_list as unknown[])
+              .map((s) => String(s ?? '').trim())
+              .filter(Boolean),
+          ),
+        )
       : [];
     const currentSource = String(entity?.attributes.source ?? '');
     const isUnavailable = !entity || stateStr === 'unavailable' || stateStr === 'unknown';
