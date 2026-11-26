@@ -112,6 +112,8 @@ export class M3ELightCard extends LitElement {
         { name: 'entity', required: true, selector: { entity: { domain: 'light' } } },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:text-short',
           title: 'Content',
           schema: [
@@ -154,6 +156,8 @@ export class M3ELightCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:gesture-tap',
           title: 'Interactions',
           schema: [

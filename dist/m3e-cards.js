@@ -950,6 +950,8 @@ let it = class extends E {
       schema: [
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -962,6 +964,8 @@ let it = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -2594,6 +2598,8 @@ let D = class extends E {
         { name: "entity", required: !0, selector: { entity: { domain: "light" } } },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -2636,6 +2642,8 @@ let D = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -4312,6 +4320,8 @@ let W = class extends E {
         { name: "entity", required: !0, selector: { entity: { domain: "light" } } },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -4354,6 +4364,8 @@ let W = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -6915,6 +6927,8 @@ let G = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -6935,6 +6949,8 @@ let G = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -7733,6 +7749,8 @@ let V = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -7753,6 +7771,8 @@ let V = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -9456,6 +9476,8 @@ let ft = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -10491,6 +10513,8 @@ let Mt = class extends E {
         { name: "entity", required: !0, selector: { entity: {} } },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -10533,6 +10557,8 @@ let Mt = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [
@@ -11262,6 +11288,8 @@ let rt = class extends E {
     return t === "custom" ? i.push(
       {
         type: "expandable",
+        name: "",
+        flatten: !0,
         title: "Sottotitolo avanzato (altra entità / orari relativi)",
         icon: "mdi:clock-outline",
         schema: [
@@ -11293,6 +11321,8 @@ let rt = class extends E {
     ) : t === "sensor" ? i.push(
       {
         type: "expandable",
+        name: "",
+        flatten: !0,
         title: "Sottotitolo avanzato (attributi / orari relativi)",
         icon: "mdi:clock-outline",
         schema: [s, a, r]
@@ -14698,6 +14728,8 @@ let ot = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:text-short",
           title: "Content",
           schema: [
@@ -14707,6 +14739,8 @@ let ot = class extends E {
         },
         {
           type: "expandable",
+          name: "",
+          flatten: !0,
           icon: "mdi:gesture-tap",
           title: "Interactions",
           schema: [

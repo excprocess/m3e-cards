@@ -73,6 +73,8 @@ export class M3EMediaBarCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:text-short',
           title: 'Content',
           schema: [
@@ -93,6 +95,8 @@ export class M3EMediaBarCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:gesture-tap',
           title: 'Interactions',
           schema: [

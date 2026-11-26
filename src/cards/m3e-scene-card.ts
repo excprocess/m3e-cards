@@ -47,6 +47,8 @@ export class M3ESceneCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:text-short',
           title: 'Content',
           schema: [

@@ -112,6 +112,8 @@ export class M3EMediaPlayerCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:text-short',
           title: 'Content',
           schema: [
@@ -132,6 +134,8 @@ export class M3EMediaPlayerCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:gesture-tap',
           title: 'Interactions',
           schema: [

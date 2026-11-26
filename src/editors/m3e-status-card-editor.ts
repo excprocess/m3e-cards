@@ -152,6 +152,8 @@ export class M3EStatusCardEditor extends LitElement {
       schema.push(
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           title: 'Sottotitolo avanzato (altra entità / orari relativi)',
           icon: 'mdi:clock-outline',
           schema: [
@@ -185,6 +187,8 @@ export class M3EStatusCardEditor extends LitElement {
       schema.push(
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           title: 'Sottotitolo avanzato (attributi / orari relativi)',
           icon: 'mdi:clock-outline',
           schema: [attributeSelector, visibilitySelector, formatSelector],

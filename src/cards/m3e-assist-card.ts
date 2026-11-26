@@ -37,6 +37,8 @@ export class M3EAssistCard extends LitElement {
       schema: [
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:text-short',
           title: 'Content',
           schema: [
@@ -49,6 +51,8 @@ export class M3EAssistCard extends LitElement {
         },
         {
           type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:gesture-tap',
           title: 'Interactions',
           schema: [
