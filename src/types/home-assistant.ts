@@ -323,6 +323,14 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
 }
 
 export interface M3ERemoteButtonsConfig {
+  dpad_up?: string;
+  dpad_down?: string;
+  dpad_left?: string;
+  dpad_right?: string;
+  dpad_center?: string;
+  back?: string;
+  home?: string;
+  assist?: string;
   volume_up?: string;
   volume_down?: string;
   mute?: string;

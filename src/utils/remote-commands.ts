@@ -19,6 +19,14 @@ interface PlatformCommandMap {
 const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   androidtv_remote: {
     commands: {
+      dpad_up: 'DPAD_UP',
+      dpad_down: 'DPAD_DOWN',
+      dpad_left: 'DPAD_LEFT',
+      dpad_right: 'DPAD_RIGHT',
+      dpad_center: 'DPAD_CENTER',
+      back: 'BACK',
+      home: 'HOME',
+      assist: 'ASSIST',
       volume_up: 'VOLUME_UP',
       volume_down: 'VOLUME_DOWN',
       mute: 'MUTE',
@@ -35,6 +43,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   androidtv: {
     commands: {
+      dpad_up: 'UP',
+      dpad_down: 'DOWN',
+      dpad_left: 'LEFT',
+      dpad_right: 'RIGHT',
+      dpad_center: 'CENTER',
+      back: 'BACK',
+      home: 'HOME',
+      assist: 'SEARCH',
       volume_up: 'VOLUME_UP',
       volume_down: 'VOLUME_DOWN',
       mute: 'MUTE',
@@ -51,6 +67,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   firetv: {
     commands: {
+      dpad_up: 'UP',
+      dpad_down: 'DOWN',
+      dpad_left: 'LEFT',
+      dpad_right: 'RIGHT',
+      dpad_center: 'CENTER',
+      back: 'BACK',
+      home: 'HOME',
+      assist: 'SEARCH',
       volume_up: 'VOLUME_UP',
       volume_down: 'VOLUME_DOWN',
       mute: 'MUTE',
@@ -65,6 +89,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   apple_tv: {
     commands: {
+      dpad_up: 'up',
+      dpad_down: 'down',
+      dpad_left: 'left',
+      dpad_right: 'right',
+      dpad_center: 'select',
+      back: 'menu',
+      home: 'home',
+      assist: 'top_menu',
       volume_up: 'volume_up',
       volume_down: 'volume_down',
       power_on: 'wakeup',
@@ -79,6 +111,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
     service: 'webostv.button',
     paramKey: 'button',
     commands: {
+      dpad_up: 'UP',
+      dpad_down: 'DOWN',
+      dpad_left: 'LEFT',
+      dpad_right: 'RIGHT',
+      dpad_center: 'ENTER',
+      back: 'BACK',
+      home: 'HOME',
+      assist: 'MENU',
       volume_up: 'VOLUMEUP',
       volume_down: 'VOLUMEDOWN',
       mute: 'MUTE',
@@ -93,6 +133,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   samsungtv: {
     commands: {
+      dpad_up: 'KEY_UP',
+      dpad_down: 'KEY_DOWN',
+      dpad_left: 'KEY_LEFT',
+      dpad_right: 'KEY_RIGHT',
+      dpad_center: 'KEY_ENTER',
+      back: 'KEY_RETURN',
+      home: 'KEY_HOME',
+      assist: 'KEY_MENU',
       volume_up: 'KEY_VOLUP',
       volume_down: 'KEY_VOLDOWN',
       mute: 'KEY_MUTE',
@@ -109,6 +157,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   samsungtv_smart: {
     commands: {
+      dpad_up: 'KEY_UP',
+      dpad_down: 'KEY_DOWN',
+      dpad_left: 'KEY_LEFT',
+      dpad_right: 'KEY_RIGHT',
+      dpad_center: 'KEY_ENTER',
+      back: 'KEY_RETURN',
+      home: 'KEY_HOME',
+      assist: 'KEY_MENU',
       volume_up: 'KEY_VOLUP',
       volume_down: 'KEY_VOLDOWN',
       mute: 'KEY_MUTE',
@@ -125,6 +181,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   samsungtv_tizen: {
     commands: {
+      dpad_up: 'KEY_UP',
+      dpad_down: 'KEY_DOWN',
+      dpad_left: 'KEY_LEFT',
+      dpad_right: 'KEY_RIGHT',
+      dpad_center: 'KEY_ENTER',
+      back: 'KEY_RETURN',
+      home: 'KEY_HOME',
+      assist: 'KEY_MENU',
       volume_up: 'KEY_VOLUP',
       volume_down: 'KEY_VOLDOWN',
       mute: 'KEY_MUTE',
@@ -141,6 +205,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   braviatv: {
     commands: {
+      dpad_up: 'Up',
+      dpad_down: 'Down',
+      dpad_left: 'Left',
+      dpad_right: 'Right',
+      dpad_center: 'Confirm',
+      back: 'Return',
+      home: 'Home',
+      assist: 'GoogleAssistant',
       volume_up: 'VolumeUp',
       volume_down: 'VolumeDown',
       mute: 'Mute',
@@ -157,6 +229,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   roku: {
     commands: {
+      dpad_up: 'up',
+      dpad_down: 'down',
+      dpad_left: 'left',
+      dpad_right: 'right',
+      dpad_center: 'select',
+      back: 'back',
+      home: 'home',
+      assist: 'search',
       volume_up: 'volume_up',
       volume_down: 'volume_down',
       mute: 'volume_mute',
@@ -173,6 +253,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   philips_js: {
     commands: {
+      dpad_up: 'CursorUp',
+      dpad_down: 'CursorDown',
+      dpad_left: 'CursorLeft',
+      dpad_right: 'CursorRight',
+      dpad_center: 'Confirm',
+      back: 'Back',
+      home: 'Home',
+      assist: 'Search',
       volume_up: 'VolumeUp',
       volume_down: 'VolumeDown',
       mute: 'Mute',
@@ -189,6 +277,14 @@ const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
   },
   panasonic_viera: {
     commands: {
+      dpad_up: 'NRC_UP-ONOFF',
+      dpad_down: 'NRC_DOWN-ONOFF',
+      dpad_left: 'NRC_LEFT-ONOFF',
+      dpad_right: 'NRC_RIGHT-ONOFF',
+      dpad_center: 'NRC_ENTER-ONOFF',
+      back: 'NRC_RETURN-ONOFF',
+      home: 'NRC_HOME-ONOFF',
+      assist: 'NRC_MENU-ONOFF',
       volume_up: 'NRC_VOLUP-ONOFF',
       volume_down: 'NRC_VOLDOWN-ONOFF',
       mute: 'NRC_MUTE-ONOFF',
@@ -234,6 +330,14 @@ const MEDIA_PLAYER_SERVICES: Partial<
 };
 
 const GENERIC_REMOTE_FALLBACK: Record<RemoteActionKey, string> = {
+  dpad_up: 'DPAD_UP',
+  dpad_down: 'DPAD_DOWN',
+  dpad_left: 'DPAD_LEFT',
+  dpad_right: 'DPAD_RIGHT',
+  dpad_center: 'DPAD_CENTER',
+  back: 'BACK',
+  home: 'HOME',
+  assist: 'ASSIST',
   volume_up: 'VolumeUp',
   volume_down: 'VolumeDown',
   mute: 'Mute',
@@ -273,6 +377,14 @@ function findSiblingButtonId(
   if (!deviceId || !hass.entities) return undefined;
 
   const patterns: Record<RemoteActionKey, string[]> = {
+    dpad_up: ['dpad_up', 'nav_up', '_up'],
+    dpad_down: ['dpad_down', 'nav_down', '_down'],
+    dpad_left: ['dpad_left', 'nav_left', '_left'],
+    dpad_right: ['dpad_right', 'nav_right', '_right'],
+    dpad_center: ['dpad_center', 'select', 'enter', '_ok'],
+    back: ['back', 'return'],
+    home: ['home'],
+    assist: ['assist', 'voice', 'search', 'menu'],
     volume_up: ['volume_up', 'vol_up', 'vol+'],
     volume_down: ['volume_down', 'vol_down', 'vol-'],
     mute: ['mute'],

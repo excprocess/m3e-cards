@@ -186,6 +186,20 @@ export class M3EStatusCard extends LitElement {
   private _relativeTimer: number | null = null;
   @state() private _relativeTick = 0;
 
+  // Google Home Remote Touchpad gesture state
+  @state() private _padOffsetX = 0;
+  @state() private _padOffsetY = 0;
+  @state() private _padActive = false;
+  @state() private _padTapPulse = false;
+  private _padPointerId: number | null = null;
+  private _padStartX = 0;
+  private _padStartY = 0;
+  private _padSwiped = false;
+  private _padDir: 'dpad_up' | 'dpad_down' | 'dpad_left' | 'dpad_right' | null = null;
+  private _padRepeatTimer: number | null = null;
+  private _padHoldTimer: number | null = null;
+  private _padPulseTimer: number | null = null;
+
   public static getStubConfig(hass?: HomeAssistant): M3EStatusCardConfig {
     const entity = hass
       ? Object.keys(hass.states).find(
@@ -240,6 +254,7 @@ export class M3EStatusCard extends LitElement {
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     this._clearLongPress();
+    this._clearPadTimers();
     if (this._relativeTimer !== null) {
       window.clearInterval(this._relativeTimer);
       this._relativeTimer = null;
@@ -1696,6 +1711,115 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _clearPadTimers(): void {
+    if (this._padHoldTimer !== null) {
+      window.clearTimeout(this._padHoldTimer);
+      this._padHoldTimer = null;
+    }
+    if (this._padRepeatTimer !== null) {
+      window.clearInterval(this._padRepeatTimer);
+      this._padRepeatTimer = null;
+    }
+    if (this._padPulseTimer !== null) {
+      window.clearTimeout(this._padPulseTimer);
+      this._padPulseTimer = null;
+    }
+  }
+
+  private _startPadRepeat(dir: 'dpad_up' | 'dpad_down' | 'dpad_left' | 'dpad_right'): void {
+    if (this._padHoldTimer !== null) window.clearTimeout(this._padHoldTimer);
+    if (this._padRepeatTimer !== null) window.clearInterval(this._padRepeatTimer);
+    this._padHoldTimer = window.setTimeout(() => {
+      this._padHoldTimer = null;
+      this._padRepeatTimer = window.setInterval(() => {
+        if (this._padDir === dir) {
+          this._triggerRemoteKey(dir);
+          navigator.vibrate?.(8);
+        }
+      }, 220);
+    }, 420);
+  }
+
+  private _onPadPointerDown = (e: PointerEvent): void => {
+    if (e.button !== 0) return;
+    const el = e.currentTarget as HTMLElement;
+    el.setPointerCapture(e.pointerId);
+    this._padPointerId = e.pointerId;
+    this._padStartX = e.clientX;
+    this._padStartY = e.clientY;
+    this._padSwiped = false;
+    this._padDir = null;
+    this._padActive = true;
+    this._padOffsetX = 0;
+    this._padOffsetY = 0;
+  };
+
+  private _onPadPointerMove = (e: PointerEvent): void => {
+    if (this._padPointerId !== e.pointerId) return;
+    const el = e.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+    const dx = e.clientX - this._padStartX;
+    const dy = e.clientY - this._padStartY;
+
+    const maxX = Math.max(24, rect.width / 2 - 28);
+    const maxY = Math.max(20, rect.height / 2 - 28);
+    this._padOffsetX = Math.max(-maxX, Math.min(maxX, dx * 0.85));
+    this._padOffsetY = Math.max(-maxY, Math.min(maxY, dy * 0.85));
+
+    const dist = Math.hypot(dx, dy);
+    if (dist >= 24) {
+      const dir: 'dpad_up' | 'dpad_down' | 'dpad_left' | 'dpad_right' =
+        Math.abs(dx) >= Math.abs(dy)
+          ? dx > 0
+            ? 'dpad_right'
+            : 'dpad_left'
+          : dy > 0
+            ? 'dpad_down'
+            : 'dpad_up';
+
+      if (!this._padSwiped || this._padDir !== dir) {
+        this._padSwiped = true;
+        this._padDir = dir;
+        this._triggerRemoteKey(dir);
+        navigator.vibrate?.(12);
+        this._startPadRepeat(dir);
+      }
+    }
+  };
+
+  private _onPadPointerUp = (e: PointerEvent): void => {
+    if (this._padPointerId !== e.pointerId) return;
+    const el = e.currentTarget as HTMLElement;
+    if (el.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId);
+    }
+    const wasSwiped = this._padSwiped;
+    this._padPointerId = null;
+    this._padActive = false;
+    this._padDir = null;
+    this._padOffsetX = 0;
+    this._padOffsetY = 0;
+    if (this._padHoldTimer !== null) {
+      window.clearTimeout(this._padHoldTimer);
+      this._padHoldTimer = null;
+    }
+    if (this._padRepeatTimer !== null) {
+      window.clearInterval(this._padRepeatTimer);
+      this._padRepeatTimer = null;
+    }
+
+    if (!wasSwiped && e.type === 'pointerup') {
+      this._triggerRemoteKey('dpad_center');
+      navigator.vibrate?.(10);
+      this._padTapPulse = true;
+      if (this._padPulseTimer !== null) window.clearTimeout(this._padPulseTimer);
+      this._padPulseTimer = window.setTimeout(() => {
+        this._padTapPulse = false;
+        this._padPulseTimer = null;
+      }, 180);
+    }
+  };
+
   private _triggerRemoteKey(key: RemoteActionKey): void {
     if (!this.hass || !this._config) return;
     executeRemoteCommand(
@@ -1737,6 +1861,65 @@ export class M3EStatusCard extends LitElement {
     const sourceLabel = currentSource || t(this.hass, 'sources');
 
     return html`
+      <!-- Compact Google Home Gesture Touchpad -->
+      <div
+        class="remote-touchpad ${this._padActive ? 'is-dragging' : ''}"
+        role="application"
+        aria-label="Navigation touchpad"
+        @pointerdown=${this._onPadPointerDown}
+        @pointermove=${this._onPadPointerMove}
+        @pointerup=${this._onPadPointerUp}
+        @pointercancel=${this._onPadPointerUp}
+      >
+        <span
+          class="touchpad-dot ${this._padActive ? 'is-dragging' : ''} ${this._padTapPulse ? 'is-pulsing' : ''}"
+          style="transform: translate3d(${this._padOffsetX}px, ${this._padOffsetY}px, 0)"
+          aria-hidden="true"
+        ></span>
+      </div>
+
+      <!-- 3 Essential Navigation Buttons: Back | Home | Assist -->
+      <div class="remote-essential-row">
+        <button
+          type="button"
+          class="essential-btn"
+          aria-label="Back"
+          @click=${() => this._triggerRemoteKey('back')}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="essential-btn is-home"
+          aria-label="Home"
+          @click=${() => this._triggerRemoteKey('home')}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 5.69 17 10.19V18h-2v-6H9v6H7v-7.81l5-4.5M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3Z"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="essential-btn is-assist"
+          aria-label="Assistant"
+          @click=${() => this._triggerRemoteKey('assist')}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9.2" cy="10.2" r="3.4" fill="currentColor" />
+            <circle cx="16.4" cy="8.4" r="1.7" fill="currentColor" />
+            <circle cx="15.4" cy="13.4" r="2.1" fill="currentColor" />
+            <circle cx="19.5" cy="11.2" r="1" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+
       <div class="remote-hero">
         <div class="rocker-pill">
           <button
@@ -3537,17 +3720,120 @@ export class M3EStatusCard extends LitElement {
       }
 
       /* =====================================================================
-         VARIANT 3: REMOTE / TV (Vertical Rocker Pill + Split Pills)
+         VARIANT 3: REMOTE / TV (Touchpad + Essentials + Vertical Rocker + Split Pills)
          ===================================================================== */
+      .remote-touchpad {
+        position: relative;
+        width: 100%;
+        height: 168px;
+        border-radius: 28px;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        display: grid;
+        place-items: center;
+        touch-action: none;
+        user-select: none;
+        cursor: grab;
+        overflow: hidden;
+        transition: background-color var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .remote-touchpad.is-dragging {
+        cursor: grabbing;
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 5%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
+      }
+
+      .touchpad-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--md-sys-color-on-surface, #e3e2e6);
+        pointer-events: none;
+        will-change: transform;
+        transition:
+          transform var(--m3e-spring-bouncy),
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+      }
+
+      .touchpad-dot.is-dragging {
+        transition:
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+      }
+
+      .touchpad-dot.is-pulsing {
+        width: 32px;
+        height: 32px;
+      }
+
+      .remote-essential-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 12px;
+      }
+
+      .essential-btn {
+        width: 56px;
+        height: 56px;
+        border: 0;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .essential-btn.is-home {
+        width: 68px;
+        height: 68px;
+      }
+
+      .essential-btn.is-assist {
+        background: var(--md-sys-color-on-surface, #e3e2e6);
+        color: var(--md-sys-color-surface, #141418);
+      }
+
+      .essential-btn:hover {
+        filter: brightness(1.06);
+      }
+
+      .essential-btn:active {
+        transform: scale(0.92);
+        border-radius: 18px;
+      }
+
+      .essential-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .essential-btn.is-home svg {
+        width: 26px;
+        height: 26px;
+      }
+
       .remote-hero {
         display: flex;
         justify-content: center;
-        padding: 6px 0;
+        padding: 4px 0;
       }
 
       .rocker-pill {
-        width: 132px;
-        height: 236px;
+        width: 124px;
+        height: 176px;
         border-radius: var(--m3e-corner-full);
         background: var(--md-sys-color-surface-container-high, #282930);
         display: flex;

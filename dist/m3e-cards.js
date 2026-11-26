@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const se = globalThis, $e = se.ShadowRoot && (se.ShadyCSS === void 0 || se.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ke = Symbol(), Te = /* @__PURE__ */ new WeakMap();
-let qe = class {
+let Ke = class {
   constructor(e, i, s) {
     if (this._$cssResult$ = !0, s !== ke) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = e, this.t = i;
@@ -22,13 +22,13 @@ let qe = class {
     return this.cssText;
   }
 };
-const ui = (t) => new qe(typeof t == "string" ? t : t + "", void 0, ke), I = (t, ...e) => {
+const ui = (t) => new Ke(typeof t == "string" ? t : t + "", void 0, ke), I = (t, ...e) => {
   const i = t.length === 1 ? t[0] : e.reduce((s, a, r) => s + ((o) => {
     if (o._$cssResult$ === !0) return o.cssText;
     if (typeof o == "number") return o;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + o + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(a) + t[r + 1], t[0]);
-  return new qe(i, t, ke);
+  return new Ke(i, t, ke);
 }, fi = (t, e) => {
   if ($e) t.adoptedStyleSheets = e.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
   else for (const i of e) {
@@ -45,7 +45,7 @@ const ui = (t) => new qe(typeof t == "string" ? t : t + "", void 0, ke), I = (t,
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: mi, defineProperty: gi, getOwnPropertyDescriptor: vi, getOwnPropertyNames: _i, getOwnPropertySymbols: bi, getPrototypeOf: yi } = Object, le = globalThis, Ie = le.trustedTypes, xi = Ie ? Ie.emptyScript : "", wi = le.reactiveElementPolyfillSupport, Zt = (t, e) => t, ae = { toAttribute(t, e) {
+const { is: mi, defineProperty: gi, getOwnPropertyDescriptor: vi, getOwnPropertyNames: _i, getOwnPropertySymbols: bi, getPrototypeOf: yi } = Object, le = globalThis, Ie = le.trustedTypes, xi = Ie ? Ie.emptyScript : "", wi = le.reactiveElementPolyfillSupport, Ut = (t, e) => t, ae = { toAttribute(t, e) {
   switch (e) {
     case Boolean:
       t = t ? xi : null;
@@ -103,13 +103,13 @@ let bt = class extends HTMLElement {
     return this.elementProperties.get(e) ?? Le;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(Zt("elementProperties"))) return;
+    if (this.hasOwnProperty(Ut("elementProperties"))) return;
     const e = yi(this);
     e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(Zt("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(Zt("properties"))) {
+    if (this.hasOwnProperty(Ut("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(Ut("properties"))) {
       const i = this.properties, s = [..._i(i), ...bi(i)];
       for (const a of s) this.createProperty(a, i[a]);
     }
@@ -256,28 +256,28 @@ let bt = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-bt.elementStyles = [], bt.shadowRootOptions = { mode: "open" }, bt[Zt("elementProperties")] = /* @__PURE__ */ new Map(), bt[Zt("finalized")] = /* @__PURE__ */ new Map(), wi?.({ ReactiveElement: bt }), (le.reactiveElementVersions ??= []).push("2.1.2");
+bt.elementStyles = [], bt.shadowRootOptions = { mode: "open" }, bt[Ut("elementProperties")] = /* @__PURE__ */ new Map(), bt[Ut("finalized")] = /* @__PURE__ */ new Map(), wi?.({ ReactiveElement: bt }), (le.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Se = globalThis, ze = (t) => t, re = Se.trustedTypes, De = re ? re.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Xe = "$lit$", at = `lit$${Math.random().toFixed(9).slice(2)}$`, Ke = "?" + at, $i = `<${Ke}>`, mt = document, Ft = () => mt.createComment(""), jt = (t) => t === null || typeof t != "object" && typeof t != "function", Ee = Array.isArray, ki = (t) => Ee(t) || typeof t?.[Symbol.iterator] == "function", ge = `[ 	
-\f\r]`, Bt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, He = /-->/g, Be = />/g, dt = RegExp(`>|${ge}(?:([^\\s"'>=/]+)(${ge}*=${ge}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Re = /'/g, Ue = /"/g, Qe = /^(?:script|style|textarea|title)$/i, Je = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = Je(1), ve = Je(2), yt = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), Ze = /* @__PURE__ */ new WeakMap(), ft = mt.createTreeWalker(mt, 129);
+const Se = globalThis, De = (t) => t, re = Se.trustedTypes, ze = re ? re.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, qe = "$lit$", at = `lit$${Math.random().toFixed(9).slice(2)}$`, Xe = "?" + at, $i = `<${Xe}>`, mt = document, Ft = () => mt.createComment(""), jt = (t) => t === null || typeof t != "object" && typeof t != "function", Ee = Array.isArray, ki = (t) => Ee(t) || typeof t?.[Symbol.iterator] == "function", ge = `[ 	
+\f\r]`, Rt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, He = /-->/g, Re = />/g, dt = RegExp(`>|${ge}(?:([^\\s"'>=/]+)(${ge}*=${ge}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Be = /'/g, Ne = /"/g, Qe = /^(?:script|style|textarea|title)$/i, Je = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = Je(1), ve = Je(2), yt = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), Ue = /* @__PURE__ */ new WeakMap(), ft = mt.createTreeWalker(mt, 129);
 function ti(t, e) {
   if (!Ee(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
-  return De !== void 0 ? De.createHTML(e) : e;
+  return ze !== void 0 ? ze.createHTML(e) : e;
 }
 const Ci = (t, e) => {
   const i = t.length - 1, s = [];
-  let a, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = Bt;
+  let a, r = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = Rt;
   for (let n = 0; n < i; n++) {
     const c = t[n];
     let d, p, m = -1, v = 0;
-    for (; v < c.length && (o.lastIndex = v, p = o.exec(c), p !== null); ) v = o.lastIndex, o === Bt ? p[1] === "!--" ? o = He : p[1] !== void 0 ? o = Be : p[2] !== void 0 ? (Qe.test(p[2]) && (a = RegExp("</" + p[2], "g")), o = dt) : p[3] !== void 0 && (o = dt) : o === dt ? p[0] === ">" ? (o = a ?? Bt, m = -1) : p[1] === void 0 ? m = -2 : (m = o.lastIndex - p[2].length, d = p[1], o = p[3] === void 0 ? dt : p[3] === '"' ? Ue : Re) : o === Ue || o === Re ? o = dt : o === He || o === Be ? o = Bt : (o = dt, a = void 0);
+    for (; v < c.length && (o.lastIndex = v, p = o.exec(c), p !== null); ) v = o.lastIndex, o === Rt ? p[1] === "!--" ? o = He : p[1] !== void 0 ? o = Re : p[2] !== void 0 ? (Qe.test(p[2]) && (a = RegExp("</" + p[2], "g")), o = dt) : p[3] !== void 0 && (o = dt) : o === dt ? p[0] === ">" ? (o = a ?? Rt, m = -1) : p[1] === void 0 ? m = -2 : (m = o.lastIndex - p[2].length, d = p[1], o = p[3] === void 0 ? dt : p[3] === '"' ? Ne : Be) : o === Ne || o === Be ? o = dt : o === He || o === Re ? o = Rt : (o = dt, a = void 0);
     const f = o === dt && t[n + 1].startsWith("/>") ? " " : "";
-    r += o === Bt ? c + $i : m >= 0 ? (s.push(d), c.slice(0, m) + Xe + c.slice(m) + at + f) : c + at + (m === -2 ? n : f);
+    r += o === Rt ? c + $i : m >= 0 ? (s.push(d), c.slice(0, m) + qe + c.slice(m) + at + f) : c + at + (m === -2 ? n : f);
   }
   return [ti(t, r + (t[i] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
 };
@@ -293,7 +293,7 @@ class Wt {
     }
     for (; (a = ft.nextNode()) !== null && c.length < n; ) {
       if (a.nodeType === 1) {
-        if (a.hasAttributes()) for (const m of a.getAttributeNames()) if (m.endsWith(Xe)) {
+        if (a.hasAttributes()) for (const m of a.getAttributeNames()) if (m.endsWith(qe)) {
           const v = p[o++], f = a.getAttribute(m).split(at), u = /([.?@])?(.*)/.exec(v);
           c.push({ type: 1, index: r, name: u[2], strings: f, ctor: u[1] === "." ? Ei : u[1] === "?" ? Mi : u[1] === "@" ? Pi : ce }), a.removeAttribute(m);
         } else m.startsWith(at) && (c.push({ type: 6, index: r }), a.removeAttribute(m));
@@ -305,7 +305,7 @@ class Wt {
             a.append(m[v], Ft());
           }
         }
-      } else if (a.nodeType === 8) if (a.data === Ke) c.push({ type: 2, index: r });
+      } else if (a.nodeType === 8) if (a.data === Xe) c.push({ type: 2, index: r });
       else {
         let m = -1;
         for (; (m = a.data.indexOf(at, m + 1)) !== -1; ) c.push({ type: 7, index: r }), m += at.length - 1;
@@ -341,7 +341,7 @@ class Si {
     for (; c !== void 0; ) {
       if (o === c.index) {
         let d;
-        c.type === 2 ? d = new Xt(r, r.nextSibling, this, e) : c.type === 1 ? d = new c.ctor(r, c.name, c.strings, this, e) : c.type === 6 && (d = new Ai(r, this, e)), this._$AV.push(d), c = s[++n];
+        c.type === 2 ? d = new qt(r, r.nextSibling, this, e) : c.type === 1 ? d = new c.ctor(r, c.name, c.strings, this, e) : c.type === 6 && (d = new Ai(r, this, e)), this._$AV.push(d), c = s[++n];
       }
       o !== c?.index && (r = ft.nextNode(), o++);
     }
@@ -352,7 +352,7 @@ class Si {
     for (const s of this._$AV) s !== void 0 && (s.strings !== void 0 ? (s._$AI(e, s, i), i += s.strings.length - 2) : s._$AI(e[i])), i++;
   }
 }
-class Xt {
+class qt {
   get _$AU() {
     return this._$AM?._$AU ?? this._$Cv;
   }
@@ -391,20 +391,20 @@ class Xt {
     }
   }
   _$AC(e) {
-    let i = Ze.get(e.strings);
-    return i === void 0 && Ze.set(e.strings, i = new Wt(e)), i;
+    let i = Ue.get(e.strings);
+    return i === void 0 && Ue.set(e.strings, i = new Wt(e)), i;
   }
   k(e) {
     Ee(this._$AH) || (this._$AH = [], this._$AR());
     const i = this._$AH;
     let s, a = 0;
-    for (const r of e) a === i.length ? i.push(s = new Xt(this.O(Ft()), this.O(Ft()), this, this.options)) : s = i[a], s._$AI(r), a++;
+    for (const r of e) a === i.length ? i.push(s = new qt(this.O(Ft()), this.O(Ft()), this, this.options)) : s = i[a], s._$AI(r), a++;
     a < i.length && (this._$AR(s && s._$AB.nextSibling, a), i.length = a);
   }
   _$AR(e = this._$AA.nextSibling, i) {
     for (this._$AP?.(!1, !0, i); e !== this._$AB; ) {
-      const s = ze(e).nextSibling;
-      ze(e).remove(), e = s;
+      const s = De(e).nextSibling;
+      De(e).remove(), e = s;
     }
   }
   setConnected(e) {
@@ -477,13 +477,13 @@ class Ai {
   }
 }
 const Ti = Se.litHtmlPolyfillSupport;
-Ti?.(Wt, Xt), (Se.litHtmlVersions ??= []).push("3.3.3");
+Ti?.(Wt, qt), (Se.litHtmlVersions ??= []).push("3.3.3");
 const Oi = (t, e, i) => {
   const s = i?.renderBefore ?? e;
   let a = s._$litPart$;
   if (a === void 0) {
     const r = i?.renderBefore ?? null;
-    s._$litPart$ = a = new Xt(e.insertBefore(Ft(), r), r, void 0, i ?? {});
+    s._$litPart$ = a = new qt(e.insertBefore(Ft(), r), r, void 0, i ?? {});
   }
   return a._$AI(t), a;
 };
@@ -493,7 +493,7 @@ const Oi = (t, e, i) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const Me = globalThis;
-let M = class extends bt {
+let A = class extends bt {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -515,9 +515,9 @@ let M = class extends bt {
     return yt;
   }
 };
-M._$litElement$ = !0, M.finalized = !0, Me.litElementHydrateSupport?.({ LitElement: M });
+A._$litElement$ = !0, A.finalized = !0, Me.litElementHydrateSupport?.({ LitElement: A });
 const Ii = Me.litElementPolyfillSupport;
-Ii?.({ LitElement: M });
+Ii?.({ LitElement: A });
 (Me.litElementVersions ??= []).push("4.2.2");
 /**
  * @license
@@ -534,7 +534,7 @@ const L = (t) => (e, i) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Li = { attribute: !0, type: String, converter: ae, reflect: !1, hasChanged: Ce }, zi = (t = Li, e, i) => {
+const Li = { attribute: !0, type: String, converter: ae, reflect: !1, hasChanged: Ce }, Di = (t = Li, e, i) => {
   const { kind: s, metadata: a } = i;
   let r = globalThis.litPropertyMetadata.get(a);
   if (r === void 0 && globalThis.litPropertyMetadata.set(a, r = /* @__PURE__ */ new Map()), s === "setter" && ((t = Object.create(t)).wrapped = !0), r.set(i.name, t), s === "accessor") {
@@ -556,7 +556,7 @@ const Li = { attribute: !0, type: String, converter: ae, reflect: !1, hasChanged
   throw Error("Unsupported decorator location: " + s);
 };
 function C(t) {
-  return (e, i) => typeof i == "object" ? zi(t, e, i) : ((s, a, r) => {
+  return (e, i) => typeof i == "object" ? Di(t, e, i) : ((s, a, r) => {
     const o = a.hasOwnProperty(r);
     return a.constructor.createProperty(r, s), o ? Object.getOwnPropertyDescriptor(a, r) : void 0;
   })(t, e, i);
@@ -574,21 +574,21 @@ function g(t) {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Di = (t, e, i) => (i.configurable = !0, i.enumerable = !0, Reflect.decorate && typeof e != "object" && Object.defineProperty(t, e, i), i);
+const zi = (t, e, i) => (i.configurable = !0, i.enumerable = !0, Reflect.decorate && typeof e != "object" && Object.defineProperty(t, e, i), i);
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function S(t, e) {
+function E(t, e) {
   return (i, s, a) => {
     const r = (o) => o.renderRoot?.querySelector(t) ?? null;
-    return Di(i, s, { get() {
+    return zi(i, s, { get() {
       return r(this);
     } });
   };
 }
-const U = I`
+const N = I`
   :host {
     display: block;
     height: 100%;
@@ -845,7 +845,7 @@ function Pt(t, e) {
   }
   t.cancelable && t.preventDefault();
 }
-const Ne = "cubic-bezier(0.05, 0.7, 0.1, 1.0)", Hi = "cubic-bezier(0.3, 0.0, 0.8, 0.15)";
+const Ze = "cubic-bezier(0.05, 0.7, 0.1, 1.0)", Hi = "cubic-bezier(0.3, 0.0, 0.8, 0.15)";
 function At(t, e) {
   if (!t) return;
   t.closest("dialog")?.classList.remove("is-closing");
@@ -871,7 +871,7 @@ function At(t, e) {
         ],
         {
           duration: 320,
-          easing: Ne
+          easing: Ze
         }
       );
       return;
@@ -887,7 +887,7 @@ function At(t, e) {
     ],
     {
       duration: s ? 320 : 260,
-      easing: Ne
+      easing: Ze
     }
   );
 }
@@ -925,12 +925,12 @@ function Tt(t, e, i) {
   };
   a.onfinish = o, a.oncancel = o;
 }
-var Bi = Object.defineProperty, Ri = Object.getOwnPropertyDescriptor, _t = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Ri(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+var Ri = Object.defineProperty, Bi = Object.getOwnPropertyDescriptor, _t = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? Bi(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Bi(e, i, a), a;
+  return s && a && Ri(e, i, a), a;
 };
-let it = class extends M {
+let it = class extends A {
   constructor() {
     super(...arguments), this._pressed = !1, this._selectorOpen = !1;
   }
@@ -1197,7 +1197,7 @@ let it = class extends M {
   }
 };
 it.styles = [
-  U,
+  N,
   I`
       :host {
         display: block;
@@ -1520,10 +1520,10 @@ _t([
   g()
 ], it.prototype, "_selectorOpen", 2);
 _t([
-  S("dialog.mode-dialog")
+  E("dialog.mode-dialog")
 ], it.prototype, "_dialogEl", 2);
 _t([
-  S(".dialog-surface")
+  E(".dialog-surface")
 ], it.prototype, "_dialogSurfaceEl", 2);
 it = _t([
   L("m3e-assist-card")
@@ -1558,12 +1558,12 @@ function wt(t, e, i) {
     })
   ), window.dispatchEvent(new CustomEvent("location-changed", { bubbles: !0, composed: !0 }));
 }
-var Ui = Object.defineProperty, Zi = Object.getOwnPropertyDescriptor, de = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Zi(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+var Ni = Object.defineProperty, Ui = Object.getOwnPropertyDescriptor, de = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? Ui(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Ui(e, i, a), a;
+  return s && a && Ni(e, i, a), a;
 };
-let $t = class extends M {
+let $t = class extends A {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeItemLabel = (t) => ({
       entity: "Entità",
@@ -1946,10 +1946,10 @@ de([
 $t = de([
   L("m3e-glance-card-editor")
 ], $t);
-var Ni = Object.defineProperty, Vi = Object.getOwnPropertyDescriptor, pe = (t, e, i, s) => {
+var Zi = Object.defineProperty, Vi = Object.getOwnPropertyDescriptor, pe = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? Vi(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Ni(e, i, a), a;
+  return s && a && Zi(e, i, a), a;
 };
 const Fi = /* @__PURE__ */ new Set([
   "on",
@@ -1968,7 +1968,7 @@ const Fi = /* @__PURE__ */ new Set([
   "active",
   "true"
 ]);
-let kt = class extends M {
+let kt = class extends A {
   constructor() {
     super(...arguments), this._isMouseDragging = !1, this._dragMoved = !1, this._dragStartX = 0, this._dragScrollLeft = 0;
   }
@@ -2155,7 +2155,7 @@ let kt = class extends M {
   }
 };
 kt.styles = [
-  U,
+  N,
   I`
       :host {
         display: block;
@@ -2300,7 +2300,7 @@ pe([
   g()
 ], kt.prototype, "_config", 2);
 pe([
-  S(".glance-strip")
+  E(".glance-strip")
 ], kt.prototype, "_stripEl", 2);
 kt = pe([
   L("m3e-glance-card")
@@ -2501,12 +2501,12 @@ function It(t, e, i, s) {
     }
   return r.length > 0 ? r.join(" · ") : null;
 }
-var Gi = Object.defineProperty, Yi = Object.getOwnPropertyDescriptor, Z = (t, e, i, s) => {
+var Gi = Object.defineProperty, Yi = Object.getOwnPropertyDescriptor, U = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? Yi(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && Gi(e, i, a), a;
 };
-const Ve = 8, qi = 420, Xi = [
+const Ve = 8, Ki = 420, qi = [
   { id: "warm-gold", label: "Candle", hex: "#FFE066", rgb: [255, 224, 102], kelvin: 2200 },
   { id: "warm-amber", label: "Warm", hex: "#FFE68A", rgb: [255, 230, 138], kelvin: 2700 },
   { id: "soft-white", label: "Soft White", hex: "#FFF0B8", rgb: [255, 240, 184], kelvin: 3200 },
@@ -2515,7 +2515,7 @@ const Ve = 8, qi = 420, Xi = [
   { id: "cool", label: "Cool", hex: "#E3F2FD", rgb: [227, 242, 253], kelvin: 6500 },
   { id: "coral", label: "Coral", hex: "#FFAB91", rgb: [255, 171, 145] },
   { id: "lavender", label: "Lavender", hex: "#CE93D8", rgb: [206, 147, 216] }
-], ii = "m3e-light-recent-colors:", Ki = 6;
+], ii = "m3e-light-recent-colors:", Xi = 6;
 function si(t) {
   try {
     const e = window.localStorage.getItem(`${ii}${t}`);
@@ -2530,7 +2530,7 @@ function si(t) {
 }
 function Qi(t, e) {
   try {
-    const i = si(t).filter((a) => a.hex !== e.hex), s = [e, ...i].slice(0, Ki);
+    const i = si(t).filter((a) => a.hex !== e.hex), s = [e, ...i].slice(0, Xi);
     window.localStorage.setItem(`${ii}${t}`, JSON.stringify(s));
   } catch {
   }
@@ -2549,7 +2549,7 @@ function Ji([t, e, i]) {
   });
   return 0.2126 * s + 0.7152 * a + 0.0722 * r;
 }
-let D = class extends M {
+let z = class extends A {
   constructor() {
     super(...arguments), this._dragging = !1, this._pressed = !1, this._dragPct = null, this._popupOpen = !1, this._popupDragging = !1, this._popupDragPct = null, this._selectedPresetId = null, this._scenesSheetOpen = !1, this._activeSceneId = null, this._pointerId = null, this._pointerStartX = 0, this._pointerStartY = 0, this._hasMoved = !1, this._longPressTriggered = !1, this._longPressTimer = null, this._onDialogBackdropClick = (t) => {
       t.target === this._dialogEl && this.closePopup();
@@ -2560,7 +2560,7 @@ let D = class extends M {
       const e = t.currentTarget;
       this._pointerId = t.pointerId, this._pointerStartX = t.clientX, this._pointerStartY = t.clientY, this._hasMoved = !1, this._longPressTriggered = !1, this._pressed = !0, e.setPointerCapture(t.pointerId), this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
         !this._hasMoved && this._pointerId !== null && (this._longPressTriggered = !0, this._resetTilePointer(e), this.openPopup());
-      }, qi);
+      }, Ki);
     }, this._onTilePointerMove = (t) => {
       if (this._pointerId !== t.pointerId || !this._supportsBrightness) return;
       const e = Math.abs(t.clientX - this._pointerStartX), i = Math.abs(t.clientY - this._pointerStartY);
@@ -2795,7 +2795,7 @@ let D = class extends M {
     }), t)
       for (const n of si(t))
         r(n);
-    for (const n of Xi)
+    for (const n of qi)
       if (n.kelvin) {
         if (n.kelvin >= s - 200 && n.kelvin <= a + 200) {
           const c = Math.max(s, Math.min(a, n.kelvin));
@@ -3253,8 +3253,8 @@ let D = class extends M {
     `;
   }
 };
-D.styles = [
-  U,
+z.styles = [
+  N,
   I`
       :host {
         /* MediumBouncy, Low stiffness spring for M3 Expressive On <-> Off morphing */
@@ -3877,57 +3877,57 @@ D.styles = [
       }
     `
 ];
-Z([
+U([
   C({ attribute: !1 })
-], D.prototype, "hass", 2);
-Z([
+], z.prototype, "hass", 2);
+U([
   g()
-], D.prototype, "_config", 2);
-Z([
+], z.prototype, "_config", 2);
+U([
   g()
-], D.prototype, "_dragging", 2);
-Z([
+], z.prototype, "_dragging", 2);
+U([
   g()
-], D.prototype, "_pressed", 2);
-Z([
+], z.prototype, "_pressed", 2);
+U([
   g()
-], D.prototype, "_dragPct", 2);
-Z([
+], z.prototype, "_dragPct", 2);
+U([
   g()
-], D.prototype, "_popupOpen", 2);
-Z([
+], z.prototype, "_popupOpen", 2);
+U([
   g()
-], D.prototype, "_popupDragging", 2);
-Z([
+], z.prototype, "_popupDragging", 2);
+U([
   g()
-], D.prototype, "_popupDragPct", 2);
-Z([
+], z.prototype, "_popupDragPct", 2);
+U([
   g()
-], D.prototype, "_selectedPresetId", 2);
-Z([
+], z.prototype, "_selectedPresetId", 2);
+U([
   g()
-], D.prototype, "_scenesSheetOpen", 2);
-Z([
+], z.prototype, "_scenesSheetOpen", 2);
+U([
   g()
-], D.prototype, "_activeSceneId", 2);
-Z([
-  S("dialog.light-dialog")
-], D.prototype, "_dialogEl", 2);
-Z([
-  S(".tile-card")
-], D.prototype, "_tileEl", 2);
-Z([
-  S(".dialog-surface")
-], D.prototype, "_dialogSurfaceEl", 2);
-D = Z([
+], z.prototype, "_activeSceneId", 2);
+U([
+  E("dialog.light-dialog")
+], z.prototype, "_dialogEl", 2);
+U([
+  E(".tile-card")
+], z.prototype, "_tileEl", 2);
+U([
+  E(".dialog-surface")
+], z.prototype, "_dialogSurfaceEl", 2);
+z = U([
   L("m3e-light-card")
-], D);
+], z);
 var ts = Object.defineProperty, es = Object.getOwnPropertyDescriptor, he = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? es(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && ts(e, i, a), a;
 };
-let Ct = class extends M {
+let Ct = class extends A {
   constructor() {
     super(...arguments), this._optimisticOn = null, this._optimisticTimer = null;
   }
@@ -4061,7 +4061,7 @@ let Ct = class extends M {
   }
 };
 Ct.styles = [
-  U,
+  N,
   I`
       .control-pill {
         position: relative;
@@ -4217,10 +4217,10 @@ class rs {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Nt = (t, e) => {
+const Zt = (t, e) => {
   const i = t._$AN;
   if (i === void 0) return !1;
-  for (const s of i) s._$AO?.(e, !1), Nt(s, e);
+  for (const s of i) s._$AO?.(e, !1), Zt(s, e);
   return !0;
 }, oe = (t) => {
   let e, i;
@@ -4241,9 +4241,9 @@ function os(t) {
 }
 function ns(t, e = !1, i = 0) {
   const s = this._$AH, a = this._$AN;
-  if (a !== void 0 && a.size !== 0) if (e) if (Array.isArray(s)) for (let r = i; r < s.length; r++) Nt(s[r], !1), oe(s[r]);
-  else s != null && (Nt(s, !1), oe(s));
-  else Nt(this, t);
+  if (a !== void 0 && a.size !== 0) if (e) if (Array.isArray(s)) for (let r = i; r < s.length; r++) Zt(s[r], !1), oe(s[r]);
+  else s != null && (Zt(s, !1), oe(s));
+  else Zt(this, t);
 }
 const ls = (t) => {
   t.type == ss.CHILD && (t._$AP ??= ns, t._$AQ ??= os);
@@ -4256,7 +4256,7 @@ class cs extends rs {
     super._$AT(e, i, s), ai(this), this.isConnected = e._$AU;
   }
   _$AO(e, i = !0) {
-    e !== this.isConnected && (this.isConnected = e, e ? this.reconnected?.() : this.disconnected?.()), i && (Nt(this, e), oe(this));
+    e !== this.isConnected && (this.isConnected = e, e ? this.reconnected?.() : this.disconnected?.()), i && (Zt(this, e), oe(this));
   }
   setValue(e) {
     if (is(this._$Ct)) this._$Ct._$AI(e, this);
@@ -4301,7 +4301,7 @@ var ds = Object.defineProperty, ps = Object.getOwnPropertyDescriptor, tt = (t, e
   return s && a && ds(e, i, a), a;
 };
 const Fe = 8;
-let G = class extends M {
+let G = class extends A {
   constructor() {
     super(...arguments), this._expanded = !1, this._popupOpen = !1, this._dragging = !1, this._pressed = !1, this._dragPct = null, this._pointerId = null, this._pointerStartX = 0, this._pointerStartY = 0, this._hasMoved = !1, this._prevStates = {}, this._onHeaderPointerDown = (t) => {
       if (t.button !== 0 || this._aggregateStats.isUnavailable) return;
@@ -4692,7 +4692,7 @@ let G = class extends M {
   }
 };
 G.styles = [
-  U,
+  N,
   I`
       .group-wrapper {
         display: flex;
@@ -5122,10 +5122,10 @@ tt([
   g()
 ], G.prototype, "_dragPct", 2);
 tt([
-  S("dialog.group-dialog")
+  E("dialog.group-dialog")
 ], G.prototype, "_dialogEl", 2);
 tt([
-  S(".group-header")
+  E(".group-header")
 ], G.prototype, "_headerEl", 2);
 G = tt([
   L("m3e-light-group-card")
@@ -5239,8 +5239,8 @@ async function Pe(t) {
           if (o[_ + 3] < 128) continue;
           const [j, w, O] = fs(o[_], o[_ + 1], o[_ + 2]);
           if (d++, c += w, w < 12 || O < 10 || O > 92) continue;
-          const R = Math.floor(j % 360 / 15) % 24, ct = 1 - Math.abs(O - 50) / 52, q = w / 100 * (0.4 + 0.6 * ct), Q = j * Math.PI / 180;
-          n[R].w += q, n[R].hSin += Math.sin(Q) * q, n[R].hCos += Math.cos(Q) * q, n[R].s += w * q;
+          const B = Math.floor(j % 360 / 15) % 24, ct = 1 - Math.abs(O - 50) / 52, K = w / 100 * (0.4 + 0.6 * ct), Q = j * Math.PI / 180;
+          n[B].w += K, n[B].hSin += Math.sin(Q) * K, n[B].hCos += Math.cos(Q) * K, n[B].s += w * K;
         }
         let p = n[0];
         for (let _ = 1; _ < 24; _++)
@@ -5260,13 +5260,13 @@ async function Pe(t) {
         }
         let m = Math.atan2(p.hSin, p.hCos) * 180 / Math.PI;
         m < 0 && (m += 360);
-        const v = Math.round(m), f = p.s / p.w, u = Math.round(Math.max(18, Math.min(46, f * 0.55))), y = Math.round(Math.max(42, Math.min(82, f * 0.95))), b = Math.round(Math.max(28, Math.min(60, f * 0.65))), H = Math.round(Math.max(22, Math.min(48, f * 0.62))), $ = Math.round(Math.max(24, Math.min(72, f * 0.78))), A = Math.round(Math.max(30, Math.min(74, f * 0.82))), k = Math.round(Math.max(28, Math.min(62, f * 0.68))), F = {
+        const v = Math.round(m), f = p.s / p.w, u = Math.round(Math.max(18, Math.min(46, f * 0.55))), y = Math.round(Math.max(42, Math.min(82, f * 0.95))), b = Math.round(Math.max(28, Math.min(60, f * 0.65))), H = Math.round(Math.max(22, Math.min(48, f * 0.62))), $ = Math.round(Math.max(24, Math.min(72, f * 0.78))), T = Math.round(Math.max(30, Math.min(74, f * 0.82))), k = Math.round(Math.max(28, Math.min(62, f * 0.68))), F = {
           scrim: `hsl(${v}, ${u}%, 12%)`,
           accent: `hsl(${v}, ${y}%, 86%)`,
           onAccent: `hsl(${v}, ${b}%, 14%)`,
           containerDark: `hsl(${v}, ${H}%, 22%)`,
           onContainerDark: `hsl(${v}, ${$}%, 91%)`,
-          containerLight: `hsl(${v}, ${A}%, 88%)`,
+          containerLight: `hsl(${v}, ${T}%, 88%)`,
           onContainerLight: `hsl(${v}, ${k}%, 16%)`
         };
         pt.set(t, F), e(F);
@@ -5278,7 +5278,7 @@ async function Pe(t) {
     }, i.src = t;
   }) : null;
 }
-var ms = Object.defineProperty, gs = Object.getOwnPropertyDescriptor, B = (t, e, i, s) => {
+var ms = Object.defineProperty, gs = Object.getOwnPropertyDescriptor, R = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? gs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && ms(e, i, a), a;
@@ -5293,7 +5293,7 @@ function We(t) {
   }
   return `${s}:${r}`;
 }
-let z = class extends M {
+let D = class extends A {
   constructor() {
     super(...arguments), this.entityId = "", this.playerIds = [], this._open = !1, this._castSheetOpen = !1, this._nowTick = Date.now(), this._scrubbing = !1, this._scrubPct = null, this._volDragging = !1, this._volPct = null, this._palette = null, this._tickTimer = null, this._volPendingTimer = null, this._lastVolSentAt = 0, this._lastArtworkUrl = "", this._lastTrackKey = "", this._pendingTrackDir = "next", this._onSeekDown = (t) => {
       if (this._duration <= 0 || t.pointerType === "mouse" && t.button !== 0) return;
@@ -5468,7 +5468,7 @@ let z = class extends M {
       new Set(
         t.attributes.source_list.map((w) => String(w ?? "").trim()).filter(Boolean)
       )
-    ) : [], H = String(t?.attributes.source ?? ""), $ = !t || e === "unavailable" || e === "unknown", A = Number(t?.attributes.supported_features ?? 0), k = !$ && (A === 0 || (A & vs) !== 0 || typeof t?.attributes.volume_level == "number"), F = b.length > 0 || y.length > 1, _ = s ? 0 : v, j = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    ) : [], H = String(t?.attributes.source ?? ""), $ = !t || e === "unavailable" || e === "unknown", T = Number(t?.attributes.supported_features ?? 0), k = !$ && (T === 0 || (T & vs) !== 0 || typeof t?.attributes.volume_level == "number"), F = b.length > 0 || y.length > 1, _ = s ? 0 : v, j = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <dialog
         class="media-dialog"
@@ -5801,31 +5801,31 @@ let z = class extends M {
                           <!-- Output Devices (M3 Expressive Pill = Selected, 20px = Unselected) -->
                           <div class="cast-list" role="radiogroup" aria-label="Dispositivi Cast">
                             ${y.map((w) => {
-      const O = this.hass?.states[w], R = w === this.entityId, ct = O?.attributes.friendly_name || w, q = String(O?.attributes.source ?? "").trim(), Q = q || ct, J = typeof O?.attributes.volume_level == "number" ? Math.round(O.attributes.volume_level * 100) : null, E = O?.attributes.device_class === "tv" || w.toLowerCase().includes("tv") || w.toLowerCase().includes("chromecast") || q.toLowerCase().includes("tv") || q.toLowerCase().includes("chromecast");
+      const O = this.hass?.states[w], B = w === this.entityId, ct = O?.attributes.friendly_name || w, K = String(O?.attributes.source ?? "").trim(), Q = K || ct, J = typeof O?.attributes.volume_level == "number" ? Math.round(O.attributes.volume_level * 100) : null, P = O?.attributes.device_class === "tv" || w.toLowerCase().includes("tv") || w.toLowerCase().includes("chromecast") || K.toLowerCase().includes("tv") || K.toLowerCase().includes("chromecast");
       return l`
                                 <button
                                   type="button"
-                                  class="cast-row ${R ? "is-selected" : ""}"
+                                  class="cast-row ${B ? "is-selected" : ""}"
                                   role="radio"
-                                  aria-checked=${String(R)}
+                                  aria-checked=${String(B)}
                                   @click=${() => this._selectPlayer(w)}
                                 >
-                                  ${R && J !== null ? l`<span class="cast-row-fill" style="width: ${J}%;"></span>` : h}
+                                  ${B && J !== null ? l`<span class="cast-row-fill" style="width: ${J}%;"></span>` : h}
                                   <span class="cast-row-inner">
                                     <span class="cast-row-left">
                                       <svg viewBox="0 0 24 24" class="cast-dev-icon" aria-hidden="true">
                                         <path
                                           fill="currentColor"
-                                          d=${E ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
+                                          d=${P ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
                                         />
                                       </svg>
                                       <span class="cast-row-text">
                                         <span class="cast-row-name">${Q}</span>
-                                        ${R && J !== null ? l`<span class="cast-row-sub">${J}%</span>` : h}
+                                        ${B && J !== null ? l`<span class="cast-row-sub">${J}%</span>` : h}
                                       </span>
                                     </span>
-                                    <span class="cast-check ${R ? "checked" : ""}" aria-hidden="true">
-                                      ${R ? l`
+                                    <span class="cast-check ${B ? "checked" : ""}" aria-hidden="true">
+                                      ${B ? l`
                                             <svg viewBox="0 0 24 24">
                                               <path
                                                 fill="currentColor"
@@ -5897,8 +5897,8 @@ let z = class extends M {
     `;
   }
 };
-z.styles = [
-  U,
+D.styles = [
+  N,
   I`
       :host {
         display: contents;
@@ -6868,61 +6868,61 @@ z.styles = [
       }
     `
 ];
-B([
+R([
   C({ attribute: !1 })
-], z.prototype, "hass", 2);
-B([
+], D.prototype, "hass", 2);
+R([
   C({ type: String })
-], z.prototype, "entityId", 2);
-B([
+], D.prototype, "entityId", 2);
+R([
   C({ attribute: !1 })
-], z.prototype, "playerIds", 2);
-B([
+], D.prototype, "playerIds", 2);
+R([
   g()
-], z.prototype, "_open", 2);
-B([
+], D.prototype, "_open", 2);
+R([
   g()
-], z.prototype, "_castSheetOpen", 2);
-B([
+], D.prototype, "_castSheetOpen", 2);
+R([
   g()
-], z.prototype, "_nowTick", 2);
-B([
+], D.prototype, "_nowTick", 2);
+R([
   g()
-], z.prototype, "_scrubbing", 2);
-B([
+], D.prototype, "_scrubbing", 2);
+R([
   g()
-], z.prototype, "_scrubPct", 2);
-B([
+], D.prototype, "_scrubPct", 2);
+R([
   g()
-], z.prototype, "_volDragging", 2);
-B([
+], D.prototype, "_volDragging", 2);
+R([
   g()
-], z.prototype, "_volPct", 2);
-B([
+], D.prototype, "_volPct", 2);
+R([
   g()
-], z.prototype, "_palette", 2);
-B([
-  S("dialog.media-dialog")
-], z.prototype, "_dialogEl", 2);
-B([
-  S(".dialog-surface")
-], z.prototype, "_dialogSurfaceEl", 2);
-B([
-  S(".artwork-frame")
-], z.prototype, "_artworkFrameEl", 2);
-B([
-  S(".meta-block")
-], z.prototype, "_metaBlockEl", 2);
-z = B([
+], D.prototype, "_palette", 2);
+R([
+  E("dialog.media-dialog")
+], D.prototype, "_dialogEl", 2);
+R([
+  E(".dialog-surface")
+], D.prototype, "_dialogSurfaceEl", 2);
+R([
+  E(".artwork-frame")
+], D.prototype, "_artworkFrameEl", 2);
+R([
+  E(".meta-block")
+], D.prototype, "_metaBlockEl", 2);
+D = R([
   L("m3e-media-popup")
-], z);
-var _s = Object.defineProperty, bs = Object.getOwnPropertyDescriptor, K = (t, e, i, s) => {
+], D);
+var _s = Object.defineProperty, bs = Object.getOwnPropertyDescriptor, X = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? bs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && _s(e, i, a), a;
 };
 const ys = 2048;
-let W = class extends M {
+let W = class extends A {
   constructor() {
     super(...arguments), this._marqueeActive = !1, this._marqueeDuration = 12, this._pressed = !1, this._prevStates = {};
   }
@@ -7239,7 +7239,7 @@ let W = class extends M {
   }
 };
 W.styles = [
-  U,
+  N,
   I`
       :host {
         display: block;
@@ -7673,37 +7673,37 @@ W.styles = [
       }
     `
 ];
-K([
+X([
   C({ attribute: !1 })
 ], W.prototype, "hass", 2);
-K([
+X([
   g()
 ], W.prototype, "_config", 2);
-K([
+X([
   g()
 ], W.prototype, "_selectedEntityId", 2);
-K([
+X([
   g()
 ], W.prototype, "_marqueeActive", 2);
-K([
+X([
   g()
 ], W.prototype, "_marqueeDuration", 2);
-K([
+X([
   g()
 ], W.prototype, "_pressed", 2);
-K([
-  S(".media-bar")
+X([
+  E(".media-bar")
 ], W.prototype, "_barEl", 2);
-K([
-  S(".marquee-viewport")
+X([
+  E(".marquee-viewport")
 ], W.prototype, "_marqueeViewport", 2);
-K([
-  S(".marquee-measure")
+X([
+  E(".marquee-measure")
 ], W.prototype, "_marqueeMeasure", 2);
-K([
-  S("m3e-media-popup")
+X([
+  E("m3e-media-popup")
 ], W.prototype, "_popupEl", 2);
-W = K([
+W = X([
   L("m3e-media-bar-card")
 ], W);
 var xs = Object.defineProperty, ws = Object.getOwnPropertyDescriptor, Y = (t, e, i, s) => {
@@ -7721,7 +7721,7 @@ function Ge(t) {
   }
   return `${s}:${r}`;
 }
-let N = class extends M {
+let Z = class extends A {
   constructor() {
     super(...arguments), this._palette = null, this._nowTick = Date.now(), this._scrubbing = !1, this._scrubPct = null, this._pressed = !1, this._lastArtworkUrl = "", this._tickTimer = null, this._onSliderPointerDown = (t) => {
       if (t.stopPropagation(), this._duration <= 0 || t.pointerType === "mouse" && t.button !== 0) return;
@@ -7940,11 +7940,11 @@ let N = class extends M {
   }
   render() {
     if (!this._config) return h;
-    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", a = i || e === "off" || e === "idle", r = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, n = String(t?.attributes.source ?? "").trim() || r, c = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : a ? r : "In riproduzione"), d = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : a ? "Nessuna riproduzione" : r), p = this._artworkUrl, m = this._progressPct, v = this._duration, f = Number(t?.attributes.supported_features ?? 0), u = !i && (f === 0 || (f & ks) !== 0), y = !i && (f === 0 || (f & Cs) !== 0), b = !i && v > 0 && (f === 0 || (f & $s) !== 0), H = s && !this._scrubbing && v > 0, $ = this._scrubPct !== null ? this._scrubPct / 100 * v : this._currentPosition, A = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", a = i || e === "off" || e === "idle", r = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, n = String(t?.attributes.source ?? "").trim() || r, c = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : a ? r : "In riproduzione"), d = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : a ? "Nessuna riproduzione" : r), p = this._artworkUrl, m = this._progressPct, v = this._duration, f = Number(t?.attributes.supported_features ?? 0), u = !i && (f === 0 || (f & ks) !== 0), y = !i && (f === 0 || (f & Cs) !== 0), b = !i && v > 0 && (f === 0 || (f & $s) !== 0), H = s && !this._scrubbing && v > 0, $ = this._scrubPct !== null ? this._scrubPct / 100 * v : this._currentPosition, T = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <ha-card
         class="media-player-card is-wide-card ${s ? "is-playing" : "is-paused"} ${p ? "has-artwork" : "no-artwork"} ${this._pressed ? "is-pressed" : ""} ${i ? "is-unavailable" : ""}"
-        style=${A}
+        style=${T}
         role="button"
         tabindex="0"
         aria-label="${c}, ${d}"
@@ -8103,8 +8103,8 @@ let N = class extends M {
     `;
   }
 };
-N.styles = [
-  U,
+Z.styles = [
+  N,
   I`
       :host {
         display: block;
@@ -8602,46 +8602,46 @@ N.styles = [
 ];
 Y([
   C({ attribute: !1 })
-], N.prototype, "hass", 2);
+], Z.prototype, "hass", 2);
 Y([
   g()
-], N.prototype, "_config", 2);
+], Z.prototype, "_config", 2);
 Y([
   g()
-], N.prototype, "_palette", 2);
+], Z.prototype, "_palette", 2);
 Y([
   g()
-], N.prototype, "_nowTick", 2);
+], Z.prototype, "_nowTick", 2);
 Y([
   g()
-], N.prototype, "_scrubbing", 2);
+], Z.prototype, "_scrubbing", 2);
 Y([
   g()
-], N.prototype, "_scrubPct", 2);
+], Z.prototype, "_scrubPct", 2);
 Y([
   g()
-], N.prototype, "_activeEntityId", 2);
+], Z.prototype, "_activeEntityId", 2);
 Y([
   g()
-], N.prototype, "_pressed", 2);
+], Z.prototype, "_pressed", 2);
 Y([
-  S(".media-player-card")
-], N.prototype, "_cardEl", 2);
+  E(".media-player-card")
+], Z.prototype, "_cardEl", 2);
 Y([
-  S("m3e-media-popup")
-], N.prototype, "_popupEl", 2);
+  E("m3e-media-popup")
+], Z.prototype, "_popupEl", 2);
 Y([
   C({ attribute: !1 })
-], N.prototype, "config", 1);
-N = Y([
+], Z.prototype, "config", 1);
+Z = Y([
   L("m3e-media-player-card")
-], N);
+], Z);
 var Ss = Object.defineProperty, Es = Object.getOwnPropertyDescriptor, ue = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? Es(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && Ss(e, i, a), a;
 };
-let St = class extends M {
+let St = class extends A {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeTopLabel = (t) => ({
       layout: "Layout visualizzazione",
@@ -9056,7 +9056,7 @@ var Ms = Object.defineProperty, Ps = Object.getOwnPropertyDescriptor, fe = (t, e
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && Ms(e, i, a), a;
 };
-let Et = class extends M {
+let Et = class extends A {
   constructor() {
     super(...arguments), this._isMouseDragging = !1, this._dragMoved = !1, this._dragStartX = 0, this._dragScrollLeft = 0;
   }
@@ -9206,7 +9206,7 @@ let Et = class extends M {
   }
 };
 Et.styles = [
-  U,
+  N,
   I`
       :host {
         display: block;
@@ -9487,18 +9487,18 @@ fe([
   g()
 ], Et.prototype, "_config", 2);
 fe([
-  S(".people-container")
+  E(".people-container")
 ], Et.prototype, "_containerEl", 2);
 Et = fe([
   L("m3e-people-card")
 ], Et);
-var As = Object.defineProperty, Ts = Object.getOwnPropertyDescriptor, Kt = (t, e, i, s) => {
+var As = Object.defineProperty, Ts = Object.getOwnPropertyDescriptor, Xt = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? Ts(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && As(e, i, a), a;
 };
 const Os = 2200;
-let gt = class extends M {
+let gt = class extends A {
   constructor() {
     super(...arguments), this._pressed = !1, this._activated = !1, this._resetTimer = null;
   }
@@ -9725,7 +9725,7 @@ let gt = class extends M {
   }
 };
 gt.styles = [
-  U,
+  N,
   I`
       .scene-tile {
         height: 100%;
@@ -9903,19 +9903,19 @@ gt.styles = [
       }
     `
 ];
-Kt([
+Xt([
   C({ attribute: !1 })
 ], gt.prototype, "hass", 2);
-Kt([
+Xt([
   g()
 ], gt.prototype, "_config", 2);
-Kt([
+Xt([
   g()
 ], gt.prototype, "_pressed", 2);
-Kt([
+Xt([
   g()
 ], gt.prototype, "_activated", 2);
-gt = Kt([
+gt = Xt([
   L("m3e-scene-card")
 ], gt);
 var Is = Object.defineProperty, Ls = Object.getOwnPropertyDescriptor, me = (t, e, i, s) => {
@@ -9923,7 +9923,7 @@ var Is = Object.defineProperty, Ls = Object.getOwnPropertyDescriptor, me = (t, e
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && Is(e, i, a), a;
 };
-let Mt = class extends M {
+let Mt = class extends A {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeTopLabel = (t) => ({
       title: "Titolo in alto a sinistra",
@@ -10281,12 +10281,12 @@ me([
 Mt = me([
   L("m3e-stack-card-editor")
 ], Mt);
-var zs = Object.defineProperty, Ds = Object.getOwnPropertyDescriptor, Ae = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Ds(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+var Ds = Object.defineProperty, zs = Object.getOwnPropertyDescriptor, Ae = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? zs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && zs(e, i, a), a;
+  return s && a && Ds(e, i, a), a;
 };
-let qt = class extends M {
+let Kt = class extends A {
   setConfig(t) {
     if (!t)
       throw new Error("m3e-stack-card: configurazione mancante");
@@ -10393,8 +10393,8 @@ let qt = class extends M {
     `;
   }
 };
-qt.styles = [
-  U,
+Kt.styles = [
+  N,
   I`
       :host {
         display: block;
@@ -10491,19 +10491,19 @@ qt.styles = [
 ];
 Ae([
   C({ attribute: !1 })
-], qt.prototype, "hass", 2);
+], Kt.prototype, "hass", 2);
 Ae([
   g()
-], qt.prototype, "_config", 2);
-qt = Ae([
+], Kt.prototype, "_config", 2);
+Kt = Ae([
   L("m3e-stack-card")
-], qt);
-var Hs = Object.defineProperty, Bs = Object.getOwnPropertyDescriptor, Qt = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Bs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+], Kt);
+var Hs = Object.defineProperty, Rs = Object.getOwnPropertyDescriptor, Qt = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? Rs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && Hs(e, i, a), a;
 };
-const Rs = /* @__PURE__ */ new Set([
+const Bs = /* @__PURE__ */ new Set([
   "on",
   "open",
   "opening",
@@ -10521,7 +10521,7 @@ const Rs = /* @__PURE__ */ new Set([
   "triggered",
   "true"
 ]);
-let vt = class extends M {
+let vt = class extends A {
   constructor() {
     super(...arguments), this._pressed = !1, this._tick = 0, this._tickTimer = null;
   }
@@ -10673,7 +10673,7 @@ let vt = class extends M {
   get _isActive() {
     if (this._isUnavailable || !this._entity) return !1;
     const t = String(this._entity.state ?? "").toLowerCase();
-    return this._config?.active_state?.trim() ? this._config.active_state.split(",").map((i) => i.trim().toLowerCase()).filter(Boolean).includes(t) : Rs.has(t);
+    return this._config?.active_state?.trim() ? this._config.active_state.split(",").map((i) => i.trim().toLowerCase()).filter(Boolean).includes(t) : Bs.has(t);
   }
   _formatPrimaryState() {
     const t = this._entity;
@@ -10778,7 +10778,7 @@ let vt = class extends M {
   }
 };
 vt.styles = [
-  U,
+  N,
   I`
       :host {
         display: inline-flex;
@@ -11161,12 +11161,12 @@ async function ni() {
 function et(t) {
   t.stopPropagation();
 }
-var Us = Object.defineProperty, Zs = Object.getOwnPropertyDescriptor, Lt = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Zs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+var Ns = Object.defineProperty, Us = Object.getOwnPropertyDescriptor, Lt = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? Us(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Us(e, i, a), a;
+  return s && a && Ns(e, i, a), a;
 };
-let rt = class extends M {
+let rt = class extends A {
   constructor() {
     super(...arguments), this._mountedType = "", this._goBack = () => {
       this.dispatchEvent(new CustomEvent("go-back", { bubbles: !0, composed: !0 }));
@@ -11326,12 +11326,12 @@ Lt([
 rt = Lt([
   L("m3e-feature-sub-editor")
 ], rt);
-var Ns = Object.defineProperty, Vs = Object.getOwnPropertyDescriptor, zt = (t, e, i, s) => {
+var Zs = Object.defineProperty, Vs = Object.getOwnPropertyDescriptor, Dt = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? Vs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Ns(e, i, a), a;
+  return s && a && Zs(e, i, a), a;
 };
-let ot = class extends M {
+let ot = class extends A {
   constructor() {
     super(...arguments), this._featuresEditorReady = !1, this._computeLabel = (t) => ({
       entity: "Entità principale",
@@ -11363,6 +11363,14 @@ let ot = class extends M {
       media_controls_action: 'Azione pulsante "Media & Controls"',
       features_position: "Posizione Features",
       remote_device: "Device ID trasmettitore (multi-dispositivo)",
+      dpad_up: "Pad Su (es. DPAD_UP)",
+      dpad_down: "Pad Giù (es. DPAD_DOWN)",
+      dpad_left: "Pad Sinistra (es. DPAD_LEFT)",
+      dpad_right: "Pad Destra (es. DPAD_RIGHT)",
+      dpad_center: "Pad Selezione / OK (es. DPAD_CENTER)",
+      back: "Indietro (Back)",
+      home: "Home",
+      assist: "Assistente / Ricerca (Assist)",
       volume_up: "Volume + (es. button.tv_vol_up o VolumeUp)",
       volume_down: "Volume − (es. button.tv_vol_down o VolumeDown)",
       mute: "Mute",
@@ -11648,6 +11656,14 @@ let ot = class extends M {
         title: "Pulsanti Telecomando (Entità button/script o comandi remote)",
         name: "remote_buttons",
         schema: [
+          { name: "dpad_up", selector: { text: {} } },
+          { name: "dpad_down", selector: { text: {} } },
+          { name: "dpad_left", selector: { text: {} } },
+          { name: "dpad_right", selector: { text: {} } },
+          { name: "dpad_center", selector: { text: {} } },
+          { name: "back", selector: { text: {} } },
+          { name: "home", selector: { text: {} } },
+          { name: "assist", selector: { text: {} } },
           { name: "volume_up", selector: { text: {} } },
           { name: "volume_down", selector: { text: {} } },
           { name: "mute", selector: { text: {} } },
@@ -11820,27 +11836,35 @@ ot.styles = I`
       padding: 8px 0;
     }
   `;
-zt([
+Dt([
   C({ attribute: !1 })
 ], ot.prototype, "hass", 2);
-zt([
+Dt([
   C({ attribute: !1 })
 ], ot.prototype, "lovelace", 2);
-zt([
+Dt([
   g()
 ], ot.prototype, "_config", 2);
-zt([
+Dt([
   g()
 ], ot.prototype, "_featuresEditorReady", 2);
-zt([
+Dt([
   g()
 ], ot.prototype, "_subElementEditorConfig", 2);
-ot = zt([
+ot = Dt([
   L("m3e-status-card-editor")
 ], ot);
 const Fs = {
   androidtv_remote: {
     commands: {
+      dpad_up: "DPAD_UP",
+      dpad_down: "DPAD_DOWN",
+      dpad_left: "DPAD_LEFT",
+      dpad_right: "DPAD_RIGHT",
+      dpad_center: "DPAD_CENTER",
+      back: "BACK",
+      home: "HOME",
+      assist: "ASSIST",
       volume_up: "VOLUME_UP",
       volume_down: "VOLUME_DOWN",
       mute: "MUTE",
@@ -11857,6 +11881,14 @@ const Fs = {
   },
   androidtv: {
     commands: {
+      dpad_up: "UP",
+      dpad_down: "DOWN",
+      dpad_left: "LEFT",
+      dpad_right: "RIGHT",
+      dpad_center: "CENTER",
+      back: "BACK",
+      home: "HOME",
+      assist: "SEARCH",
       volume_up: "VOLUME_UP",
       volume_down: "VOLUME_DOWN",
       mute: "MUTE",
@@ -11873,6 +11905,14 @@ const Fs = {
   },
   firetv: {
     commands: {
+      dpad_up: "UP",
+      dpad_down: "DOWN",
+      dpad_left: "LEFT",
+      dpad_right: "RIGHT",
+      dpad_center: "CENTER",
+      back: "BACK",
+      home: "HOME",
+      assist: "SEARCH",
       volume_up: "VOLUME_UP",
       volume_down: "VOLUME_DOWN",
       mute: "MUTE",
@@ -11887,6 +11927,14 @@ const Fs = {
   },
   apple_tv: {
     commands: {
+      dpad_up: "up",
+      dpad_down: "down",
+      dpad_left: "left",
+      dpad_right: "right",
+      dpad_center: "select",
+      back: "menu",
+      home: "home",
+      assist: "top_menu",
       volume_up: "volume_up",
       volume_down: "volume_down",
       power_on: "wakeup",
@@ -11901,6 +11949,14 @@ const Fs = {
     service: "webostv.button",
     paramKey: "button",
     commands: {
+      dpad_up: "UP",
+      dpad_down: "DOWN",
+      dpad_left: "LEFT",
+      dpad_right: "RIGHT",
+      dpad_center: "ENTER",
+      back: "BACK",
+      home: "HOME",
+      assist: "MENU",
       volume_up: "VOLUMEUP",
       volume_down: "VOLUMEDOWN",
       mute: "MUTE",
@@ -11915,6 +11971,14 @@ const Fs = {
   },
   samsungtv: {
     commands: {
+      dpad_up: "KEY_UP",
+      dpad_down: "KEY_DOWN",
+      dpad_left: "KEY_LEFT",
+      dpad_right: "KEY_RIGHT",
+      dpad_center: "KEY_ENTER",
+      back: "KEY_RETURN",
+      home: "KEY_HOME",
+      assist: "KEY_MENU",
       volume_up: "KEY_VOLUP",
       volume_down: "KEY_VOLDOWN",
       mute: "KEY_MUTE",
@@ -11931,6 +11995,14 @@ const Fs = {
   },
   samsungtv_smart: {
     commands: {
+      dpad_up: "KEY_UP",
+      dpad_down: "KEY_DOWN",
+      dpad_left: "KEY_LEFT",
+      dpad_right: "KEY_RIGHT",
+      dpad_center: "KEY_ENTER",
+      back: "KEY_RETURN",
+      home: "KEY_HOME",
+      assist: "KEY_MENU",
       volume_up: "KEY_VOLUP",
       volume_down: "KEY_VOLDOWN",
       mute: "KEY_MUTE",
@@ -11947,6 +12019,14 @@ const Fs = {
   },
   samsungtv_tizen: {
     commands: {
+      dpad_up: "KEY_UP",
+      dpad_down: "KEY_DOWN",
+      dpad_left: "KEY_LEFT",
+      dpad_right: "KEY_RIGHT",
+      dpad_center: "KEY_ENTER",
+      back: "KEY_RETURN",
+      home: "KEY_HOME",
+      assist: "KEY_MENU",
       volume_up: "KEY_VOLUP",
       volume_down: "KEY_VOLDOWN",
       mute: "KEY_MUTE",
@@ -11963,6 +12043,14 @@ const Fs = {
   },
   braviatv: {
     commands: {
+      dpad_up: "Up",
+      dpad_down: "Down",
+      dpad_left: "Left",
+      dpad_right: "Right",
+      dpad_center: "Confirm",
+      back: "Return",
+      home: "Home",
+      assist: "GoogleAssistant",
       volume_up: "VolumeUp",
       volume_down: "VolumeDown",
       mute: "Mute",
@@ -11979,6 +12067,14 @@ const Fs = {
   },
   roku: {
     commands: {
+      dpad_up: "up",
+      dpad_down: "down",
+      dpad_left: "left",
+      dpad_right: "right",
+      dpad_center: "select",
+      back: "back",
+      home: "home",
+      assist: "search",
       volume_up: "volume_up",
       volume_down: "volume_down",
       mute: "volume_mute",
@@ -11995,6 +12091,14 @@ const Fs = {
   },
   philips_js: {
     commands: {
+      dpad_up: "CursorUp",
+      dpad_down: "CursorDown",
+      dpad_left: "CursorLeft",
+      dpad_right: "CursorRight",
+      dpad_center: "Confirm",
+      back: "Back",
+      home: "Home",
+      assist: "Search",
       volume_up: "VolumeUp",
       volume_down: "VolumeDown",
       mute: "Mute",
@@ -12011,6 +12115,14 @@ const Fs = {
   },
   panasonic_viera: {
     commands: {
+      dpad_up: "NRC_UP-ONOFF",
+      dpad_down: "NRC_DOWN-ONOFF",
+      dpad_left: "NRC_LEFT-ONOFF",
+      dpad_right: "NRC_RIGHT-ONOFF",
+      dpad_center: "NRC_ENTER-ONOFF",
+      back: "NRC_RETURN-ONOFF",
+      home: "NRC_HOME-ONOFF",
+      assist: "NRC_MENU-ONOFF",
       volume_up: "NRC_VOLUP-ONOFF",
       volume_down: "NRC_VOLDOWN-ONOFF",
       mute: "NRC_MUTE-ONOFF",
@@ -12048,6 +12160,14 @@ const Fs = {
   prev: { service: "media_previous_track" },
   next: { service: "media_next_track" }
 }, Gs = {
+  dpad_up: "DPAD_UP",
+  dpad_down: "DPAD_DOWN",
+  dpad_left: "DPAD_LEFT",
+  dpad_right: "DPAD_RIGHT",
+  dpad_center: "DPAD_CENTER",
+  back: "BACK",
+  home: "HOME",
+  assist: "ASSIST",
   volume_up: "VolumeUp",
   volume_down: "VolumeDown",
   mute: "Mute",
@@ -12074,6 +12194,14 @@ function Ys(t, e, i) {
   const s = t.entities?.[e]?.device_id;
   if (!s || !t.entities) return;
   const r = {
+    dpad_up: ["dpad_up", "nav_up", "_up"],
+    dpad_down: ["dpad_down", "nav_down", "_down"],
+    dpad_left: ["dpad_left", "nav_left", "_left"],
+    dpad_right: ["dpad_right", "nav_right", "_right"],
+    dpad_center: ["dpad_center", "select", "enter", "_ok"],
+    back: ["back", "return"],
+    home: ["home"],
+    assist: ["assist", "voice", "search", "menu"],
     volume_up: ["volume_up", "vol_up", "vol+"],
     volume_down: ["volume_down", "vol_down", "vol-"],
     mute: ["mute"],
@@ -12093,7 +12221,7 @@ function Ys(t, e, i) {
     if (r.some((d) => c.includes(d))) return o;
   }
 }
-function qs(t, e, i, s, a) {
+function Ks(t, e, i, s, a) {
   const r = Ye(t, e, "remote"), o = Ye(t, e, "media_player"), n = o ? t.states[o] : void 0, c = s?.[i]?.trim();
   if (c) {
     if (c.startsWith("button.") || c.startsWith("input_button.")) {
@@ -12177,13 +12305,13 @@ function qs(t, e, i, s, a) {
     a?.trim() && (f.device = a.trim()), t.callService("remote", "send_command", f);
   }
 }
-var Xs = Object.defineProperty, Ks = Object.getOwnPropertyDescriptor, T = (t, e, i, s) => {
-  for (var a = s > 1 ? void 0 : s ? Ks(e, i) : e, r = t.length - 1, o; r >= 0; r--)
+var qs = Object.defineProperty, Xs = Object.getOwnPropertyDescriptor, M = (t, e, i, s) => {
+  for (var a = s > 1 ? void 0 : s ? Xs(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
-  return s && a && Xs(e, i, a), a;
+  return s && a && qs(e, i, a), a;
 };
-const Ut = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/, li = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
-function Rt(t, e) {
+const Nt = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/, li = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
+function Bt(t, e) {
   if (e === "raw") return t;
   const i = t.trim();
   let s = null;
@@ -12194,7 +12322,7 @@ function Rt(t, e) {
       const b = /* @__PURE__ */ new Date();
       s = new Date(b.getFullYear(), b.getMonth(), b.getDate(), f, u, y), s.getTime() <= b.getTime() && s.setDate(s.getDate() + 1);
     }
-  } else if (Ut.test(i)) {
+  } else if (Nt.test(i)) {
     const f = new Date(i);
     Number.isNaN(f.getTime()) || (s = f);
   }
@@ -12203,7 +12331,7 @@ function Rt(t, e) {
   if (e === "time" || e === "auto")
     return r;
   if (e === "datetime") {
-    const f = /* @__PURE__ */ new Date(), u = ($, A) => $.getFullYear() === A.getFullYear() && $.getMonth() === A.getMonth() && $.getDate() === A.getDate(), y = new Date(f.getFullYear(), f.getMonth(), f.getDate() + 1), b = new Date(f.getFullYear(), f.getMonth(), f.getDate() - 1);
+    const f = /* @__PURE__ */ new Date(), u = ($, T) => $.getFullYear() === T.getFullYear() && $.getMonth() === T.getMonth() && $.getDate() === T.getDate(), y = new Date(f.getFullYear(), f.getMonth(), f.getDate() + 1), b = new Date(f.getFullYear(), f.getMonth(), f.getDate() - 1);
     return u(s, f) ? `Oggi ${r}` : u(s, y) ? `Domani ${r}` : u(s, b) ? `Ieri ${r}` : `${s.toLocaleDateString([], { day: "numeric", month: "short" })} ${r}`;
   }
   const o = s.getTime() - Date.now(), n = o >= 0, c = Math.round(Math.abs(o) / 6e4);
@@ -12240,9 +12368,9 @@ function ia(t, e, i, s, a) {
   const r = Vt(t, e, i, s), o = Vt(t, e, i, a);
   return `M ${r.x.toFixed(2)} ${r.y.toFixed(2)} A ${i} ${i} 0 1 1 ${o.x.toFixed(2)} ${o.y.toFixed(2)}`;
 }
-let P = class extends M {
+let S = class extends A {
   constructor() {
-    super(...arguments), this.popupOnly = !1, this._pressed = !1, this._popupOpen = !1, this._dialDragging = !1, this._dialTemp = null, this._activeSheet = null, this._remoteSourceSheetOpen = !1, this._volDragging = !1, this._volPct = null, this._volPendingTimer = null, this._historyPoints = [], this._historyLoading = !1, this._historyEntityId = null, this._historyHoverIdx = null, this._featuresLoaded = !1, this._artPalette = null, this._lastArtUrl = "", this._prevStates = {}, this._longPressTimer = null, this._longPressTriggered = !1, this._relativeTimer = null, this._relativeTick = 0, this._onTilePointerDown = (t) => {
+    super(...arguments), this.popupOnly = !1, this._pressed = !1, this._popupOpen = !1, this._dialDragging = !1, this._dialTemp = null, this._activeSheet = null, this._remoteSourceSheetOpen = !1, this._volDragging = !1, this._volPct = null, this._volPendingTimer = null, this._historyPoints = [], this._historyLoading = !1, this._historyEntityId = null, this._historyHoverIdx = null, this._featuresLoaded = !1, this._artPalette = null, this._lastArtUrl = "", this._prevStates = {}, this._longPressTimer = null, this._longPressTriggered = !1, this._relativeTimer = null, this._relativeTick = 0, this._padOffsetX = 0, this._padOffsetY = 0, this._padActive = !1, this._padTapPulse = !1, this._padPointerId = null, this._padStartX = 0, this._padStartY = 0, this._padSwiped = !1, this._padDir = null, this._padRepeatTimer = null, this._padHoldTimer = null, this._padPulseTimer = null, this._onTilePointerDown = (t) => {
       t.button === 0 && (this._pressed = !0, this._longPressTriggered = !1, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
         this._longPressTriggered = !0, this._pressed = !1, this._handleHoldAction();
       }, 420));
@@ -12298,6 +12426,24 @@ let P = class extends M {
       e.hasPointerCapture(t.pointerId) && e.releasePointerCapture(t.pointerId), this._updateVolFromPointer(t.clientX, e, !0), this._volDragging = !1, this._volPendingTimer = window.setTimeout(() => {
         this._volPct = null, this._volPendingTimer = null;
       }, 900);
+    }, this._onPadPointerDown = (t) => {
+      if (t.button !== 0) return;
+      t.currentTarget.setPointerCapture(t.pointerId), this._padPointerId = t.pointerId, this._padStartX = t.clientX, this._padStartY = t.clientY, this._padSwiped = !1, this._padDir = null, this._padActive = !0, this._padOffsetX = 0, this._padOffsetY = 0;
+    }, this._onPadPointerMove = (t) => {
+      if (this._padPointerId !== t.pointerId) return;
+      const i = t.currentTarget.getBoundingClientRect(), s = t.clientX - this._padStartX, a = t.clientY - this._padStartY, r = Math.max(24, i.width / 2 - 28), o = Math.max(20, i.height / 2 - 28);
+      if (this._padOffsetX = Math.max(-r, Math.min(r, s * 0.85)), this._padOffsetY = Math.max(-o, Math.min(o, a * 0.85)), Math.hypot(s, a) >= 24) {
+        const c = Math.abs(s) >= Math.abs(a) ? s > 0 ? "dpad_right" : "dpad_left" : a > 0 ? "dpad_down" : "dpad_up";
+        (!this._padSwiped || this._padDir !== c) && (this._padSwiped = !0, this._padDir = c, this._triggerRemoteKey(c), navigator.vibrate?.(12), this._startPadRepeat(c));
+      }
+    }, this._onPadPointerUp = (t) => {
+      if (this._padPointerId !== t.pointerId) return;
+      const e = t.currentTarget;
+      e.hasPointerCapture(t.pointerId) && e.releasePointerCapture(t.pointerId);
+      const i = this._padSwiped;
+      this._padPointerId = null, this._padActive = !1, this._padDir = null, this._padOffsetX = 0, this._padOffsetY = 0, this._padHoldTimer !== null && (window.clearTimeout(this._padHoldTimer), this._padHoldTimer = null), this._padRepeatTimer !== null && (window.clearInterval(this._padRepeatTimer), this._padRepeatTimer = null), !i && t.type === "pointerup" && (this._triggerRemoteKey("dpad_center"), navigator.vibrate?.(10), this._padTapPulse = !0, this._padPulseTimer !== null && window.clearTimeout(this._padPulseTimer), this._padPulseTimer = window.setTimeout(() => {
+        this._padTapPulse = !1, this._padPulseTimer = null;
+      }, 180));
     };
   }
   static getStubConfig(t) {
@@ -12333,7 +12479,7 @@ let P = class extends M {
     });
   }
   disconnectedCallback() {
-    super.disconnectedCallback(), this._clearLongPress(), this._relativeTimer !== null && (window.clearInterval(this._relativeTimer), this._relativeTimer = null);
+    super.disconnectedCallback(), this._clearLongPress(), this._clearPadTimers(), this._relativeTimer !== null && (window.clearInterval(this._relativeTimer), this._relativeTimer = null);
   }
   _syncRelativeTimer() {
     const t = this._config?.subtitle_format === "relative";
@@ -12551,7 +12697,7 @@ let P = class extends M {
           }
         }
         if (d != null && String(d).trim() !== "") {
-          const p = Rt(String(d), i), m = this._config?.subtitle_prefix ?? "", v = this._config?.subtitle_suffix ?? "";
+          const p = Bt(String(d), i), m = this._config?.subtitle_prefix ?? "", v = this._config?.subtitle_suffix ?? "";
           return `${m}${p}${v}`;
         }
       }
@@ -12564,8 +12710,8 @@ let P = class extends M {
       return e !== "off" && typeof c == "number" ? `${n} ${c}` : n;
     }
     if (o === "sensor") {
-      if (Ut.test(e.trim()))
-        return Rt(e, i);
+      if (Nt.test(e.trim()))
+        return Bt(e, i);
       const n = t.attributes.unit_of_measurement, c = n ? `${e}${n}` : e;
       if (t.attributes.device_class === "temperature" || n === "°C" || n === "°F") {
         const p = this._getSiblingSensors().find(
@@ -12576,7 +12722,7 @@ let P = class extends M {
       }
       return c;
     }
-    return o === "media_player" ? e.charAt(0).toUpperCase() + e.slice(1) : Ut.test(e.trim()) ? Rt(e, i) : e.charAt(0).toUpperCase() + e.slice(1);
+    return o === "media_player" ? e.charAt(0).toUpperCase() + e.slice(1) : Nt.test(e.trim()) ? Bt(e, i) : e.charAt(0).toUpperCase() + e.slice(1);
   }
   _isNumericHistoryEntity(t) {
     if (!t || !t.entity_id.startsWith("sensor.")) return !1;
@@ -12851,7 +12997,7 @@ let P = class extends M {
       const j = u[_ - 1], w = u[_], O = ((j.x + w.x) / 2).toFixed(1);
       y += ` C ${O} ${j.y.toFixed(1)}, ${O} ${w.y.toFixed(1)}, ${w.x.toFixed(1)} ${w.y.toFixed(1)}`;
     }
-    const b = `${y} L ${u[u.length - 1].x.toFixed(1)} ${m} L ${u[0].x.toFixed(1)} ${m} Z`, H = this._historyHoverIdx, $ = H !== null ? u[H] : u[u.length - 1], A = (_) => new Date(_).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), k = (_) => {
+    const b = `${y} L ${u[u.length - 1].x.toFixed(1)} ${m} L ${u[0].x.toFixed(1)} ${m} Z`, H = this._historyHoverIdx, $ = H !== null ? u[H] : u[u.length - 1], T = (_) => new Date(_).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), k = (_) => {
       const w = _.currentTarget.getBoundingClientRect();
       if (w.width <= 0) return;
       const O = Math.max(0, Math.min(1, (_.clientX - w.left) / w.width));
@@ -12862,7 +13008,7 @@ let P = class extends M {
         <div class="history-header">
           <span class="history-title">${i}</span>
           <span class="history-range">
-            ${H !== null ? `${$.v}${e} · ${A($.t)}` : `${a}${e} – ${r}${e}`}
+            ${H !== null ? `${$.v}${e} · ${T($.t)}` : `${a}${e} – ${r}${e}`}
           </span>
         </div>
 
@@ -12894,9 +13040,9 @@ let P = class extends M {
         </svg>
 
         <div class="history-axis">
-          <span>${A(n)}</span>
-          <span>${A((n + c) / 2)}</span>
-          <span>${A(c)}</span>
+          <span>${T(n)}</span>
+          <span>${T((n + c) / 2)}</span>
+          <span>${T(c)}</span>
         </div>
       </div>
     `;
@@ -12916,8 +13062,8 @@ let P = class extends M {
     if (!e || i === "unavailable" || i === "unknown") return "Offline";
     const s = t.entity_id.split(".")[0], a = String(t.attributes.device_class ?? "").toLowerCase();
     if (s === "sensor") {
-      if (Ut.test(e))
-        return Rt(e, "auto");
+      if (Nt.test(e))
+        return Bt(e, "auto");
       const r = t.attributes.unit_of_measurement;
       return r ? `${e}${r}` : e;
     }
@@ -12965,7 +13111,7 @@ let P = class extends M {
       ${e.length > 0 ? l`
             <div class="modular-stack">
               ${e.map((s) => {
-      const a = this._cleanSiblingLabel(s), r = String(s.state ?? ""), o = r === "unavailable" || r === "unknown" ? "Offline" : Ut.test(r.trim()) || li.test(r.trim()) ? Rt(r, "auto") : `${r}${s.attributes.unit_of_measurement ?? ""}`;
+      const a = this._cleanSiblingLabel(s), r = String(s.state ?? ""), o = r === "unavailable" || r === "unknown" ? "Offline" : Nt.test(r.trim()) || li.test(r.trim()) ? Bt(r, "auto") : `${r}${s.attributes.unit_of_measurement ?? ""}`;
       return l`
                   <button
                     type="button"
@@ -12995,9 +13141,9 @@ let P = class extends M {
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, a = this._climateCurrent, r = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), d = a !== null ? this._tempToDeg(a) : null, p = 140, m = 140, v = 114, f = ia(p, m, v, ie, ie + ut), u = Vt(p, m, v, c), y = d !== null ? Vt(p, m, v, d) : null, b = d !== null ? Vt(p, m, v - 22, d) : null, H = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], $ = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], A = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], k = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], F = String(t?.attributes.preset_mode ?? "none"), _ = String(t?.attributes.fan_mode ?? "auto"), j = String(t?.attributes.swing_mode ?? "off"), w = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((E) => E.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((E) => E.attributes.device_class === "humidity").state}%` : null, O = $.length > 0, R = A.length > 0, ct = k.length > 0, q = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", Q = (E) => E.replace(/_/g, " ").replace(/^./, (Jt) => Jt.toUpperCase()), J = this._activeSheet === "mode" ? { title: "Select a mode", options: H, current: e, onSelect: (E) => this._setClimateMode(E) } : this._activeSheet === "preset" ? { title: "Select preset", options: $, current: F, onSelect: (E) => this._setClimatePreset(E) } : this._activeSheet === "fan" ? { title: "Fan speed", options: A, current: _, onSelect: (E) => this._setClimateFan(E) } : this._activeSheet === "swing" ? { title: "Swing mode", options: k, current: j, onSelect: (E) => this._setClimateSwing(E) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, a = this._climateCurrent, r = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), d = a !== null ? this._tempToDeg(a) : null, p = 140, m = 140, v = 114, f = ia(p, m, v, ie, ie + ut), u = Vt(p, m, v, c), y = d !== null ? Vt(p, m, v, d) : null, b = d !== null ? Vt(p, m, v - 22, d) : null, H = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], $ = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], T = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], k = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], F = String(t?.attributes.preset_mode ?? "none"), _ = String(t?.attributes.fan_mode ?? "auto"), j = String(t?.attributes.swing_mode ?? "off"), w = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((P) => P.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((P) => P.attributes.device_class === "humidity").state}%` : null, O = $.length > 0, B = T.length > 0, ct = k.length > 0, K = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", Q = (P) => P.replace(/_/g, " ").replace(/^./, (Jt) => Jt.toUpperCase()), J = this._activeSheet === "mode" ? { title: "Select a mode", options: H, current: e, onSelect: (P) => this._setClimateMode(P) } : this._activeSheet === "preset" ? { title: "Select preset", options: $, current: F, onSelect: (P) => this._setClimatePreset(P) } : this._activeSheet === "fan" ? { title: "Fan speed", options: T, current: _, onSelect: (P) => this._setClimateFan(P) } : this._activeSheet === "swing" ? { title: "Swing mode", options: k, current: j, onSelect: (P) => this._setClimateSwing(P) } : null;
     return l`
-      <div class="climate-hero ${q} ${this._dialDragging ? "is-dragging" : ""}">
+      <div class="climate-hero ${K} ${this._dialDragging ? "is-dragging" : ""}">
         <div
           class="dial-container"
           @pointerdown=${this._onDialPointerDown}
@@ -13041,7 +13187,7 @@ let P = class extends M {
                   </span>
                 `}
 
-            <div class="dial-steppers" @pointerdown=${(E) => E.stopPropagation()}>
+            <div class="dial-steppers" @pointerdown=${(P) => P.stopPropagation()}>
               <button
                 type="button"
                 class="dial-step-btn"
@@ -13068,7 +13214,7 @@ let P = class extends M {
         <div class="${O ? "climate-grid-2" : ""}">
           <button
             type="button"
-            class="mode-pill ${O ? "compact-trait" : ""} ${q}"
+            class="mode-pill ${O ? "compact-trait" : ""} ${K}"
             @click=${() => this._activeSheet = "mode"}
           >
             <span class="mode-pill-icon">
@@ -13096,9 +13242,9 @@ let P = class extends M {
         </div>
 
         <!-- Adaptive Row 2: Fan speed & Swing (only rendered if entity exposes them) -->
-        ${R || ct ? l`
-              <div class="${R && ct ? "climate-grid-2" : ""}">
-                ${R ? l`
+        ${B || ct ? l`
+              <div class="${B && ct ? "climate-grid-2" : ""}">
+                ${B ? l`
                       <button
                         type="button"
                         class="trait-card"
@@ -13163,7 +13309,7 @@ let P = class extends M {
       <!-- Unified Inline Bottom Sheet for Mode / Preset / Fan / Swing -->
       ${J ? l`
             <div class="mode-sheet-backdrop" @click=${() => this._activeSheet = null}>
-              <div class="mode-sheet" @click=${(E) => E.stopPropagation()}>
+              <div class="mode-sheet" @click=${(P) => P.stopPropagation()}>
                 <div class="mode-sheet-header">
                   <button
                     type="button"
@@ -13176,15 +13322,15 @@ let P = class extends M {
                   <span>${J.title}</span>
                 </div>
                 <div class="mode-sheet-list">
-                  ${J.options.map((E) => {
-      const Jt = E.toLowerCase() === J.current.toLowerCase(), hi = this._activeSheet === "mode" ? E === "heat" ? "mode-heat" : E === "cool" ? "mode-cool" : "mode-off" : "mode-off";
+                  ${J.options.map((P) => {
+      const Jt = P.toLowerCase() === J.current.toLowerCase(), hi = this._activeSheet === "mode" ? P === "heat" ? "mode-heat" : P === "cool" ? "mode-cool" : "mode-off" : "mode-off";
       return l`
                       <button
                         type="button"
                         class="mode-option ${Jt ? `selected ${hi}` : ""}"
-                        @click=${() => J.onSelect(E)}
+                        @click=${() => J.onSelect(P)}
                       >
-                        <span>${Q(E)}</span>
+                        <span>${Q(P)}</span>
                         ${Jt ? l`<span class="check-mark">✓</span>` : h}
                       </button>
                     `;
@@ -13195,8 +13341,18 @@ let P = class extends M {
           ` : h}
     `;
   }
+  _clearPadTimers() {
+    this._padHoldTimer !== null && (window.clearTimeout(this._padHoldTimer), this._padHoldTimer = null), this._padRepeatTimer !== null && (window.clearInterval(this._padRepeatTimer), this._padRepeatTimer = null), this._padPulseTimer !== null && (window.clearTimeout(this._padPulseTimer), this._padPulseTimer = null);
+  }
+  _startPadRepeat(t) {
+    this._padHoldTimer !== null && window.clearTimeout(this._padHoldTimer), this._padRepeatTimer !== null && window.clearInterval(this._padRepeatTimer), this._padHoldTimer = window.setTimeout(() => {
+      this._padHoldTimer = null, this._padRepeatTimer = window.setInterval(() => {
+        this._padDir === t && (this._triggerRemoteKey(t), navigator.vibrate?.(8));
+      }, 220);
+    }, 420);
+  }
   _triggerRemoteKey(t) {
-    !this.hass || !this._config || qs(
+    !this.hass || !this._config || Ks(
       this.hass,
       this._config.entity,
       t,
@@ -13211,6 +13367,65 @@ let P = class extends M {
       )
     ) : [], u = v || x(this.hass, "sources");
     return l`
+      <!-- Compact Google Home Gesture Touchpad -->
+      <div
+        class="remote-touchpad ${this._padActive ? "is-dragging" : ""}"
+        role="application"
+        aria-label="Navigation touchpad"
+        @pointerdown=${this._onPadPointerDown}
+        @pointermove=${this._onPadPointerMove}
+        @pointerup=${this._onPadPointerUp}
+        @pointercancel=${this._onPadPointerUp}
+      >
+        <span
+          class="touchpad-dot ${this._padActive ? "is-dragging" : ""} ${this._padTapPulse ? "is-pulsing" : ""}"
+          style="transform: translate3d(${this._padOffsetX}px, ${this._padOffsetY}px, 0)"
+          aria-hidden="true"
+        ></span>
+      </div>
+
+      <!-- 3 Essential Navigation Buttons: Back | Home | Assist -->
+      <div class="remote-essential-row">
+        <button
+          type="button"
+          class="essential-btn"
+          aria-label="Back"
+          @click=${() => this._triggerRemoteKey("back")}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="essential-btn is-home"
+          aria-label="Home"
+          @click=${() => this._triggerRemoteKey("home")}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 5.69 17 10.19V18h-2v-6H9v6H7v-7.81l5-4.5M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3Z"
+            />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          class="essential-btn is-assist"
+          aria-label="Assistant"
+          @click=${() => this._triggerRemoteKey("assist")}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="9.2" cy="10.2" r="3.4" fill="currentColor" />
+            <circle cx="16.4" cy="8.4" r="1.7" fill="currentColor" />
+            <circle cx="15.4" cy="13.4" r="2.1" fill="currentColor" />
+            <circle cx="19.5" cy="11.2" r="1" fill="currentColor" />
+          </svg>
+        </button>
+      </div>
+
       <div class="remote-hero">
         <div class="rocker-pill">
           <button
@@ -13754,7 +13969,7 @@ let P = class extends M {
         @touchmove=${($) => Pt($, this._dialogEl)}
       >
         ${this._popupOpen ? (() => {
-      const $ = a === "power_strip", A = a === "sensor" || a === "custom" ? this._toggleablePowerEntity : void 0, k = $ ? this._getPowerStripEntities() : [], F = !!A || $ && k.length > 0, _ = $ ? k.some((w) => w.state === "on") : A?.state === "on", j = l`
+      const $ = a === "power_strip", T = a === "sensor" || a === "custom" ? this._toggleablePowerEntity : void 0, k = $ ? this._getPowerStripEntities() : [], F = !!T || $ && k.length > 0, _ = $ ? k.some((w) => w.state === "on") : T?.state === "on", j = l`
                 <button
                   type="button"
                   class="icon-btn"
@@ -13784,7 +13999,7 @@ let P = class extends M {
                             role="switch"
                             aria-checked=${String(_)}
                             aria-label=${_ ? "Spegni" : "Accendi"}
-                            @click=${() => $ ? this._togglePowerStripAll(!_) : A && this._togglePowerEntity(A)}
+                            @click=${() => $ ? this._togglePowerStripAll(!_) : T && this._togglePowerEntity(T)}
                           >
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
@@ -13824,8 +14039,8 @@ let P = class extends M {
     `;
   }
 };
-P.styles = [
-  U,
+S.styles = [
+  N,
   I`
       :host {
         --m3e-spring-bouncy: 520ms linear(
@@ -14829,17 +15044,120 @@ P.styles = [
       }
 
       /* =====================================================================
-         VARIANT 3: REMOTE / TV (Vertical Rocker Pill + Split Pills)
+         VARIANT 3: REMOTE / TV (Touchpad + Essentials + Vertical Rocker + Split Pills)
          ===================================================================== */
+      .remote-touchpad {
+        position: relative;
+        width: 100%;
+        height: 168px;
+        border-radius: 28px;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        display: grid;
+        place-items: center;
+        touch-action: none;
+        user-select: none;
+        cursor: grab;
+        overflow: hidden;
+        transition: background-color var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .remote-touchpad.is-dragging {
+        cursor: grabbing;
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 5%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
+      }
+
+      .touchpad-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--md-sys-color-on-surface, #e3e2e6);
+        pointer-events: none;
+        will-change: transform;
+        transition:
+          transform var(--m3e-spring-bouncy),
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+      }
+
+      .touchpad-dot.is-dragging {
+        transition:
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast);
+      }
+
+      .touchpad-dot.is-pulsing {
+        width: 32px;
+        height: 32px;
+      }
+
+      .remote-essential-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 2px 12px;
+      }
+
+      .essential-btn {
+        width: 56px;
+        height: 56px;
+        border: 0;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .essential-btn.is-home {
+        width: 68px;
+        height: 68px;
+      }
+
+      .essential-btn.is-assist {
+        background: var(--md-sys-color-on-surface, #e3e2e6);
+        color: var(--md-sys-color-surface, #141418);
+      }
+
+      .essential-btn:hover {
+        filter: brightness(1.06);
+      }
+
+      .essential-btn:active {
+        transform: scale(0.92);
+        border-radius: 18px;
+      }
+
+      .essential-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .essential-btn.is-home svg {
+        width: 26px;
+        height: 26px;
+      }
+
       .remote-hero {
         display: flex;
         justify-content: center;
-        padding: 6px 0;
+        padding: 4px 0;
       }
 
       .rocker-pill {
-        width: 132px;
-        height: 236px;
+        width: 124px;
+        height: 176px;
         border-radius: var(--m3e-corner-full);
         background: var(--md-sys-color-surface-container-high, #282930);
         display: flex;
@@ -15331,81 +15649,93 @@ P.styles = [
       }
     `
 ];
-T([
+M([
   C({ attribute: !1 })
-], P.prototype, "hass", 2);
-T([
+], S.prototype, "hass", 2);
+M([
   C({ type: Boolean })
-], P.prototype, "popupOnly", 2);
-T([
+], S.prototype, "popupOnly", 2);
+M([
   g()
-], P.prototype, "_config", 2);
-T([
+], S.prototype, "_config", 2);
+M([
   g()
-], P.prototype, "_pressed", 2);
-T([
+], S.prototype, "_pressed", 2);
+M([
   g()
-], P.prototype, "_popupOpen", 2);
-T([
+], S.prototype, "_popupOpen", 2);
+M([
   g()
-], P.prototype, "_dialDragging", 2);
-T([
+], S.prototype, "_dialDragging", 2);
+M([
   g()
-], P.prototype, "_dialTemp", 2);
-T([
+], S.prototype, "_dialTemp", 2);
+M([
   g()
-], P.prototype, "_activeSheet", 2);
-T([
+], S.prototype, "_activeSheet", 2);
+M([
   g()
-], P.prototype, "_remoteSourceSheetOpen", 2);
-T([
+], S.prototype, "_remoteSourceSheetOpen", 2);
+M([
   g()
-], P.prototype, "_volDragging", 2);
-T([
+], S.prototype, "_volDragging", 2);
+M([
   g()
-], P.prototype, "_volPct", 2);
-T([
+], S.prototype, "_volPct", 2);
+M([
   g()
-], P.prototype, "_historyPoints", 2);
-T([
+], S.prototype, "_historyPoints", 2);
+M([
   g()
-], P.prototype, "_historyLoading", 2);
-T([
+], S.prototype, "_historyLoading", 2);
+M([
   g()
-], P.prototype, "_historyEntityId", 2);
-T([
+], S.prototype, "_historyEntityId", 2);
+M([
   g()
-], P.prototype, "_historyHoverIdx", 2);
-T([
+], S.prototype, "_historyHoverIdx", 2);
+M([
   g()
-], P.prototype, "_featuresLoaded", 2);
-T([
+], S.prototype, "_featuresLoaded", 2);
+M([
   g()
-], P.prototype, "_artPalette", 2);
-T([
-  S("dialog.status-dialog")
-], P.prototype, "_dialogEl", 2);
-T([
-  S(".status-tile")
-], P.prototype, "_tileEl", 2);
-T([
-  S("m3e-media-popup")
-], P.prototype, "_mediaPopupEl", 2);
-T([
-  S(".dialog-surface")
-], P.prototype, "_dialogSurfaceEl", 2);
-T([
+], S.prototype, "_artPalette", 2);
+M([
+  E("dialog.status-dialog")
+], S.prototype, "_dialogEl", 2);
+M([
+  E(".status-tile")
+], S.prototype, "_tileEl", 2);
+M([
+  E("m3e-media-popup")
+], S.prototype, "_mediaPopupEl", 2);
+M([
+  E(".dialog-surface")
+], S.prototype, "_dialogSurfaceEl", 2);
+M([
   g()
-], P.prototype, "_relativeTick", 2);
-P = T([
+], S.prototype, "_relativeTick", 2);
+M([
+  g()
+], S.prototype, "_padOffsetX", 2);
+M([
+  g()
+], S.prototype, "_padOffsetY", 2);
+M([
+  g()
+], S.prototype, "_padActive", 2);
+M([
+  g()
+], S.prototype, "_padTapPulse", 2);
+S = M([
   L("m3e-status-card")
-], P);
-var sa = Object.defineProperty, aa = Object.getOwnPropertyDescriptor, Dt = (t, e, i, s) => {
+], S);
+var sa = Object.defineProperty, aa = Object.getOwnPropertyDescriptor, zt = (t, e, i, s) => {
   for (var a = s > 1 ? void 0 : s ? aa(e, i) : e, r = t.length - 1, o; r >= 0; r--)
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && sa(e, i, a), a;
 };
-let nt = class extends M {
+let nt = class extends A {
   constructor() {
     super(...arguments), this._optimisticTemp = null, this._pressed = !1, this._optimisticTimer = null, this._boundPopupKey = "", this._attachPopupHost = (t) => {
       if (!t || !(t instanceof HTMLElement) || !this._config) return;
@@ -15699,7 +16029,7 @@ let nt = class extends M {
   }
 };
 nt.styles = [
-  U,
+  N,
   I`
       :host {
         display: block;
@@ -15897,22 +16227,22 @@ nt.styles = [
       }
     `
 ];
-Dt([
+zt([
   C({ attribute: !1 })
 ], nt.prototype, "hass", 2);
-Dt([
+zt([
   g()
 ], nt.prototype, "_config", 2);
-Dt([
+zt([
   g()
 ], nt.prototype, "_optimisticTemp", 2);
-Dt([
+zt([
   g()
 ], nt.prototype, "_pressed", 2);
-Dt([
-  S(".thermostat-card")
+zt([
+  E(".thermostat-card")
 ], nt.prototype, "_cardEl", 2);
-nt = Dt([
+nt = zt([
   L("m3e-thermostat-card")
 ], nt);
 var ra = Object.defineProperty, oa = Object.getOwnPropertyDescriptor, Ht = (t, e, i, s) => {
@@ -15920,7 +16250,7 @@ var ra = Object.defineProperty, oa = Object.getOwnPropertyDescriptor, Ht = (t, e
     (o = t[r]) && (a = (s ? o(e, i, a) : o(a)) || a);
   return s && a && ra(e, i, a), a;
 };
-let lt = class extends M {
+let lt = class extends A {
   constructor() {
     super(...arguments), this._featuresEditorReady = !1, this._computeLabel = (t) => ({
       entity: "Entità (switch, presa, input_boolean…)",
@@ -16248,7 +16578,7 @@ var na = Object.defineProperty, la = Object.getOwnPropertyDescriptor, st = (t, e
   return s && a && na(e, i, a), a;
 };
 const ca = 420;
-let X = class extends M {
+let q = class extends A {
   constructor() {
     super(...arguments), this._pressed = !1, this._popupOpen = !1, this._featuresLoaded = !1, this._longPressTimer = null, this._longPressTriggered = !1, this._dragStartY = null, this._downX = 0, this._downY = 0, this._onTilePointerDown = (t) => {
       this._isUnavailable || t.pointerType === "mouse" && t.button !== 0 || (this._pressed = !0, this._longPressTriggered = !1, this._downX = t.clientX, this._downY = t.clientY, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
@@ -16625,8 +16955,8 @@ let X = class extends M {
     `;
   }
 };
-X.styles = [
-  U,
+q.styles = [
+  N,
   I`
       :host {
         --m3e-spring-bouncy: 540ms linear(
@@ -17010,31 +17340,31 @@ X.styles = [
 ];
 st([
   C({ attribute: !1 })
-], X.prototype, "hass", 2);
+], q.prototype, "hass", 2);
 st([
   g()
-], X.prototype, "_config", 2);
+], q.prototype, "_config", 2);
 st([
   g()
-], X.prototype, "_pressed", 2);
+], q.prototype, "_pressed", 2);
 st([
   g()
-], X.prototype, "_popupOpen", 2);
+], q.prototype, "_popupOpen", 2);
 st([
   g()
-], X.prototype, "_featuresLoaded", 2);
+], q.prototype, "_featuresLoaded", 2);
 st([
-  S("dialog.toggle-dialog")
-], X.prototype, "_dialogEl", 2);
+  E("dialog.toggle-dialog")
+], q.prototype, "_dialogEl", 2);
 st([
-  S(".toggle-tile")
-], X.prototype, "_tileEl", 2);
+  E(".toggle-tile")
+], q.prototype, "_tileEl", 2);
 st([
-  S(".dialog-surface")
-], X.prototype, "_dialogSurfaceEl", 2);
-X = st([
+  E(".dialog-surface")
+], q.prototype, "_dialogSurfaceEl", 2);
+q = st([
   L("m3e-toggle-card")
-], X);
+], q);
 function V(t) {
   window.customCards = window.customCards || [], window.customCards.some((e) => e.type === t.type) || window.customCards.push(t);
 }
@@ -17132,16 +17462,16 @@ V(pi);
 export {
   it as M3EAssistCard,
   kt as M3EGlanceCard,
-  D as M3ELightCard,
+  z as M3ELightCard,
   Ct as M3ELightControlCard,
   G as M3ELightGroupCard,
   W as M3EMediaBarCard,
-  N as M3EMediaPlayerCard,
+  Z as M3EMediaPlayerCard,
   Et as M3EPeopleCard,
   gt as M3ESceneCard,
-  qt as M3EStackCard,
+  Kt as M3EStackCard,
   vt as M3EStatusBadge,
-  P as M3EStatusCard,
+  S as M3EStatusCard,
   nt as M3EThermostatCard,
-  X as M3EToggleCard
+  q as M3EToggleCard
 };
