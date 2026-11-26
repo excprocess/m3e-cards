@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ESceneCardConfig } from '../types/home-assistant';
+import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 
 const ACTIVATED_DURATION_MS = 2200;
 
@@ -43,42 +44,61 @@ export class M3ESceneCard extends LitElement {
             },
           },
         },
-        { name: 'name', selector: { text: {} } },
-        { name: 'subtitle', selector: { text: {} } },
-        { name: 'icon', selector: { icon: {} } },
         {
-          name: 'accent',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'primary', label: 'Primary (Tema M3Y)' },
-                { value: 'secondary', label: 'Secondary (Tema M3Y)' },
-                { value: 'tertiary', label: 'Tertiary (Tema M3Y)' },
-              ],
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
+          schema: [
+            {
+              name: 'name',
+              selector: { entity_name: {} },
+              context: { entity: 'entity' },
             },
-          },
-        },
-        {
-          name: 'card_style',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'default', label: 'Google Home (Default 28px)' },
-                { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
-                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
-                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
-                { value: 'compact', label: 'Compatta (56px / 18px)' },
-              ],
+            { name: 'icon', selector: { icon: {} } },
+            {
+              name: 'card_style',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'default', label: 'Google Home (Default 28px)' },
+                    { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
+                    { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+                    { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+                    { value: 'compact', label: 'Compatta (56px / 18px)' },
+                  ],
+                },
+              },
             },
-          },
+            {
+              name: 'accent',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'primary', label: 'Primary (Tema M3Y)' },
+                    { value: 'secondary', label: 'Secondary (Tema M3Y)' },
+                    { value: 'tertiary', label: 'Tertiary (Tema M3Y)' },
+                  ],
+                },
+              },
+            },
+            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              name: 'state_content',
+              selector: { ui_state_content: { allow_name: false } },
+              context: { filter_entity: 'entity' },
+            },
+            { name: 'subtitle', selector: { text: {} } },
+          ],
         },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Scena, Script o Pulsante',
-          name: 'Nome personalizzato',
+          name: 'Nome',
+          hide_state: 'Nascondi stato',
+          state_content: 'Contenuto stato (stato / attributi)',
           subtitle: 'Sottotitolo opzionale',
           icon: 'Icona personalizzata (vuoto = scintille Google Home)',
           accent: 'Colore di attivazione (M3Y)',
@@ -206,12 +226,18 @@ export class M3ESceneCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
-    const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
+    const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
     const customIcon = this._config.icon?.trim() || undefined;
     const accent = this._config.accent ?? 'primary';
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const restSub = this._config.subtitle?.trim() || '';
-    const subtitle = this._isUnavailable ? 'Offline' : this._activated ? 'Avviata' : restSub;
+    const baseSub = this._isUnavailable ? 'Offline' : this._activated ? 'Avviata' : restSub;
+    const hideState = Boolean(this._config.hide_state);
+    const stateContentVal =
+      !hideState && !this._activated
+        ? resolveStateContent(this.hass, entity, this._config.state_content, baseSub)
+        : null;
+    const subtitle = hideState ? '' : (stateContentVal ?? baseSub);
 
     return html`
       <ha-card

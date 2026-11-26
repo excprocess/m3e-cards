@@ -5,6 +5,7 @@ import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/hom
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 
 const DRAG_THRESHOLD_PX = 8;
 const LONG_PRESS_MS = 420;
@@ -108,33 +109,59 @@ export class M3ELightCard extends LitElement {
     return {
       schema: [
         { name: 'entity', required: true, selector: { entity: { domain: 'light' } } },
-        { name: 'name', selector: { text: {} } },
-        { name: 'icon', selector: { icon: {} } },
         {
-          name: 'card_style',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'default', label: 'Google Home (Default 28px)' },
-                { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
-                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
-                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
-                { value: 'compact', label: 'Compatta (56px / 18px)' },
-              ],
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
+          schema: [
+            {
+              name: 'name',
+              selector: { entity_name: {} },
+              context: { entity: 'entity' },
             },
-          },
+            { name: 'icon', selector: { icon: {} } },
+            {
+              name: 'card_style',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'default', label: 'Google Home (Default 28px)' },
+                    { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
+                    { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+                    { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+                    { value: 'compact', label: 'Compatta (56px / 18px)' },
+                  ],
+                },
+              },
+            },
+            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              name: 'state_content',
+              selector: { ui_state_content: { allow_name: false } },
+              context: { filter_entity: 'entity' },
+            },
+            { name: 'use_light_color', selector: { boolean: {} } },
+          ],
         },
-        { name: 'use_light_color', selector: { boolean: {} } },
-        { name: 'allow_drag_off', selector: { boolean: {} } },
-        { name: 'scenes', selector: { entity: { domain: 'scene', multiple: true } } },
+        {
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            { name: 'allow_drag_off', selector: { boolean: {} } },
+            { name: 'scenes', selector: { entity: { domain: 'scene', multiple: true } } },
+          ],
+        },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Entità luce',
-          name: 'Nome personalizzato',
+          name: 'Nome',
           icon: 'Icona personalizzata (vuoto = standard Google Home)',
           card_style: 'Design della pillola (Material 3)',
+          hide_state: 'Nascondi stato',
+          state_content: 'Contenuto stato (stato / attributi)',
           use_light_color: 'Usa colore reale della luce',
           allow_drag_off: 'Spegni trascinando a 0%',
           scenes: 'Scene collegate (opzionale, oltre a quelle rilevate dal dispositivo/stanza)',
@@ -485,7 +512,7 @@ export class M3ELightCard extends LitElement {
       String(scene.attributes.group_name ?? ''),
       dev?.name_by_user ?? '',
       dev?.name ?? '',
-      this._config?.name ?? '',
+      typeof this._config?.name === 'string' ? this._config.name : '',
       this._entity?.attributes.friendly_name ?? '',
     ];
 
@@ -782,11 +809,11 @@ export class M3ELightCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
-    const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
+    const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
     const customIcon = this._config.icon?.trim() || undefined;
     const isOn = this._isOn;
     const pct = this._brightnessPct;
-    const subtitle = this._isUnavailable
+    const baseSubtitle = this._isUnavailable
       ? 'Offline'
       : this._dragging && this._supportsBrightness
         ? `${pct}%`
@@ -795,6 +822,12 @@ export class M3ELightCard extends LitElement {
             ? `On • ${pct}%`
             : 'On'
           : 'Off';
+    const hideState = Boolean(this._config.hide_state);
+    const stateContentVal =
+      !hideState && !this._dragging
+        ? resolveStateContent(this.hass, entity, this._config.state_content, baseSubtitle)
+        : null;
+    const subtitle = hideState && !this._dragging ? '' : (stateContentVal ?? baseSubtitle);
 
     const colorVars = this._computeColorVars();
     const matchedPreset = this._matchedPresetId;
@@ -830,7 +863,7 @@ export class M3ELightCard extends LitElement {
           <span class="bulb-icon">${this._renderBulbIcon(customIcon, isOn)}</span>
           <div class="meta">
             <span class="title">${name}</span>
-            <span class="subtitle">${subtitle}</span>
+            ${subtitle ? html`<span class="subtitle">${subtitle}</span>` : nothing}
           </div>
           ${this._isUnavailable
             ? html`

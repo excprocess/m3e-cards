@@ -2,6 +2,7 @@ import type {
   LovelaceCardFeatureConfig,
   M3EFeaturesPosition,
 } from '../utils/ha-card-features';
+import type { EntityNameConfig, StateContentConfig } from '../utils/entity-display';
 
 export interface HassEntity {
   entity_id: string;
@@ -47,6 +48,11 @@ export interface HomeAssistant {
   states: Record<string, HassEntity>;
   entities?: Record<string, HassEntityRegistryEntry>;
   devices?: Record<string, HassDeviceRegistryEntry>;
+  areas?: Record<string, { area_id: string; name: string; floor_id?: string | null }>;
+  floors?: Record<string, { floor_id: string; name: string }>;
+  formatEntityName?: (stateObj: HassEntity, type: EntityNameConfig) => string;
+  formatEntityState?: (stateObj: HassEntity, state?: string) => string;
+  formatEntityAttributeValue?: (stateObj: HassEntity, attribute: string, value?: unknown) => string;
   callService(
     domain: string,
     service: string,
@@ -74,8 +80,12 @@ export interface M3ELightColorPreset {
 
 export interface M3ELightCardConfig extends LovelaceCardConfig {
   entity: string;
-  name?: string;
+  name?: EntityNameConfig;
   icon?: string;
+  /** Hide the secondary state/brightness line on the tile (default: false) */
+  hide_state?: boolean;
+  /** Native Home Assistant state content selector (state, last_changed, or entity attributes) */
+  state_content?: StateContentConfig;
   /** Use the light's actual rgb_color / color_temp_kelvin when ON (default: true). Set false to always use Material You theme primary. */
   use_light_color?: boolean;
   /** Allow dragging all the way to 0% to turn the light off (default: true) */
@@ -248,8 +258,12 @@ export interface M3ELightControlCardConfig extends LovelaceCardConfig {
 export interface M3ELightGroupCardConfig extends LovelaceCardConfig {
   /** Home Assistant light group entity (exposing attributes.entity_id) */
   entity: string;
-  name?: string;
+  name?: EntityNameConfig;
   icon?: string;
+  /** Hide the secondary state line on the tile (default: false) */
+  hide_state?: boolean;
+  /** Native Home Assistant state content selector */
+  state_content?: StateContentConfig;
   /** Start expanded by default (default: false) */
   expanded?: boolean;
   /** Compact half-width tile (6 cols) where the chevron opens a 2-column popup instead of expanding inline (default: false) */
@@ -262,7 +276,11 @@ export interface M3ELightGroupCardConfig extends LovelaceCardConfig {
 
 export interface M3ESceneCardConfig extends LovelaceCardConfig {
   entity: string;
-  name?: string;
+  name?: EntityNameConfig;
+  /** Hide the secondary state/subtitle line on the tile (default: false) */
+  hide_state?: boolean;
+  /** Native Home Assistant state content selector */
+  state_content?: StateContentConfig;
   /** Optional resting subtitle (leave empty for clean centered title) */
   subtitle?: string;
   /** Optional custom MDI icon (empty = standard Google Home outline -> filled sparkles) */
@@ -275,11 +293,15 @@ export interface M3ESceneCardConfig extends LovelaceCardConfig {
 
 export interface M3EToggleCardConfig extends LovelaceCardConfig {
   entity: string;
-  name?: string;
+  name?: EntityNameConfig;
   icon_on?: string;
   icon_off?: string;
   label_on?: string;
   label_off?: string;
+  /** Hide the secondary state line on the tile (default: false) */
+  hide_state?: boolean;
+  /** Native Home Assistant state content selector */
+  state_content?: StateContentConfig;
   /** Action on long-press: open M3E popup (default), native HA more-info, navigate/Bubble/Browser Mod, or none */
   hold_action?: M3EHoldAction;
   /** Dashboard path (/lovelace/...), Bubble Card hash (#popup), or script.* / browser_mod.* service */
@@ -309,7 +331,13 @@ export interface M3ERemoteButtonsConfig {
 
 export interface M3EStatusCardConfig extends LovelaceCardConfig {
   entity: string;
-  name?: string;
+  name?: EntityNameConfig;
+  /** Show the entity's artwork/entity_picture on the left side (1:1 max, dissolving smoothly into the card) instead of the icon */
+  show_entity_picture?: boolean;
+  /** Hide the secondary state/subtitle line on the tile (default: false) */
+  hide_state?: boolean;
+  /** Native Home Assistant state content selector (state, last_changed, or entity attributes) */
+  state_content?: StateContentConfig;
   /** Optional linked entity used to determine active/inactive status (e.g. smart plug or ping sensor for a remote) */
   status_entity?: string;
   /** Icon shown when the entity is in an active state */

@@ -19,6 +19,8 @@ import {
   ensureCardFeaturesLoaded,
   stopFeatureEventPropagation,
 } from '../utils/ha-card-features';
+import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
@@ -168,6 +170,8 @@ export class M3EStatusCard extends LitElement {
   @state() private _historyEntityId: string | null = null;
   @state() private _historyHoverIdx: number | null = null;
   @state() private _featuresLoaded = false;
+  @state() private _artPalette: ArtworkPalette | null = null;
+  private _lastArtUrl = '';
 
   @query('dialog.status-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.status-tile') private _tileEl?: HTMLElement;
@@ -291,7 +295,8 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_historyLoading') ||
       changedProps.has('_historyHoverIdx') ||
       changedProps.has('_relativeTick') ||
-      changedProps.has('_featuresLoaded')
+      changedProps.has('_featuresLoaded') ||
+      changedProps.has('_artPalette')
     ) {
       return true;
     }
@@ -1130,7 +1135,7 @@ export class M3EStatusCard extends LitElement {
     for (const candidate of [
       dev?.name_by_user,
       dev?.name,
-      this._config?.name,
+      typeof this._config?.name === 'string' ? this._config.name : undefined,
       this._entity?.attributes.friendly_name,
     ]) {
       if (candidate) {
@@ -2187,13 +2192,43 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private get _entityPictureUrl(): string {
+    if (!this._config?.show_entity_picture) return '';
+    const ent = this._entity;
+    if (!ent) return '';
+    const st = String(ent.state ?? '').toLowerCase();
+    if (st === 'unavailable' || st === 'unknown') return '';
+    if (ent.entity_id.startsWith('media_player.') && (st === 'off' || st === 'idle')) {
+      return '';
+    }
+    return String(
+      ent.attributes.entity_picture_local || ent.attributes.entity_picture || '',
+    ).trim();
+  }
+
+  protected updated(): void {
+    const art = this._entityPictureUrl;
+    if (art !== this._lastArtUrl) {
+      this._lastArtUrl = art;
+      if (art) {
+        void extractArtworkPalette(art).then((pal) => {
+          if (this._lastArtUrl === art) {
+            this._artPalette = pal;
+          }
+        });
+      } else {
+        this._artPalette = null;
+      }
+    }
+  }
+
   /* =========================================================================
      MAIN RENDER
      ========================================================================= */
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
-    const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
+    const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
     const isActive = this._isActive;
     // Only use custom icon if explicitly configured in settings; otherwise standard Google Home SVG
     const icon = isActive
@@ -2215,16 +2250,29 @@ export class M3EStatusCard extends LitElement {
     const features = this._config.features ?? [];
     const hasFeatures = features.length > 0;
     const featuresPos = this._config.features_position ?? 'bottom';
+    const hideState = Boolean(this._config.hide_state);
+    const stateContentVal = !hideState
+      ? resolveStateContent(this.hass, entity, this._config.state_content, this._stateLabel)
+      : null;
+    const displaySubtitle = hideState ? '' : (stateContentVal ?? this._stateLabel);
+
+    const artUrl = this._entityPictureUrl;
+    const hasArt = Boolean(artUrl);
+    const artStyle =
+      hasArt && this._artPalette
+        ? `--art-accent: ${this._artPalette.accent}; --art-scrim: ${this._artPalette.scrim};`
+        : '';
 
     return html`
       ${this.popupOnly
         ? nothing
         : html`
             <ha-card
-              class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''} ${hasFeatures ? `has-features features-${featuresPos}` : ''}"
+              class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''} ${hasFeatures ? `has-features features-${featuresPos}` : ''} ${hasArt ? 'has-entity-picture' : ''}"
+              style=${artStyle}
               role="button"
               tabindex="0"
-              aria-label="${name}, ${this._stateLabel}"
+              aria-label="${name}${displaySubtitle ? `, ${displaySubtitle}` : ''}"
               @pointerdown=${this._onTilePointerDown}
               @pointerup=${this._onTilePointerUp}
               @pointerleave=${this._onTilePointerCancel}
@@ -2241,12 +2289,21 @@ export class M3EStatusCard extends LitElement {
                 }
               }}
             >
+              ${hasArt
+                ? html`
+                    <div class="entity-picture-backdrop" aria-hidden="true">
+                      <img class="entity-picture-img" src=${artUrl} alt="" loading="lazy" />
+                    </div>
+                  `
+                : nothing}
               <div class="state-layer" aria-hidden="true"></div>
               <div class="tile-inner">
-                <span class="tile-icon">${this._renderEntityIcon(icon)}</span>
+                ${hasArt ? nothing : html`<span class="tile-icon">${this._renderEntityIcon(icon)}</span>`}
                 <div class="tile-meta">
                   <span class="tile-title">${name}</span>
-                  <span class="tile-subtitle">${this._stateLabel}</span>
+                  ${displaySubtitle
+                    ? html`<span class="tile-subtitle">${displaySubtitle}</span>`
+                    : nothing}
                 </div>
                 ${this._isUnavailable
                   ? html`
@@ -2443,6 +2500,65 @@ export class M3EStatusCard extends LitElement {
         flex: 1 1 50%;
         min-width: 0;
         padding: 8px 12px 8px 0;
+      }
+
+      /* Left-side 1:1 dissolving Entity Picture (e.g. compact Media Player / Person tiles) */
+      .status-tile.has-entity-picture {
+        background: color-mix(
+          in srgb,
+          var(--art-accent, var(--md-sys-color-primary-container, transparent)) 22%,
+          var(--ha-card-background, var(--md-sys-color-surface-container-low, #f3f3fa))
+        );
+        color: var(--md-sys-color-on-surface, #1b1b1f);
+      }
+
+      .status-tile.has-entity-picture .tile-title {
+        color: var(--md-sys-color-on-surface, #1b1b1f);
+      }
+
+      .status-tile.has-entity-picture .tile-subtitle {
+        color: var(--md-sys-color-on-surface-variant, #444746);
+      }
+
+      .status-tile.has-entity-picture .tile-inner {
+        padding-inline-start: 72px;
+      }
+
+      .entity-picture-backdrop {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        max-width: 48%;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 0;
+        -webkit-mask-image: linear-gradient(
+          to right,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.92) 52%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        mask-image: linear-gradient(
+          to right,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.92) 52%,
+          rgba(0, 0, 0, 0) 100%
+        );
+      }
+
+      .status-tile.has-features.features-bottom .entity-picture-backdrop {
+        height: 76px;
+        bottom: auto;
+      }
+
+      .entity-picture-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
       }
 
       /* =====================================================================

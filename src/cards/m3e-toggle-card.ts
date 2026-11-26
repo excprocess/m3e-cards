@@ -11,6 +11,7 @@ import {
   ensureCardFeaturesLoaded,
   stopFeatureEventPropagation,
 } from '../utils/ha-card-features';
+import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import '../editors/m3e-toggle-card-editor';
 
 const LONG_PRESS_MS = 420;
@@ -331,7 +332,7 @@ export class M3EToggleCard extends LitElement {
     for (const prefix of [
       dev?.name_by_user,
       dev?.name,
-      this._config?.name,
+      typeof this._config?.name === 'string' ? this._config.name : undefined,
       this._entity?.attributes.friendly_name,
     ]) {
       const p = prefix?.trim();
@@ -346,17 +347,22 @@ export class M3EToggleCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
-    const name = this._config.name || entity?.attributes.friendly_name || this._config.entity;
+    const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
     const isOn = this._isOn;
     // Only use custom icon if explicitly configured in card settings; otherwise standard Google Home SVG
     const icon = isOn
       ? this._config.icon_on?.trim() || undefined
       : this._config.icon_off?.trim() || this._config.icon_on?.trim() || undefined;
-    const label = this._isUnavailable
+    const baseLabel = this._isUnavailable
       ? 'Offline'
       : isOn
         ? this._config.label_on || 'On'
         : this._config.label_off || 'Off';
+    const hideState = Boolean(this._config.hide_state);
+    const stateContentVal = !hideState
+      ? resolveStateContent(this.hass, entity, this._config.state_content, baseLabel)
+      : null;
+    const label = hideState ? '' : (stateContentVal ?? baseLabel);
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const lastChanged = this._popupOpen ? formatLastChanged(entity?.last_changed) : null;
@@ -399,7 +405,7 @@ export class M3EToggleCard extends LitElement {
           <span class="tile-icon">${this._renderIcon(icon)}</span>
           <div class="tile-meta">
             <span class="tile-title">${name}</span>
-            <span class="tile-subtitle">${label}</span>
+            ${label ? html`<span class="tile-subtitle">${label}</span>` : nothing}
           </div>
           ${this._isUnavailable
             ? html`

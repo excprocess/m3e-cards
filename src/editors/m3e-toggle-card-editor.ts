@@ -51,8 +51,12 @@ export class M3EToggleCardEditor extends LitElement {
   }
 
   private _buildContentSchema(): unknown[] {
-    return [
-      { name: 'name', selector: { text: {} } },
+    const schema: unknown[] = [
+      {
+        name: 'name',
+        selector: { entity_name: {} },
+        context: { entity: 'entity' },
+      },
       {
         name: 'card_style',
         selector: {
@@ -76,15 +80,28 @@ export class M3EToggleCardEditor extends LitElement {
           { name: 'icon_off', selector: { icon: {} } },
         ],
       },
-      {
-        type: 'grid',
-        name: '',
-        schema: [
-          { name: 'label_on', selector: { text: {} } },
-          { name: 'label_off', selector: { text: {} } },
-        ],
-      },
+      { name: 'hide_state', selector: { boolean: {} } },
     ];
+
+    if (!this._config?.hide_state) {
+      schema.push(
+        {
+          name: 'state_content',
+          selector: { ui_state_content: { allow_name: false } },
+          context: { filter_entity: 'entity' },
+        },
+        {
+          type: 'grid',
+          name: '',
+          schema: [
+            { name: 'label_on', selector: { text: {} } },
+            { name: 'label_off', selector: { text: {} } },
+          ],
+        },
+      );
+    }
+
+    return schema;
   }
 
   private _buildInteractionsSchema(): unknown[] {
@@ -140,10 +157,12 @@ export class M3EToggleCardEditor extends LitElement {
   private _computeLabel = (schema: { name: string }): string => {
     const labels: Record<string, string> = {
       entity: 'Entità (switch, presa, input_boolean…)',
-      name: 'Nome personalizzato',
+      name: 'Nome',
       card_style: 'Design della pillola (Material 3)',
       icon_on: 'Icona acceso (vuoto = standard Google Home)',
       icon_off: 'Icona spento (vuoto = standard Google Home)',
+      hide_state: 'Nascondi stato',
+      state_content: 'Contenuto stato (stato / attributi)',
       label_on: 'Testo acceso (default: On)',
       label_off: 'Testo spento (default: Off)',
       hold_action: 'Azione pressione prolungata (Hold)',

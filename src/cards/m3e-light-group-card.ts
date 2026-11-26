@@ -5,6 +5,7 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightGroupCardConfig } from '../types/home-assistant';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import './m3e-light-card';
 
 const DRAG_THRESHOLD_PX = 8;
@@ -49,32 +50,58 @@ export class M3ELightGroupCard extends LitElement {
     return {
       schema: [
         { name: 'entity', required: true, selector: { entity: { domain: 'light' } } },
-        { name: 'name', selector: { text: {} } },
-        { name: 'icon', selector: { icon: {} } },
-        { name: 'compact', selector: { boolean: {} } },
-        { name: 'expanded', selector: { boolean: {} } },
-        { name: 'use_light_color', selector: { boolean: {} } },
         {
-          name: 'card_style',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'default', label: 'Google Home (Default 28px)' },
-                { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
-                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
-                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
-                { value: 'compact', label: 'Compatta (56px / 18px)' },
-              ],
+          type: 'expandable',
+          icon: 'mdi:text-short',
+          title: 'Content',
+          schema: [
+            {
+              name: 'name',
+              selector: { entity_name: {} },
+              context: { entity: 'entity' },
             },
-          },
+            { name: 'icon', selector: { icon: {} } },
+            {
+              name: 'card_style',
+              selector: {
+                select: {
+                  mode: 'dropdown',
+                  options: [
+                    { value: 'default', label: 'Google Home (Default 28px)' },
+                    { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
+                    { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
+                    { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
+                    { value: 'compact', label: 'Compatta (56px / 18px)' },
+                  ],
+                },
+              },
+            },
+            { name: 'hide_state', selector: { boolean: {} } },
+            {
+              name: 'state_content',
+              selector: { ui_state_content: { allow_name: false } },
+              context: { filter_entity: 'entity' },
+            },
+            { name: 'use_light_color', selector: { boolean: {} } },
+          ],
+        },
+        {
+          type: 'expandable',
+          icon: 'mdi:gesture-tap',
+          title: 'Interactions',
+          schema: [
+            { name: 'compact', selector: { boolean: {} } },
+            { name: 'expanded', selector: { boolean: {} } },
+          ],
         },
       ],
       computeLabel: (schema: { name: string }) => {
         const labels: Record<string, string> = {
           entity: 'Gruppo luci (entità light con luci figlie)',
-          name: 'Nome personalizzato',
+          name: 'Nome',
           icon: 'Icona personalizzata (vuoto = lampade Google Home)',
+          hide_state: 'Nascondi stato',
+          state_content: 'Contenuto stato (stato / attributi)',
           compact: 'Modalità compatta (mezza larghezza con popup)',
           expanded: 'Espanso di default (solo modalità estesa)',
           use_light_color: 'Usa colore reale delle luci',
@@ -320,12 +347,12 @@ export class M3ELightGroupCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const group = this._groupEntity;
-    const name = this._config.name || group?.attributes.friendly_name || this._config.entity;
+    const name = resolveEntityName(this.hass, group, this._config.name, this._config.entity);
     const customIcon = this._config.icon?.trim() || undefined;
     const childIds = this._childEntityIds;
     const { onCount, totalCount, avgPct, isOn, isUnavailable } = this._aggregateStats;
 
-    const subtitle = isUnavailable
+    const baseSubtitle = isUnavailable
       ? 'Offline'
       : this._dragging
         ? `${avgPct}%`
@@ -334,6 +361,12 @@ export class M3ELightGroupCard extends LitElement {
             ? `${onCount} on • ${avgPct}%`
             : `On • ${avgPct}%`
           : 'Off';
+    const hideState = Boolean(this._config.hide_state);
+    const stateContentVal =
+      !hideState && !this._dragging
+        ? resolveStateContent(this.hass, group, this._config.state_content, baseSubtitle)
+        : null;
+    const subtitle = hideState && !this._dragging ? '' : (stateContentVal ?? baseSubtitle);
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const accentCss = this._computeAccentCss();
@@ -365,7 +398,7 @@ export class M3ELightGroupCard extends LitElement {
             <span class="group-icon">${this._renderGroupIcon(customIcon)}</span>
             <div class="meta">
               <span class="title">${name}</span>
-              <span class="subtitle">${subtitle}</span>
+              ${subtitle ? html`<span class="subtitle">${subtitle}</span>` : nothing}
             </div>
 
             ${isUnavailable

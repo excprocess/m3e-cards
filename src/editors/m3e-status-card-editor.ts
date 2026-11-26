@@ -62,7 +62,11 @@ export class M3EStatusCardEditor extends LitElement {
       this._config?.subtitle_entity?.trim() || this._config?.entity || '';
 
     const schema: unknown[] = [
-      { name: 'name', selector: { text: {} } },
+      {
+        name: 'name',
+        selector: { entity_name: {} },
+        context: { entity: 'entity' },
+      },
       {
         name: 'card_style',
         selector: {
@@ -86,7 +90,23 @@ export class M3EStatusCardEditor extends LitElement {
           { name: 'icon_inactive', selector: { icon: {} } },
         ],
       },
+      {
+        type: 'grid',
+        name: '',
+        schema: [
+          { name: 'show_entity_picture', selector: { boolean: {} } },
+          { name: 'hide_state', selector: { boolean: {} } },
+        ],
+      },
     ];
+
+    if (!this._config?.hide_state) {
+      schema.push({
+        name: 'state_content',
+        selector: { ui_state_content: { allow_name: false } },
+        context: { filter_entity: 'entity' },
+      });
+    }
 
     const attributeSelector = {
       name: 'subtitle_attribute',
@@ -320,8 +340,11 @@ export class M3EStatusCardEditor extends LitElement {
     const labels: Record<string, string> = {
       entity: 'Entità principale',
       status_entity: 'Entità stato dispositivo (opzionale)',
-      name: 'Nome personalizzato',
+      name: 'Nome',
       card_style: 'Design della pillola (Material 3)',
+      show_entity_picture: 'Mostra entity picture (1:1 sfumata)',
+      hide_state: 'Nascondi stato',
+      state_content: 'Contenuto stato (stato / attributi)',
       icon_active: 'Icona attivo (vuoto = standard Google Home)',
       icon_inactive: 'Icona inattivo (vuoto = standard Google Home)',
       active_state: 'Stati attivi personalizzati (es. on,home,detected)',
