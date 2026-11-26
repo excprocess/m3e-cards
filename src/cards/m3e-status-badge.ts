@@ -4,7 +4,11 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3EStatusBadgeConfig } from '../types/home-assistant';
 import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
-import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import {
+  formatRelativeTimestamp,
+  resolveEntityName,
+  resolveStateContent,
+} from '../utils/entity-display';
 import { t } from '../utils/i18n';
 
 const DEFAULT_ACTIVE_STATES = new Set([
@@ -31,8 +35,34 @@ export class M3EStatusBadge extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3EStatusBadgeConfig;
   @state() private _pressed = false;
+  @state() private _tick = 0;
 
   private _prevEntity?: HassEntity;
+  private _tickTimer: number | null = null;
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    if (this._tickTimer !== null) {
+      window.clearInterval(this._tickTimer);
+      this._tickTimer = null;
+    }
+  }
+
+  protected updated(): void {
+    const isTs = Boolean(
+      this._entity &&
+        (this._entity.attributes.device_class === 'timestamp' ||
+          formatRelativeTimestamp(String(this._entity.state ?? ''), this.hass) !== null),
+    );
+    if (isTs && this._tickTimer === null) {
+      this._tickTimer = window.setInterval(() => {
+        this._tick++;
+      }, 30000);
+    } else if (!isTs && this._tickTimer !== null) {
+      window.clearInterval(this._tickTimer);
+      this._tickTimer = null;
+    }
+  }
 
   public setConfig(config: M3EStatusBadgeConfig): void {
     if (!config || !config.entity) {
@@ -169,7 +199,9 @@ export class M3EStatusBadge extends LitElement {
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
     if (!this._config) return false;
-    if (changedProps.has('_config') || changedProps.has('_pressed')) return true;
+    if (changedProps.has('_config') || changedProps.has('_pressed') || changedProps.has('_tick')) {
+      return true;
+    }
     if (changedProps.has('hass') && this.hass) {
       const next = this.hass.states[this._config.entity];
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
@@ -210,6 +242,9 @@ export class M3EStatusBadge extends LitElement {
     if (!entity || this._isUnavailable) return t(this.hass, 'offline');
 
     const raw = String(entity.state ?? '').trim();
+    const relTs = formatRelativeTimestamp(raw, this.hass);
+    if (relTs) return relTs;
+
     const low = raw.toLowerCase();
     if (low === 'home') return t(this.hass, 'home');
     if (low === 'not_home') return t(this.hass, 'away');

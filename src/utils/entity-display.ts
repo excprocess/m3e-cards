@@ -1,5 +1,54 @@
 import type { HassEntity, HomeAssistant } from '../types/home-assistant';
 import { formatLastChanged } from './time';
+import { getLocale } from './i18n';
+
+const ISO_TS_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+
+/**
+ * Formats an ISO timestamp string into a compact relative label:
+ * - EN: "In 38m", "In 2h 15m", "In 1d 4h", "12m ago", "Now"
+ * - IT: "Tra 38m", "Tra 2h 15m", "Tra 1g 4h", "12m fa", "Ora"
+ */
+export function formatRelativeTimestamp(
+  raw: string,
+  hass?: HomeAssistant,
+): string | null {
+  const trimmed = raw.trim();
+  if (!ISO_TS_RE.test(trimmed)) return null;
+  const date = new Date(trimmed);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const isIt = getLocale(hass) === 'it';
+  const diffSec = Math.round((date.getTime() - Date.now()) / 1000);
+  const absMin = Math.round(Math.abs(diffSec) / 60);
+
+  if (diffSec >= 0) {
+    if (absMin < 1) return isIt ? 'Tra <1m' : 'In <1m';
+    if (absMin < 60) return isIt ? `Tra ${absMin}m` : `In ${absMin}m`;
+    const h = Math.floor(absMin / 60);
+    const m = absMin % 60;
+    if (h < 24) {
+      const hm = m > 0 ? `${h}h ${m}m` : `${h}h`;
+      return isIt ? `Tra ${hm}` : `In ${hm}`;
+    }
+    const d = Math.floor(h / 24);
+    const remH = h % 24;
+    const dUnit = isIt ? 'g' : 'd';
+    const dh = remH > 0 ? `${d}${dUnit} ${remH}h` : `${d}${dUnit}`;
+    return isIt ? `Tra ${dh}` : `In ${dh}`;
+  }
+
+  if (absMin < 1) return isIt ? 'Ora' : 'Now';
+  if (absMin < 60) return isIt ? `${absMin}m fa` : `${absMin}m ago`;
+  const h = Math.floor(absMin / 60);
+  const m = absMin % 60;
+  if (h < 24) {
+    const hm = m > 0 ? `${h}h ${m}m` : `${h}h`;
+    return isIt ? `${hm} fa` : `${hm} ago`;
+  }
+  const d = Math.floor(h / 24);
+  return isIt ? `${d}g fa` : `${d}d ago`;
+}
 
 export type EntityNamePart =
   | { type: 'entity' | 'device' | 'area' | 'floor' }
@@ -90,10 +139,12 @@ export function resolveStateContent(
   const parts: string[] = [];
   for (const key of items) {
     if (key === 'state') {
+      const relTs = formatRelativeTimestamp(String(entity.state ?? ''), hass);
       const val =
-        typeof hass?.formatEntityState === 'function'
+        relTs ??
+        (typeof hass?.formatEntityState === 'function'
           ? hass.formatEntityState(entity)
-          : defaultStateFallback ?? entity.state;
+          : defaultStateFallback ?? entity.state);
       if (val && String(val).trim()) parts.push(String(val).trim());
     } else if (key === 'last_changed' || key === 'last-changed') {
       const rel = formatLastChanged(entity.last_changed);
