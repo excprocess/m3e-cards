@@ -247,6 +247,8 @@ export interface M3ELightGroupCardConfig extends LovelaceCardConfig {
   icon?: string;
   /** Start expanded by default (default: false) */
   expanded?: boolean;
+  /** Compact half-width tile (6 cols) where the chevron opens a 2-column popup instead of expanding inline (default: false) */
+  compact?: boolean;
   /** Use the group/light real color when ON (default: true) */
   use_light_color?: boolean;
   /** Card shape style for the group header & child tiles */

@@ -1,8 +1,10 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightGroupCardConfig } from '../types/home-assistant';
+import { guardDialogTouchMove } from '../utils/scroll-lock';
+import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
 import './m3e-light-card';
 
 const DRAG_THRESHOLD_PX = 8;
@@ -12,9 +14,13 @@ export class M3ELightGroupCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3ELightGroupCardConfig;
   @state() private _expanded = false;
+  @state() private _popupOpen = false;
   @state() private _dragging = false;
   @state() private _pressed = false;
   @state() private _dragPct: number | null = null;
+
+  @query('dialog.group-dialog') private _dialogEl?: HTMLDialogElement;
+  @query('.group-header') private _headerEl?: HTMLElement;
 
   private _pointerId: number | null = null;
   private _pointerStartX = 0;
@@ -45,6 +51,7 @@ export class M3ELightGroupCard extends LitElement {
         { name: 'entity', required: true, selector: { entity: { domain: 'light' } } },
         { name: 'name', selector: { text: {} } },
         { name: 'icon', selector: { icon: {} } },
+        { name: 'compact', selector: { boolean: {} } },
         { name: 'expanded', selector: { boolean: {} } },
         { name: 'use_light_color', selector: { boolean: {} } },
         {
@@ -68,7 +75,8 @@ export class M3ELightGroupCard extends LitElement {
           entity: 'Gruppo luci (entità light con luci figlie)',
           name: 'Nome personalizzato',
           icon: 'Icona personalizzata (vuoto = lampade Google Home)',
-          expanded: 'Espanso di default',
+          compact: 'Modalità compatta (mezza larghezza con popup)',
+          expanded: 'Espanso di default (solo modalità estesa)',
           use_light_color: 'Usa colore reale delle luci',
           card_style: 'Design della pillola (Material 3)',
         };
@@ -82,20 +90,23 @@ export class M3ELightGroupCard extends LitElement {
       throw new Error('m3e-light-group-card: you must define a light group entity');
     }
     this._config = {
+      compact: false,
       expanded: false,
       use_light_color: true,
       card_style: 'default',
       ...config,
     };
-    this._expanded = Boolean(this._config.expanded);
+    this._expanded = !this._config.compact && Boolean(this._config.expanded);
   }
 
   public getCardSize(): number {
+    if (this._config?.compact) return 2;
     return this._expanded ? 4 : 2;
   }
 
   public getGridOptions() {
-    return { rows: 'auto', columns: 12, min_columns: 6 };
+    const isCompact = Boolean(this._config?.compact);
+    return { rows: 'auto', columns: isCompact ? 6 : 12, min_columns: 6 };
   }
 
   private get _groupEntity(): HassEntity | undefined {
@@ -113,6 +124,7 @@ export class M3ELightGroupCard extends LitElement {
     if (
       changedProps.has('_config') ||
       changedProps.has('_expanded') ||
+      changedProps.has('_popupOpen') ||
       changedProps.has('_dragging') ||
       changedProps.has('_pressed') ||
       changedProps.has('_dragPct')
@@ -258,8 +270,37 @@ export class M3ELightGroupCard extends LitElement {
 
   private _toggleExpand = (e: Event): void => {
     e.stopPropagation();
+    if (this._config?.compact) {
+      void this._openPopup();
+      return;
+    }
     this._expanded = !this._expanded;
   };
+
+  private async _openPopup(): Promise<void> {
+    const tileRect = this._headerEl?.getBoundingClientRect() ?? null;
+    this._popupOpen = true;
+    await this.updateComplete;
+    if (this._dialogEl && !this._dialogEl.open) {
+      this._dialogEl.showModal();
+    }
+    const surface = this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null;
+    animateDialogOpen(surface, tileRect);
+  }
+
+  private _closePopup(): void {
+    const surface = this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null;
+    animateDialogClose(this._dialogEl, surface, () => {
+      this._popupOpen = false;
+    });
+  }
+
+  private _toggleGroupMaster(turnOn: boolean): void {
+    if (!this.hass || !this._config) return;
+    this.hass.callService('light', turnOn ? 'turn_on' : 'turn_off', {
+      entity_id: this._config.entity,
+    });
+  }
 
   private _renderGroupIcon(customIcon?: string) {
     if (customIcon && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
@@ -296,11 +337,12 @@ export class M3ELightGroupCard extends LitElement {
 
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const accentCss = this._computeAccentCss();
+    const isCompact = Boolean(this._config.compact);
 
     return html`
-      <div class="group-wrapper">
+      <div class="group-wrapper ${isCompact ? 'is-compact' : ''}">
         <ha-card
-          class="group-header ${styleClass} ${isOn ? 'is-on' : 'is-off'} ${this._dragging ? 'is-dragging' : ''} ${this._pressed ? 'is-pressed' : ''} ${isUnavailable ? 'is-unavailable' : ''}"
+          class="group-header ${styleClass} ${isCompact ? 'is-compact' : ''} ${isOn ? 'is-on' : 'is-off'} ${this._dragging ? 'is-dragging' : ''} ${this._pressed ? 'is-pressed' : ''} ${isUnavailable ? 'is-unavailable' : ''}"
           style="${accentCss} --fill-pct: ${isOn ? avgPct : 0}%;"
           role="slider"
           tabindex="0"
@@ -341,25 +383,40 @@ export class M3ELightGroupCard extends LitElement {
                 ? html`
                     <button
                       type="button"
-                      class="expand-btn ${this._expanded ? 'is-expanded' : ''}"
-                      aria-expanded=${String(this._expanded)}
-                      aria-label=${this._expanded ? 'Collapse lights' : 'Expand lights'}
+                      class="expand-btn ${isCompact ? 'is-compact-chevron' : ''} ${!isCompact && this._expanded ? 'is-expanded' : ''}"
+                      aria-expanded=${isCompact ? String(this._popupOpen) : String(this._expanded)}
+                      aria-label=${isCompact
+                        ? 'Apri luci del gruppo'
+                        : this._expanded
+                          ? 'Collapse lights'
+                          : 'Expand lights'}
                       @pointerdown=${(e: Event) => e.stopPropagation()}
                       @click=${this._toggleExpand}
                     >
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"
-                        />
-                      </svg>
+                      ${isCompact
+                        ? html`
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path
+                                fill="currentColor"
+                                d="M9.29 6.71a1 1 0 0 0 0 1.41L13.17 12l-3.88 3.88a1 1 0 1 0 1.41 1.41l4.59-4.59a1 1 0 0 0 0-1.41L10.7 6.7a1 1 0 0 0-1.41.01Z"
+                              />
+                            </svg>
+                          `
+                        : html`
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                              <path
+                                fill="currentColor"
+                                d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"
+                              />
+                            </svg>
+                          `}
                     </button>
                   `
                 : nothing}
           </div>
         </ha-card>
 
-        ${childIds.length > 0
+        ${!isCompact && childIds.length > 0
           ? html`
               <div class="group-grid-collapse ${this._expanded ? 'is-open' : ''}">
                 <div class="group-grid-inner">
@@ -378,6 +435,71 @@ export class M3ELightGroupCard extends LitElement {
             `
           : nothing}
       </div>
+
+      ${isCompact
+        ? html`
+            <dialog
+              class="group-dialog"
+              @click=${(e: MouseEvent) => {
+                if (e.target === this._dialogEl) this._closePopup();
+              }}
+              @cancel=${(e: Event) => {
+                e.preventDefault();
+                this._closePopup();
+              }}
+              @touchmove=${(e: TouchEvent) => guardDialogTouchMove(e, this._dialogEl)}
+            >
+              ${this._popupOpen
+                ? html`
+                    <div class="dialog-surface">
+                      <header class="dialog-header">
+                        <button
+                          type="button"
+                          class="icon-btn"
+                          @click=${() => this._closePopup()}
+                          aria-label="Chiudi"
+                        >
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              fill="currentColor"
+                              d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+                            />
+                          </svg>
+                        </button>
+
+                        <div class="dialog-title-wrap">
+                          <span class="dialog-title">${name}</span>
+                          <span class="dialog-sub">${subtitle}</span>
+                        </div>
+
+                        <button
+                          type="button"
+                          class="m3-header-switch ${isOn ? 'is-on' : ''}"
+                          role="switch"
+                          aria-checked=${String(isOn)}
+                          aria-label=${isOn ? 'Spegni tutte le luci' : 'Accendi tutte le luci'}
+                          @click=${() => this._toggleGroupMaster(!isOn)}
+                        >
+                          <span class="m3-header-switch-thumb" aria-hidden="true"></span>
+                        </button>
+                      </header>
+
+                      <div class="popup-child-grid">
+                        ${childIds.map(
+                          (childId) => html`
+                            <m3e-light-card
+                              .hass=${this.hass}
+                              ${ref(this._attachChildConfig(childId))}
+                            ></m3e-light-card>
+                          `,
+                        )}
+                      </div>
+                    </div>
+                  `
+                : nothing}
+            </dialog>
+          `
+        : nothing}
     `;
   }
 
@@ -585,7 +707,54 @@ export class M3ELightGroupCard extends LitElement {
         transform: scale(0.9);
       }
 
-      /* Smooth Expandable 2-Column Grid */
+      /* Compact half-width tile variant (matches Google Home tile spacing) */
+      .group-wrapper.is-compact {
+        height: 100%;
+      }
+
+      .group-header.is-compact {
+        height: 100%;
+        min-height: 84px;
+      }
+
+      .group-header.is-compact .header-content {
+        height: 100%;
+        min-height: 84px;
+      }
+
+      .group-header.is-compact .title {
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        line-height: 18px;
+      }
+
+      .expand-btn.is-compact-chevron {
+        flex: 0 0 28px;
+        width: 28px;
+        height: 36px;
+        margin-inline-start: -8px;
+        margin-inline-end: -4px;
+        background: transparent;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        opacity: 0.85;
+      }
+
+      .group-header.is-on .expand-btn.is-compact-chevron {
+        color: color-mix(
+          in srgb,
+          var(--m3e-group-accent) 55%,
+          var(--md-sys-color-on-surface, #ffffff)
+        );
+      }
+
+      .expand-btn.is-compact-chevron svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Smooth Expandable 2-Column Grid (with shadow breathing room at bottom & sides) */
       .group-grid-collapse {
         display: grid;
         grid-template-rows: 0fr;
@@ -602,13 +771,168 @@ export class M3ELightGroupCard extends LitElement {
 
       .group-grid-inner {
         overflow: hidden;
+        margin-inline: -4px;
       }
 
       .child-grid {
-        padding-top: 10px;
+        padding: 10px 4px 10px;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+      }
+
+      /* =====================================================================
+         COMPACT MODE POPUP DIALOG (Matches M3E Power Strip Popup)
+         ===================================================================== */
+      dialog.group-dialog {
+        padding: 0;
+        border: 0;
+        background: transparent;
+        max-width: 100vw;
+        max-height: 100dvh;
+        width: min(440px, calc(100vw - 24px));
+        margin: auto;
+        overflow: visible;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+      }
+
+      dialog.group-dialog::backdrop {
+        background: rgba(0, 0, 0, 0.48);
+      }
+
+      .dialog-surface {
+        background: var(--md-sys-color-surface-container-low, #1b1b1f);
+        border-radius: 32px;
+        padding: 20px 20px 24px;
+        box-shadow: var(--md-sys-elevation-level3, 0 12px 32px rgba(0, 0, 0, 0.35));
+        max-height: 86dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .dialog-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .icon-btn {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
+        border: 0;
+        border-radius: 9999px;
+        background: transparent;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        padding: 0;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .icon-btn:hover {
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+
+      .icon-btn:active {
+        transform: scale(0.92);
+      }
+
+      .icon-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .dialog-title-wrap {
+        flex: 1 1 auto;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .dialog-title {
+        font-size: 20px;
+        font-weight: 500;
+        line-height: 26px;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .dialog-sub {
+        font-size: 13px;
+        font-weight: 400;
+        line-height: 18px;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .m3-header-switch {
+        position: relative;
+        flex: 0 0 52px;
+        width: 52px;
+        height: 32px;
+        padding: 0;
+        border-radius: 9999px;
+        border: 2px solid var(--md-sys-color-outline, #8e9099);
+        background: var(--md-sys-color-surface-container-highest, #33353b);
+        cursor: pointer;
+        transition:
+          background-color 220ms cubic-bezier(0.2, 0, 0, 1),
+          border-color 220ms cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .m3-header-switch.is-on {
+        border-color: var(--md-sys-color-primary, #bac3ff);
+        background: var(--md-sys-color-primary, #bac3ff);
+      }
+
+      .m3-header-switch-thumb {
+        position: absolute;
+        top: 50%;
+        left: 6px;
+        width: 16px;
+        height: 16px;
+        border-radius: 9999px;
+        background: var(--md-sys-color-outline, #8e9099);
+        transform: translateY(-50%);
+        transition:
+          left 260ms var(--m3e-spring-spatial-fast),
+          width 220ms cubic-bezier(0.2, 0, 0, 1),
+          height 220ms cubic-bezier(0.2, 0, 0, 1),
+          background-color 220ms cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .m3-header-switch.is-on .m3-header-switch-thumb {
+        left: 22px;
+        width: 24px;
+        height: 24px;
+        background: var(--md-sys-color-on-primary, #1f2b5a);
+      }
+
+      .popup-child-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      @media (max-width: 600px) {
+        dialog.group-dialog {
+          width: 100vw;
+          margin: auto 0 0 0;
+        }
+
+        .dialog-surface {
+          border-radius: 28px 28px 0 0;
+          padding: 18px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+        }
       }
     `,
   ];
