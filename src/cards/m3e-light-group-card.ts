@@ -391,6 +391,8 @@ export class M3ELightGroupCard extends LitElement {
                           ? 'Collapse lights'
                           : 'Expand lights'}
                       @pointerdown=${(e: Event) => e.stopPropagation()}
+                      @pointermove=${(e: Event) => e.stopPropagation()}
+                      @pointerup=${(e: Event) => e.stopPropagation()}
                       @click=${this._toggleExpand}
                     >
                       ${isCompact
@@ -674,6 +676,7 @@ export class M3ELightGroupCard extends LitElement {
       }
 
       .expand-btn {
+        position: relative;
         flex: 0 0 36px;
         width: 36px;
         height: 36px;
@@ -684,13 +687,20 @@ export class M3ELightGroupCard extends LitElement {
         cursor: pointer;
         background: color-mix(
           in srgb,
-          var(--md-sys-color-surface-container-lowest, #ffffff) 75%,
+          var(--md-sys-color-surface-container-lowest, #ffffff) 78%,
           transparent
         );
         color: var(--md-sys-color-on-surface, #1c1b18);
         transition:
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-fast);
+      }
+
+      /* Generous invisible touch hit-zone so tapping near the arrow never toggles the light */
+      .expand-btn::before {
+        content: '';
+        position: absolute;
+        inset: -16px -12px -16px -10px;
       }
 
       .expand-btn svg {
@@ -720,6 +730,8 @@ export class M3ELightGroupCard extends LitElement {
       .group-header.is-compact .header-content {
         height: 100%;
         min-height: 84px;
+        padding: 12px 10px 12px 14px;
+        gap: 8px;
       }
 
       .group-header.is-compact .title {
@@ -731,27 +743,18 @@ export class M3ELightGroupCard extends LitElement {
       }
 
       .expand-btn.is-compact-chevron {
-        flex: 0 0 28px;
-        width: 28px;
+        flex: 0 0 36px;
+        width: 36px;
         height: 36px;
-        margin-inline-start: -8px;
-        margin-inline-end: -4px;
-        background: transparent;
-        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
-        opacity: 0.85;
       }
 
-      .group-header.is-on .expand-btn.is-compact-chevron {
-        color: color-mix(
-          in srgb,
-          var(--m3e-group-accent) 55%,
-          var(--md-sys-color-on-surface, #ffffff)
-        );
+      .expand-btn.is-compact-chevron::before {
+        inset: -24px -10px -24px -10px;
       }
 
       .expand-btn.is-compact-chevron svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
       }
 
       /* Smooth Expandable 2-Column Grid (with shadow breathing room at bottom & sides) */
