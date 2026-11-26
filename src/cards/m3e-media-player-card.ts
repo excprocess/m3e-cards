@@ -528,13 +528,23 @@ export class M3EMediaPlayerCard extends LitElement {
                 : nothing}
 
               <!-- Active Wavy / Flat Segment -->
-              <div class="wavy-active-wrap" style="width: calc(${pct}% - 7px);">
+              <div class="wavy-active-wrap" style="width: max(0px, calc(${pct}% - 7px));">
                 <div class="wavy-svg-scroller">
-                  <svg class="wavy-svg" viewBox="0 0 280 14" preserveAspectRatio="none" aria-hidden="true">
-                    <path
-                      class="wavy-path"
-                      d="M 0 7 Q 7 2, 14 7 T 28 7 T 42 7 T 56 7 T 70 7 T 84 7 T 98 7 T 112 7 T 126 7 T 140 7 T 154 7 T 168 7 T 182 7 T 196 7 T 210 7 T 224 7 T 238 7 T 252 7 T 266 7 T 280 7"
-                    />
+                  <svg class="wavy-svg" aria-hidden="true">
+                    <defs>
+                      <pattern
+                        id="m3e-mp-wave"
+                        width="28"
+                        height="14"
+                        patternUnits="userSpaceOnUse"
+                      >
+                        <path
+                          class="wavy-path"
+                          d="M 0 7 Q 7 2, 14 7 T 28 7"
+                        />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="14" fill="url(#m3e-mp-wave)" />
                   </svg>
                 </div>
                 <div class="flat-active-line"></div>
@@ -974,7 +984,7 @@ export class M3EMediaPlayerCard extends LitElement {
       }
 
       .wavy-svg {
-        width: 280px;
+        width: calc(100% + 28px);
         height: 14px;
         display: block;
         will-change: transform;
