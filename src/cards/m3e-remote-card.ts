@@ -924,7 +924,8 @@ export class M3ERemoteCard extends LitElement {
       .remote-touchpad {
         position: relative;
         width: 100%;
-        height: 176px;
+        height: 204px;
+        min-height: 204px;
         border-radius: 26px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -972,7 +973,7 @@ export class M3ERemoteCard extends LitElement {
 
       /* Alternative 4-Way D-Pad */
       .dpad-surface {
-        height: 176px;
+        height: 204px;
         border-radius: 26px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -1052,7 +1053,7 @@ export class M3ERemoteCard extends LitElement {
 
       /* Vertical Volume Rocker */
       .volume-rocker {
-        height: 176px;
+        height: 204px;
         border-radius: var(--m3e-corner-full);
         background: var(--md-sys-color-surface-container-high, #282930);
         display: flex;

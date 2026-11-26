@@ -318,7 +318,11 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_historyHoverIdx') ||
       changedProps.has('_relativeTick') ||
       changedProps.has('_featuresLoaded') ||
-      changedProps.has('_artPalette')
+      changedProps.has('_artPalette') ||
+      changedProps.has('_padOffsetX') ||
+      changedProps.has('_padOffsetY') ||
+      changedProps.has('_padActive') ||
+      changedProps.has('_padTapPulse')
     ) {
       return true;
     }
@@ -3755,8 +3759,10 @@ export class M3EStatusCard extends LitElement {
          ===================================================================== */
       .remote-touchpad {
         position: relative;
+        flex: 0 0 auto;
         width: 100%;
-        height: 168px;
+        height: 216px;
+        min-height: 216px;
         border-radius: 28px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -3803,6 +3809,7 @@ export class M3EStatusCard extends LitElement {
       }
 
       .remote-essential-row {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;

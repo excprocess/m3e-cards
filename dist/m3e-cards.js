@@ -11637,7 +11637,8 @@ X.styles = [
       .remote-touchpad {
         position: relative;
         width: 100%;
-        height: 176px;
+        height: 204px;
+        min-height: 204px;
         border-radius: 26px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -11685,7 +11686,7 @@ X.styles = [
 
       /* Alternative 4-Way D-Pad */
       .dpad-surface {
-        height: 176px;
+        height: 204px;
         border-radius: 26px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -11765,7 +11766,7 @@ X.styles = [
 
       /* Vertical Volume Rocker */
       .volume-rocker {
-        height: 176px;
+        height: 204px;
         border-radius: var(--m3e-corner-full);
         background: var(--md-sys-color-surface-container-high, #282930);
         display: flex;
@@ -14666,7 +14667,7 @@ let S = class extends P {
     return t > 0 ? e ? { rows: "auto", columns: 12, min_columns: 6 } : { rows: 1 + t, columns: 6, min_columns: 3 } : { rows: "auto", columns: 6, min_columns: 3 };
   }
   shouldUpdate(t) {
-    if (t.has("_config") || t.has("_pressed") || t.has("_popupOpen") || t.has("_dialDragging") || t.has("_dialTemp") || t.has("_activeSheet") || t.has("_remoteSourceSheetOpen") || t.has("_volDragging") || t.has("_volPct") || t.has("_historyPoints") || t.has("_historyLoading") || t.has("_historyHoverIdx") || t.has("_relativeTick") || t.has("_featuresLoaded") || t.has("_artPalette"))
+    if (t.has("_config") || t.has("_pressed") || t.has("_popupOpen") || t.has("_dialDragging") || t.has("_dialTemp") || t.has("_activeSheet") || t.has("_remoteSourceSheetOpen") || t.has("_volDragging") || t.has("_volPct") || t.has("_historyPoints") || t.has("_historyLoading") || t.has("_historyHoverIdx") || t.has("_relativeTick") || t.has("_featuresLoaded") || t.has("_artPalette") || t.has("_padOffsetX") || t.has("_padOffsetY") || t.has("_padActive") || t.has("_padTapPulse"))
       return !0;
     if (t.has("hass") && this._config && this.hass) {
       if ((this._config.features?.length ?? 0) > 0)
@@ -17242,8 +17243,10 @@ S.styles = [
          ===================================================================== */
       .remote-touchpad {
         position: relative;
+        flex: 0 0 auto;
         width: 100%;
-        height: 168px;
+        height: 216px;
+        min-height: 216px;
         border-radius: 28px;
         background: var(--md-sys-color-surface-container-high, #282930);
         display: grid;
@@ -17290,6 +17293,7 @@ S.styles = [
       }
 
       .remote-essential-row {
+        flex: 0 0 auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
