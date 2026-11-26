@@ -1,0 +1,421 @@
+import type {
+  HassEntity,
+  HomeAssistant,
+  M3ERemoteButtonsConfig,
+} from '../types/home-assistant';
+
+export type RemoteActionKey = keyof M3ERemoteButtonsConfig;
+
+interface PlatformCommandMap {
+  service?: string; // defaults to 'remote.send_command'
+  paramKey?: string; // defaults to 'command'
+  commands: Partial<Record<RemoteActionKey, string>>;
+}
+
+/**
+ * Out-of-the-box platform command tables modeled after Home Assistant native
+ * integrations & Nerwyn/universal-remote-card.
+ */
+const PLATFORM_MAPS: Record<string, PlatformCommandMap> = {
+  androidtv_remote: {
+    commands: {
+      volume_up: 'VOLUME_UP',
+      volume_down: 'VOLUME_DOWN',
+      mute: 'MUTE',
+      unmute: 'MUTE',
+      power_on: 'POWER',
+      power_off: 'POWER',
+      play: 'MEDIA_PLAY',
+      pause: 'MEDIA_PAUSE',
+      prev: 'MEDIA_PREVIOUS',
+      next: 'MEDIA_NEXT',
+      ch_up: 'CHANNEL_UP',
+      ch_down: 'CHANNEL_DOWN',
+    },
+  },
+  androidtv: {
+    commands: {
+      volume_up: 'VOLUME_UP',
+      volume_down: 'VOLUME_DOWN',
+      mute: 'MUTE',
+      unmute: 'MUTE',
+      power_on: 'POWER',
+      power_off: 'POWER',
+      play: 'MEDIA_PLAY',
+      pause: 'MEDIA_PAUSE',
+      prev: 'MEDIA_PREVIOUS',
+      next: 'MEDIA_NEXT',
+      ch_up: 'CHANNEL_UP',
+      ch_down: 'CHANNEL_DOWN',
+    },
+  },
+  firetv: {
+    commands: {
+      volume_up: 'VOLUME_UP',
+      volume_down: 'VOLUME_DOWN',
+      mute: 'MUTE',
+      unmute: 'MUTE',
+      power_on: 'POWER',
+      power_off: 'POWER',
+      play: 'MEDIA_PLAY',
+      pause: 'MEDIA_PAUSE',
+      prev: 'MEDIA_PREVIOUS',
+      next: 'MEDIA_NEXT',
+    },
+  },
+  apple_tv: {
+    commands: {
+      volume_up: 'volume_up',
+      volume_down: 'volume_down',
+      power_on: 'wakeup',
+      power_off: 'suspend',
+      play: 'play',
+      pause: 'pause',
+      prev: 'previous',
+      next: 'next',
+    },
+  },
+  webostv: {
+    service: 'webostv.button',
+    paramKey: 'button',
+    commands: {
+      volume_up: 'VOLUMEUP',
+      volume_down: 'VOLUMEDOWN',
+      mute: 'MUTE',
+      unmute: 'MUTE',
+      play: 'PLAY',
+      pause: 'PAUSE',
+      prev: 'REWIND',
+      next: 'FASTFORWARD',
+      ch_up: 'CHANNELUP',
+      ch_down: 'CHANNELDOWN',
+    },
+  },
+  samsungtv: {
+    commands: {
+      volume_up: 'KEY_VOLUP',
+      volume_down: 'KEY_VOLDOWN',
+      mute: 'KEY_MUTE',
+      unmute: 'KEY_MUTE',
+      power_on: 'KEY_POWER',
+      power_off: 'KEY_POWER',
+      play: 'KEY_PLAY',
+      pause: 'KEY_PAUSE',
+      prev: 'KEY_REWIND',
+      next: 'KEY_FF',
+      ch_up: 'KEY_CHUP',
+      ch_down: 'KEY_CHDOWN',
+    },
+  },
+  samsungtv_smart: {
+    commands: {
+      volume_up: 'KEY_VOLUP',
+      volume_down: 'KEY_VOLDOWN',
+      mute: 'KEY_MUTE',
+      unmute: 'KEY_MUTE',
+      power_on: 'KEY_POWER',
+      power_off: 'KEY_POWER',
+      play: 'KEY_PLAY',
+      pause: 'KEY_PAUSE',
+      prev: 'KEY_REWIND',
+      next: 'KEY_FF',
+      ch_up: 'KEY_CHUP',
+      ch_down: 'KEY_CHDOWN',
+    },
+  },
+  samsungtv_tizen: {
+    commands: {
+      volume_up: 'KEY_VOLUP',
+      volume_down: 'KEY_VOLDOWN',
+      mute: 'KEY_MUTE',
+      unmute: 'KEY_MUTE',
+      power_on: 'KEY_POWER',
+      power_off: 'KEY_POWER',
+      play: 'KEY_PLAY',
+      pause: 'KEY_PAUSE',
+      prev: 'KEY_REWIND',
+      next: 'KEY_FF',
+      ch_up: 'KEY_CHUP',
+      ch_down: 'KEY_CHDOWN',
+    },
+  },
+  braviatv: {
+    commands: {
+      volume_up: 'VolumeUp',
+      volume_down: 'VolumeDown',
+      mute: 'Mute',
+      unmute: 'Mute',
+      power_on: 'WakeUp',
+      power_off: 'Sleep',
+      play: 'Play',
+      pause: 'Pause',
+      prev: 'Prev',
+      next: 'Next',
+      ch_up: 'ChannelUp',
+      ch_down: 'ChannelDown',
+    },
+  },
+  roku: {
+    commands: {
+      volume_up: 'volume_up',
+      volume_down: 'volume_down',
+      mute: 'volume_mute',
+      unmute: 'volume_mute',
+      power_on: 'power',
+      power_off: 'power',
+      play: 'play',
+      pause: 'play',
+      prev: 'rev',
+      next: 'fwd',
+      ch_up: 'channel_up',
+      ch_down: 'channel_down',
+    },
+  },
+  philips_js: {
+    commands: {
+      volume_up: 'VolumeUp',
+      volume_down: 'VolumeDown',
+      mute: 'Mute',
+      unmute: 'Mute',
+      power_on: 'Standby',
+      power_off: 'Standby',
+      play: 'Play',
+      pause: 'Pause',
+      prev: 'Previous',
+      next: 'Next',
+      ch_up: 'ChannelStepUp',
+      ch_down: 'ChannelStepDown',
+    },
+  },
+  panasonic_viera: {
+    commands: {
+      volume_up: 'NRC_VOLUP-ONOFF',
+      volume_down: 'NRC_VOLDOWN-ONOFF',
+      mute: 'NRC_MUTE-ONOFF',
+      unmute: 'NRC_MUTE-ONOFF',
+      power_on: 'NRC_POWER-ONOFF',
+      power_off: 'NRC_POWER-ONOFF',
+      play: 'NRC_PLAY-ONOFF',
+      pause: 'NRC_PAUSE-ONOFF',
+      prev: 'NRC_SKIP_PREV-ONOFF',
+      next: 'NRC_SKIP_NEXT-ONOFF',
+      ch_up: 'NRC_CH_UP-ONOFF',
+      ch_down: 'NRC_CH_DOWN-ONOFF',
+    },
+  },
+};
+
+const MEDIA_PLAYER_SUPPORT: Partial<Record<RemoteActionKey, number>> = {
+  pause: 1,
+  volume_up: 1024,
+  volume_down: 1024,
+  mute: 8,
+  unmute: 8,
+  prev: 16,
+  next: 32,
+  power_on: 128,
+  power_off: 256,
+  play: 16384,
+};
+
+const MEDIA_PLAYER_SERVICES: Partial<
+  Record<RemoteActionKey, { service: string; data?: Record<string, unknown> }>
+> = {
+  volume_up: { service: 'volume_up' },
+  volume_down: { service: 'volume_down' },
+  mute: { service: 'volume_mute', data: { is_volume_muted: true } },
+  unmute: { service: 'volume_mute', data: { is_volume_muted: false } },
+  power_on: { service: 'turn_on' },
+  power_off: { service: 'turn_off' },
+  play: { service: 'media_play' },
+  pause: { service: 'media_pause' },
+  prev: { service: 'media_previous_track' },
+  next: { service: 'media_next_track' },
+};
+
+const GENERIC_REMOTE_FALLBACK: Record<RemoteActionKey, string> = {
+  volume_up: 'VolumeUp',
+  volume_down: 'VolumeDown',
+  mute: 'Mute',
+  unmute: 'Mute',
+  power_on: 'PowerOn',
+  power_off: 'PowerOff',
+  play: 'Play',
+  pause: 'Pause',
+  prev: 'Previous',
+  next: 'Next',
+  ch_up: 'ChannelUp',
+  ch_down: 'ChannelDown',
+};
+
+function findSiblingEntityId(
+  hass: HomeAssistant,
+  primaryEntityId: string,
+  domain: string,
+): string | undefined {
+  if (primaryEntityId.startsWith(`${domain}.`)) return primaryEntityId;
+  const deviceId = hass.entities?.[primaryEntityId]?.device_id;
+  if (!deviceId || !hass.entities) return undefined;
+  for (const [eid, entry] of Object.entries(hass.entities)) {
+    if (entry.device_id === deviceId && eid.startsWith(`${domain}.`) && hass.states[eid]) {
+      return eid;
+    }
+  }
+  return undefined;
+}
+
+function findSiblingButtonId(
+  hass: HomeAssistant,
+  primaryEntityId: string,
+  key: RemoteActionKey,
+): string | undefined {
+  const deviceId = hass.entities?.[primaryEntityId]?.device_id;
+  if (!deviceId || !hass.entities) return undefined;
+
+  const patterns: Record<RemoteActionKey, string[]> = {
+    volume_up: ['volume_up', 'vol_up', 'vol+'],
+    volume_down: ['volume_down', 'vol_down', 'vol-'],
+    mute: ['mute'],
+    unmute: ['unmute', 'mute'],
+    power_on: ['power_on', 'turn_on', 'power'],
+    power_off: ['power_off', 'turn_off', 'standby', 'power'],
+    play: ['play'],
+    pause: ['pause'],
+    prev: ['previous', 'prev', 'rewind'],
+    next: ['next', 'forward'],
+    ch_up: ['channel_up', 'ch_up', 'prog_up'],
+    ch_down: ['channel_down', 'ch_down', 'prog_down'],
+  };
+
+  const needles = patterns[key] ?? [];
+  for (const [eid, entry] of Object.entries(hass.entities)) {
+    if (entry.device_id !== deviceId || !eid.startsWith('button.')) continue;
+    const low = eid.toLowerCase();
+    if (needles.some((n) => low.includes(n))) return eid;
+  }
+  return undefined;
+}
+
+/**
+ * Executes a Remote popup command with 4-tier out-of-the-box resolution:
+ * 1. Explicit manual override in `config.remote_buttons[key]`
+ * 2. Linked `media_player.*` native service (when supported; channel keys prefer remote)
+ * 3. Platform-aware `remote.send_command` / `webostv.button` using HA entity registry platform
+ * 4. Sibling `button.*` auto-discovery or generic `remote.send_command` fallback
+ */
+export function executeRemoteCommand(
+  hass: HomeAssistant,
+  primaryEntityId: string,
+  key: RemoteActionKey,
+  manualButtons?: M3ERemoteButtonsConfig,
+  remoteDevice?: string,
+): void {
+  const remoteId = findSiblingEntityId(hass, primaryEntityId, 'remote');
+  const mediaId = findSiblingEntityId(hass, primaryEntityId, 'media_player');
+  const mediaEntity: HassEntity | undefined = mediaId ? hass.states[mediaId] : undefined;
+
+  // 1. Explicit manual override
+  const manual = manualButtons?.[key]?.trim();
+  if (manual) {
+    if (manual.startsWith('button.') || manual.startsWith('input_button.')) {
+      hass.callService(manual.split('.')[0], 'press', { entity_id: manual });
+      return;
+    }
+    if (manual.startsWith('script.')) {
+      hass.callService('script', 'turn_on', { entity_id: manual });
+      return;
+    }
+    if (manual.startsWith('switch.')) {
+      hass.callService('switch', key === 'power_off' ? 'turn_off' : 'turn_on', {
+        entity_id: manual,
+      });
+      return;
+    }
+    const targetRemote = remoteId || primaryEntityId;
+    if (targetRemote.startsWith('remote.')) {
+      const payload: Record<string, unknown> = { entity_id: targetRemote, command: manual };
+      if (remoteDevice?.trim()) payload.device = remoteDevice.trim();
+      hass.callService('remote', 'send_command', payload);
+      return;
+    }
+  }
+
+  // 2. Direct media_player service (for non-channel actions when media_player supports it)
+  const mpSvc = MEDIA_PLAYER_SERVICES[key];
+  if (mediaEntity && mpSvc) {
+    const features = Number(mediaEntity.attributes.supported_features ?? 0);
+    const reqBit = MEDIA_PLAYER_SUPPORT[key] ?? 0;
+    const supported = features === 0 || reqBit === 0 || (features & reqBit) !== 0;
+    if (supported) {
+      hass.callService('media_player', mpSvc.service, {
+        entity_id: mediaEntity.entity_id,
+        ...(mpSvc.data ?? {}),
+      });
+      return;
+    }
+  }
+
+  // 3. Platform-aware out-of-the-box remote command (from entity registry platform)
+  const platform = (
+    (remoteId ? hass.entities?.[remoteId]?.platform : undefined) ||
+    (mediaId ? hass.entities?.[mediaId]?.platform : undefined) ||
+    hass.entities?.[primaryEntityId]?.platform ||
+    ''
+  ).toLowerCase();
+
+  const platformMap = PLATFORM_MAPS[platform];
+  if (platformMap) {
+    // Handle webostv.button directly on the media_player entity
+    if (platformMap.service === 'webostv.button' && mediaId && platformMap.commands[key]) {
+      hass.callService('webostv', 'button', {
+        entity_id: mediaId,
+        [platformMap.paramKey ?? 'button']: platformMap.commands[key],
+      });
+      return;
+    }
+    if (remoteId && (key === 'power_on' || key === 'power_off') && platform === 'apple_tv') {
+      hass.callService('remote', key === 'power_on' ? 'turn_on' : 'turn_off', {
+        entity_id: remoteId,
+      });
+      return;
+    }
+    const cmd = platformMap.commands[key];
+    if (remoteId && cmd) {
+      const payload: Record<string, unknown> = { entity_id: remoteId, command: cmd };
+      if (remoteDevice?.trim()) payload.device = remoteDevice.trim();
+      hass.callService('remote', 'send_command', payload);
+      return;
+    }
+  }
+
+  // 4. Fallback: sibling button.* entity, channel->media skip, or generic remote command
+  const siblingBtn = findSiblingButtonId(hass, primaryEntityId, key);
+  if (siblingBtn) {
+    hass.callService('button', 'press', { entity_id: siblingBtn });
+    return;
+  }
+
+  if (mediaEntity && (key === 'ch_up' || key === 'ch_down')) {
+    hass.callService(
+      'media_player',
+      key === 'ch_up' ? 'media_next_track' : 'media_previous_track',
+      { entity_id: mediaEntity.entity_id },
+    );
+    return;
+  }
+
+  if (remoteId) {
+    if (key === 'power_on' || key === 'power_off') {
+      hass.callService('remote', key === 'power_on' ? 'turn_on' : 'turn_off', {
+        entity_id: remoteId,
+      });
+      return;
+    }
+    const payload: Record<string, unknown> = {
+      entity_id: remoteId,
+      command: GENERIC_REMOTE_FALLBACK[key],
+    };
+    if (remoteDevice?.trim()) payload.device = remoteDevice.trim();
+    hass.callService('remote', 'send_command', payload);
+  }
+}

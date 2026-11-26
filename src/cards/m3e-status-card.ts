@@ -5,7 +5,6 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type {
   HassEntity,
   HomeAssistant,
-  M3ERemoteButtonsConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
   M3ESubtitleFormat,
@@ -22,6 +21,7 @@ import {
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
 import { t } from '../utils/i18n';
+import { executeRemoteCommand, type RemoteActionKey } from '../utils/remote-commands';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
@@ -159,6 +159,7 @@ export class M3EStatusCard extends LitElement {
   @state() private _dialDragging = false;
   @state() private _dialTemp: number | null = null;
   @state() private _activeSheet: ClimateSheetKind = null;
+  @state() private _remoteSourceSheetOpen = false;
 
   // Media volume slider interaction state
   @state() private _volDragging = false;
@@ -290,6 +291,7 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_dialDragging') ||
       changedProps.has('_dialTemp') ||
       changedProps.has('_activeSheet') ||
+      changedProps.has('_remoteSourceSheetOpen') ||
       changedProps.has('_volDragging') ||
       changedProps.has('_volPct') ||
       changedProps.has('_historyPoints') ||
@@ -931,65 +933,6 @@ export class M3EStatusCard extends LitElement {
     this._activeSheet = null;
   }
 
-  /**
-   * Executes a remote button binding:
-   * - If configured as an entity_id (button.*, script.*, switch.*, scene.*), triggers that entity.
-   * - If configured as a command string (e.g. "VolumeUp"), sends remote.send_command.
-   * - Otherwise falls back to the default media_player service or remote command.
-   */
-  private _triggerRemoteButton(
-    key: keyof M3ERemoteButtonsConfig,
-    fallbackService: string,
-    fallbackData: Record<string, unknown> = {},
-    defaultCommand?: string,
-  ): void {
-    if (!this.hass || !this._config) return;
-    const binding = this._config.remote_buttons?.[key]?.trim();
-
-    if (binding) {
-      if (binding.startsWith('button.')) {
-        this.hass.callService('button', 'press', { entity_id: binding });
-        return;
-      }
-      if (binding.startsWith('script.')) {
-        this.hass.callService('script', 'turn_on', { entity_id: binding });
-        return;
-      }
-      if (binding.startsWith('scene.')) {
-        this.hass.callService('scene', 'turn_on', { entity_id: binding });
-        return;
-      }
-      if (binding.startsWith('switch.')) {
-        this.hass.callService('switch', 'toggle', { entity_id: binding });
-        return;
-      }
-      // Treat as remote.send_command command name
-      const payload: Record<string, unknown> = {
-        entity_id: this._config.entity,
-        command: binding,
-      };
-      if (this._config.remote_device?.trim()) {
-        payload.device = this._config.remote_device.trim();
-      }
-      this.hass.callService('remote', 'send_command', payload);
-      return;
-    }
-
-    if (this._config.entity.startsWith('remote.')) {
-      const payload: Record<string, unknown> = {
-        entity_id: this._config.entity,
-        command: defaultCommand ?? key,
-      };
-      if (this._config.remote_device?.trim()) {
-        payload.device = this._config.remote_device.trim();
-      }
-      this.hass.callService('remote', 'send_command', payload);
-      return;
-    }
-
-    this._callEntityService(fallbackService, fallbackData);
-  }
-
   private _onDialPointerDown = (e: PointerEvent): void => {
     if (e.button !== 0) return;
     const el = e.currentTarget as HTMLElement;
@@ -1089,15 +1032,6 @@ export class M3EStatusCard extends LitElement {
         detail: view ? { entityId, view } : { entityId },
       }),
     );
-  }
-
-  private _callEntityService(service: string, extra: Record<string, unknown> = {}): void {
-    if (!this.hass || !this._config) return;
-    const domain = this._config.entity.split('.')[0];
-    this.hass.callService(domain, service, {
-      entity_id: this._config.entity,
-      ...extra,
-    });
   }
 
   /* =========================================================================
@@ -1762,8 +1696,46 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _triggerRemoteKey(key: RemoteActionKey): void {
+    if (!this.hass || !this._config) return;
+    executeRemoteCommand(
+      this.hass,
+      this._config.entity,
+      key,
+      this._config.remote_buttons,
+      this._config.remote_device,
+    );
+  }
+
   private _renderRemotePopup() {
-    const source = String(this._entity?.attributes.source ?? 'Source');
+    const media = this._mediaEntity;
+    const targetEnt = media ?? this._entity;
+    const statusEnt = this._statusEntity ?? targetEnt;
+    const rawState = String(statusEnt?.state ?? '').toLowerCase();
+    const hasPowerState =
+      Boolean(rawState) && rawState !== 'unavailable' && rawState !== 'unknown';
+    const isPowerOn = hasPowerState && rawState !== 'off' && rawState !== 'standby';
+
+    const rawMuted = targetEnt?.attributes.is_volume_muted;
+    const hasMuteState = typeof rawMuted === 'boolean';
+    const isMuted = rawMuted === true;
+
+    const mediaState = String(media?.state ?? '').toLowerCase();
+    const isPlaying = mediaState === 'playing';
+    const isPaused = mediaState === 'paused';
+
+    const currentSource = String(targetEnt?.attributes.source ?? '').trim();
+    const sourceList = Array.isArray(targetEnt?.attributes.source_list)
+      ? Array.from(
+          new Set(
+            (targetEnt!.attributes.source_list as unknown[])
+              .map((s) => String(s ?? '').trim())
+              .filter(Boolean),
+          ),
+        )
+      : [];
+    const sourceLabel = currentSource || t(this.hass, 'sources');
+
     return html`
       <div class="remote-hero">
         <div class="rocker-pill">
@@ -1771,7 +1743,7 @@ export class M3EStatusCard extends LitElement {
             type="button"
             class="rocker-half"
             aria-label="Volume up"
-            @click=${() => this._triggerRemoteButton('volume_up', 'volume_up', {}, 'VolumeUp')}
+            @click=${() => this._triggerRemoteKey('volume_up')}
           >
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"/></svg>
           </button>
@@ -1780,7 +1752,7 @@ export class M3EStatusCard extends LitElement {
             type="button"
             class="rocker-half"
             aria-label="Volume down"
-            @click=${() => this._triggerRemoteButton('volume_down', 'volume_down', {}, 'VolumeDown')}
+            @click=${() => this._triggerRemoteKey('volume_down')}
           >
             <svg viewBox="0 0 24 24"><path fill="currentColor" d="M18.5 12A4.5 4.5 0 0 0 16 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM5 9v6h4l5 5V4L9 9H5Z"/></svg>
           </button>
@@ -1788,74 +1760,101 @@ export class M3EStatusCard extends LitElement {
       </div>
 
       <div class="modular-stack">
-        <div class="split-pill">
+        <!-- Segmented M3 Pill: Unmute | Mute (highlights active state when reported) -->
+        <div class="split-pill ${hasMuteState ? 'has-state' : ''}" role="group" aria-label="Audio">
+          ${hasMuteState
+            ? html`<span class="split-indicator ${isMuted ? 'is-right' : 'is-left'}" aria-hidden="true"></span>`
+            : nothing}
           <button
             type="button"
-            class="split-half"
-            @click=${() => this._triggerRemoteButton('unmute', 'volume_mute', { is_volume_muted: false }, 'Unmute')}
+            class="split-half ${hasMuteState && !isMuted ? 'is-selected' : ''}"
+            aria-pressed=${hasMuteState ? String(!isMuted) : 'false'}
+            @click=${() => this._triggerRemoteKey('unmute')}
           >
-            Unmute
+            ${t(this.hass, 'unmute')}
           </button>
-          <span class="split-vdivider"></span>
+          ${!hasMuteState ? html`<span class="split-vdivider"></span>` : nothing}
           <button
             type="button"
-            class="split-half"
-            @click=${() => this._triggerRemoteButton('mute', 'volume_mute', { is_volume_muted: true }, 'Mute')}
+            class="split-half ${hasMuteState && isMuted ? 'is-selected' : ''}"
+            aria-pressed=${hasMuteState ? String(isMuted) : 'false'}
+            @click=${() => this._triggerRemoteKey('mute')}
           >
-            Mute
-          </button>
-        </div>
-
-        <div class="split-pill">
-          <button
-            type="button"
-            class="split-half"
-            @click=${() => this._triggerRemoteButton('power_on', 'turn_on', {}, 'PowerOn')}
-          >
-            On
-          </button>
-          <span class="split-vdivider"></span>
-          <button
-            type="button"
-            class="split-half"
-            @click=${() => this._triggerRemoteButton('power_off', 'turn_off', {}, 'PowerOff')}
-          >
-            Off
+            ${t(this.hass, 'mute')}
           </button>
         </div>
 
+        <!-- Segmented M3 Pill: On | Off (highlights active entity state like Light Control) -->
+        <div class="split-pill ${hasPowerState ? 'has-state' : ''}" role="group" aria-label="Power">
+          ${hasPowerState
+            ? html`<span class="split-indicator ${isPowerOn ? 'is-left' : 'is-right'}" aria-hidden="true"></span>`
+            : nothing}
+          <button
+            type="button"
+            class="split-half ${hasPowerState && isPowerOn ? 'is-selected' : ''}"
+            aria-pressed=${hasPowerState ? String(isPowerOn) : 'false'}
+            @click=${() => this._triggerRemoteKey('power_on')}
+          >
+            ${t(this.hass, 'on')}
+          </button>
+          ${!hasPowerState ? html`<span class="split-vdivider"></span>` : nothing}
+          <button
+            type="button"
+            class="split-half ${hasPowerState && !isPowerOn ? 'is-selected' : ''}"
+            aria-pressed=${hasPowerState ? String(!isPowerOn) : 'false'}
+            @click=${() => this._triggerRemoteKey('power_off')}
+          >
+            ${t(this.hass, 'off')}
+          </button>
+        </div>
+
+        <!-- M3 Expressive Transport Row (Crisp SVGs + Shape Morphing Play/Pause) -->
         <div class="transport-row">
           <button
             type="button"
-            class="transport-icon"
-            aria-label="Previous"
-            @click=${() => this._triggerRemoteButton('prev', 'media_previous_track', {}, 'Previous')}
+            class="transport-icon is-prev"
+            aria-label=${t(this.hass, 'previous')}
+            @click=${() => this._triggerRemoteKey('prev')}
           >
-            ⏮
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M6 6h2v12H6V6Zm3.5 6 8.5 6V6l-8.5 6Z" />
+            </svg>
           </button>
           <button
             type="button"
-            class="transport-circle"
-            aria-label="Play"
-            @click=${() => this._triggerRemoteButton('play', 'media_play', {}, 'Play')}
+            class="transport-circle ${isPlaying ? 'is-active' : ''}"
+            aria-label=${t(this.hass, 'play')}
+            aria-pressed=${String(isPlaying)}
+            @click=${() => this._triggerRemoteKey('play')}
           >
-            ▶
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M8 5.8v12.4c0 .86.94 1.38 1.66.92l9.7-6.2a1.09 1.09 0 0 0 0-1.84l-9.7-6.2C8.94 4.42 8 4.94 8 5.8Z"
+              />
+            </svg>
           </button>
           <button
             type="button"
-            class="transport-circle"
-            aria-label="Pause"
-            @click=${() => this._triggerRemoteButton('pause', 'media_pause', {}, 'Pause')}
+            class="transport-circle ${isPaused ? 'is-active' : ''}"
+            aria-label=${t(this.hass, 'pause')}
+            aria-pressed=${String(isPaused)}
+            @click=${() => this._triggerRemoteKey('pause')}
           >
-            ⏸
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="6.5" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
+              <rect x="13.7" y="5" width="3.8" height="14" rx="1.6" fill="currentColor" />
+            </svg>
           </button>
           <button
             type="button"
-            class="transport-icon"
-            aria-label="Next"
-            @click=${() => this._triggerRemoteButton('next', 'media_next_track', {}, 'Next')}
+            class="transport-icon is-next"
+            aria-label=${t(this.hass, 'next')}
+            @click=${() => this._triggerRemoteKey('next')}
           >
-            ⏭
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M16 6h2v12h-2V6ZM6 18l8.5-6L6 6v12Z" />
+            </svg>
           </button>
         </div>
 
@@ -1864,7 +1863,7 @@ export class M3EStatusCard extends LitElement {
             type="button"
             class="channel-btn"
             aria-label="Channel down"
-            @click=${() => this._triggerRemoteButton('ch_down', 'media_previous_track', {}, 'ChannelDown')}
+            @click=${() => this._triggerRemoteKey('ch_down')}
           >
             ${CHEVRON_DOWN_SVG}
           </button>
@@ -1873,17 +1872,68 @@ export class M3EStatusCard extends LitElement {
             type="button"
             class="channel-btn"
             aria-label="Channel up"
-            @click=${() => this._triggerRemoteButton('ch_up', 'media_next_track', {}, 'ChannelUp')}
+            @click=${() => this._triggerRemoteKey('ch_up')}
           >
             ${CHEVRON_UP_SVG}
           </button>
         </div>
 
-        <div class="secondary-action-card">
-          <span>${source}</span>
+        <button
+          type="button"
+          class="secondary-action-card"
+          @click=${() => {
+            if (sourceList.length > 0 && media) {
+              this._remoteSourceSheetOpen = true;
+            } else if (targetEnt) {
+              this._openMoreInfo(targetEnt.entity_id);
+            }
+          }}
+        >
+          <span>${sourceLabel}</span>
           <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
-        </div>
+        </button>
       </div>
+
+      ${this._remoteSourceSheetOpen && sourceList.length > 0 && media
+        ? html`
+            <div class="mode-sheet-backdrop" @click=${() => (this._remoteSourceSheetOpen = false)}>
+              <div class="mode-sheet" @click=${(e: Event) => e.stopPropagation()}>
+                <div class="mode-sheet-header">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    @click=${() => (this._remoteSourceSheetOpen = false)}
+                    aria-label=${t(this.hass, 'close')}
+                  >
+                    ${CHEVRON_DOWN_SVG}
+                  </button>
+                  <span>${t(this.hass, 'sources')}</span>
+                </div>
+                <div class="mode-sheet-list">
+                  ${sourceList.map((src) => {
+                    const selected = src === currentSource;
+                    return html`
+                      <button
+                        type="button"
+                        class="mode-option ${selected ? 'selected mode-off' : ''}"
+                        @click=${() => {
+                          this.hass?.callService('media_player', 'select_source', {
+                            entity_id: media.entity_id,
+                            source: src,
+                          });
+                          this._remoteSourceSheetOpen = false;
+                        }}
+                      >
+                        <span>${src}</span>
+                        ${selected ? html`<span class="check-mark">✓</span>` : nothing}
+                      </button>
+                    `;
+                  })}
+                </div>
+              </div>
+            </div>
+          `
+        : nothing}
     `;
   }
 
@@ -3530,6 +3580,7 @@ export class M3EStatusCard extends LitElement {
       }
 
       .split-pill {
+        position: relative;
         height: 56px;
         border-radius: var(--m3e-corner-full);
         background: var(--md-sys-color-surface-container-high, #282930);
@@ -3537,55 +3588,132 @@ export class M3EStatusCard extends LitElement {
         overflow: hidden;
       }
 
+      .split-pill.has-state {
+        padding: 4px;
+      }
+
+      .split-indicator {
+        position: absolute;
+        top: 4px;
+        bottom: 4px;
+        left: 4px;
+        width: calc(50% - 4px);
+        border-radius: var(--m3e-corner-full);
+        background: var(--md-sys-color-primary-container, #364067);
+        transition: transform var(--m3e-spring-spatial-fast);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .split-indicator.is-right {
+        transform: translateX(100%);
+      }
+
       .split-half {
+        position: relative;
+        z-index: 1;
         flex: 1;
         border: 0;
+        border-radius: var(--m3e-corner-full);
         background: transparent;
         color: var(--md-sys-color-on-surface, #e3e2e6);
         font: inherit;
-        font-size: 14px;
+        font-size: 14.5px;
         font-weight: 500;
         cursor: pointer;
+        transition:
+          color var(--m3e-spring-effects-fast),
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
       }
 
-      .split-half:hover {
+      .split-half.is-selected {
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
+        font-weight: 600;
+      }
+
+      .split-half:hover:not(.is-selected) {
         background: color-mix(in srgb, currentColor 7%, transparent);
+      }
+
+      .split-half:active {
+        transform: scale(0.96);
       }
 
       .split-vdivider {
         width: 1px;
+        margin: 12px 0;
         background: var(--md-sys-color-outline-variant, #44464f);
       }
 
       .transport-row {
         display: flex;
         align-items: center;
-        justify-content: space-around;
-        padding: 4px 0;
+        justify-content: space-evenly;
+        gap: 10px;
+        padding: 6px 0;
       }
 
       .transport-icon,
       .transport-circle {
         border: 0;
+        padding: 0;
         cursor: pointer;
         color: var(--md-sys-color-on-surface, #e3e2e6);
         display: grid;
         place-items: center;
-        font-size: 18px;
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default);
+        -webkit-tap-highlight-color: transparent;
       }
 
       .transport-icon {
-        width: 44px;
-        height: 44px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         background: transparent;
       }
 
+      .transport-icon:hover {
+        background: color-mix(in srgb, currentColor 10%, transparent);
+      }
+
+      .transport-icon.is-prev:active {
+        transform: translateX(-3px) scale(0.92);
+      }
+
+      .transport-icon.is-next:active {
+        transform: translateX(3px) scale(0.92);
+      }
+
+      .transport-icon svg {
+        width: 24px;
+        height: 24px;
+      }
+
       .transport-circle {
-        width: 56px;
-        height: 56px;
+        width: 58px;
+        height: 58px;
         border-radius: 50%;
         background: var(--md-sys-color-surface-container-high, #282930);
+      }
+
+      .transport-circle.is-active {
+        border-radius: 18px;
+        background: var(--md-sys-color-primary-container, #364067);
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
+      }
+
+      .transport-circle:active {
+        transform: scale(0.91);
+      }
+
+      .transport-circle svg {
+        width: 26px;
+        height: 26px;
       }
 
       .channel-pill {
