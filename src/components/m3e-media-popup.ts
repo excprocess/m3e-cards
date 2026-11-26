@@ -201,7 +201,7 @@ export class M3EMediaPopup extends LitElement {
     this.hass.callService('media_player', service, { entity_id: eid, ...data });
   }
 
-  private _openMoreInfo(): void {
+  private _openMoreInfo(view?: 'info' | 'history' | 'settings'): void {
     const eid = this.entityId;
     if (!eid) return;
     if (this._dialogEl?.open) this._dialogEl.close();
@@ -209,7 +209,7 @@ export class M3EMediaPopup extends LitElement {
     this._castSheetOpen = false;
     this.dispatchEvent(
       new CustomEvent('hass-more-info', {
-        detail: { entityId: eid },
+        detail: view ? { entityId: eid, view } : { entityId: eid },
         bubbles: true,
         composed: true,
       }),
@@ -405,6 +405,20 @@ export class M3EMediaPopup extends LitElement {
 
                   <div class="header-right">
                     ${this._renderAppBadge(entity)}
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      @click=${() => this._openMoreInfo('history')}
+                      aria-label="Cronologia attività"
+                      title="Cronologia attività Home Assistant"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                        />
+                      </svg>
+                    </button>
                     <button
                       type="button"
                       class="icon-btn"

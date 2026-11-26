@@ -1079,13 +1079,13 @@ export class M3EStatusCard extends LitElement {
     });
   }
 
-  private _openMoreInfo(entityId: string): void {
+  private _openMoreInfo(entityId: string, view?: 'info' | 'history' | 'settings'): void {
     this.closePopup();
     this.dispatchEvent(
       new CustomEvent('hass-more-info', {
         bubbles: true,
         composed: true,
-        detail: { entityId },
+        detail: view ? { entityId, view } : { entityId },
       }),
     );
   }
@@ -2416,7 +2416,30 @@ export class M3EStatusCard extends LitElement {
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
                         `
-                      : nothing}
+                      : popupType === 'climate' || popupType === 'media'
+                        ? html`
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              aria-label="Cronologia attività"
+                              title="Cronologia attività Home Assistant"
+                              @click=${() =>
+                                this._openMoreInfo(
+                                  popupType === 'media' && this._mediaEntity
+                                    ? this._mediaEntity.entity_id
+                                    : this._config!.entity,
+                                  'history',
+                                )}
+                            >
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                                />
+                              </svg>
+                            </button>
+                          `
+                        : nothing}
                   </header>
 
                   ${popupType === 'power_strip'

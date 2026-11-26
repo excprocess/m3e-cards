@@ -5225,11 +5225,11 @@ let D = class extends T {
     const s = i || this.entityId;
     !this.hass || !s || this.hass.callService("media_player", t, { entity_id: s, ...e });
   }
-  _openMoreInfo() {
-    const t = this.entityId;
-    t && (this._dialogEl?.open && this._dialogEl.close(), this._open = !1, this._castSheetOpen = !1, this.dispatchEvent(
+  _openMoreInfo(t) {
+    const e = this.entityId;
+    e && (this._dialogEl?.open && this._dialogEl.close(), this._open = !1, this._castSheetOpen = !1, this.dispatchEvent(
       new CustomEvent("hass-more-info", {
-        detail: { entityId: t },
+        detail: t ? { entityId: e, view: t } : { entityId: e },
         bubbles: !0,
         composed: !0
       })
@@ -5307,6 +5307,20 @@ let D = class extends T {
 
                   <div class="header-right">
                     ${this._renderAppBadge(t)}
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      @click=${() => this._openMoreInfo("history")}
+                      aria-label="Cronologia attività"
+                      title="Cronologia attività Home Assistant"
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                        />
+                      </svg>
+                    </button>
                     <button
                       type="button"
                       class="icon-btn"
@@ -11354,12 +11368,12 @@ let E = class extends T {
       ...e
     });
   }
-  _openMoreInfo(t) {
+  _openMoreInfo(t, e) {
     this.closePopup(), this.dispatchEvent(
       new CustomEvent("hass-more-info", {
         bubbles: !0,
         composed: !0,
-        detail: { entityId: t }
+        detail: e ? { entityId: t, view: e } : { entityId: t }
       })
     );
   }
@@ -12305,7 +12319,25 @@ let E = class extends T {
                           >
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
-                        ` : h}
+                        ` : r === "climate" || r === "media" ? l`
+                            <button
+                              type="button"
+                              class="icon-btn"
+                              aria-label="Cronologia attività"
+                              title="Cronologia attività Home Assistant"
+                              @click=${() => this._openMoreInfo(
+        r === "media" && this._mediaEntity ? this._mediaEntity.entity_id : this._config.entity,
+        "history"
+      )}
+                            >
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                                />
+                              </svg>
+                            </button>
+                          ` : h}
                   </header>
 
                   ${r === "power_strip" ? this._renderPowerStripPopup() : r === "selector" ? this._renderSelectorPopup() : r === "sensor" || r === "custom" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}
