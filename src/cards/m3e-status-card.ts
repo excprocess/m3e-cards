@@ -2538,7 +2538,9 @@ export class M3EStatusCard extends LitElement {
       }
 
       /* Left-side 1:1 radially dissolving Entity Picture with M3E artwork-derived tonal surface */
-      .status-tile.has-entity-picture {
+      ha-card.status-tile.has-entity-picture,
+      ha-card.status-tile.has-entity-picture.is-active,
+      ha-card.status-tile.has-entity-picture.is-inactive {
         background: var(
           --art-bg,
           var(--md-sys-color-primary-container, var(--ha-card-background, #24252d))
@@ -2546,12 +2548,12 @@ export class M3EStatusCard extends LitElement {
         color: var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6));
       }
 
-      .status-tile.has-entity-picture .tile-title {
+      ha-card.status-tile.has-entity-picture .tile-title {
         color: var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6));
       }
 
-      .status-tile.has-entity-picture .tile-subtitle,
-      .status-tile.has-entity-picture .tile-chevron {
+      ha-card.status-tile.has-entity-picture .tile-subtitle,
+      ha-card.status-tile.has-entity-picture .tile-chevron {
         color: color-mix(
           in srgb,
           var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6)) 82%,
@@ -2559,8 +2561,8 @@ export class M3EStatusCard extends LitElement {
         );
       }
 
-      .status-tile.has-entity-picture .tile-inner {
-        padding-inline-start: 78px;
+      ha-card.status-tile.has-entity-picture .tile-inner {
+        padding-inline-start: 82px;
       }
 
       .entity-picture-backdrop {
@@ -2568,23 +2570,23 @@ export class M3EStatusCard extends LitElement {
         inset-block: 0;
         inset-inline-start: 0;
         height: 100%;
-        aspect-ratio: 1.08 / 1;
-        max-width: 52%;
+        width: 112px;
+        max-width: 54%;
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
         -webkit-mask-image: radial-gradient(
-          ellipse 96% 120% at 24% 50%,
+          ellipse 72% 112% at 24% 50%,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.45) 72%,
+          rgba(0, 0, 0, 0.94) 46%,
+          rgba(0, 0, 0, 0.36) 76%,
           rgba(0, 0, 0, 0) 100%
         );
         mask-image: radial-gradient(
-          ellipse 96% 120% at 24% 50%,
+          ellipse 72% 112% at 24% 50%,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.45) 72%,
+          rgba(0, 0, 0, 0.94) 46%,
+          rgba(0, 0, 0, 0.36) 76%,
           rgba(0, 0, 0, 0) 100%
         );
       }
