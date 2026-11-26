@@ -54,7 +54,28 @@ export class M3EStatusCardEditor extends LitElement {
   }
 
   private _buildEntitySchema(): unknown[] {
-    return [{ name: 'entity', required: true, selector: { entity: {} } }];
+    return [
+      { name: 'entity', required: true, selector: { entity: {} } },
+      {
+        name: 'popup_type',
+        selector: {
+          select: {
+            mode: 'dropdown',
+            options: [
+              { value: 'auto', label: 'Automatico (in base al dispositivo)' },
+              { value: 'power_strip', label: 'Power Strip (Multipresa a 2 colonne)' },
+              { value: 'selector', label: 'Selettore (Scelta opzioni M3 Expressive)' },
+              { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
+              { value: 'sensor', label: 'Sensore (Anello di stato + Storico)' },
+              { value: 'climate', label: 'Clima / Termostato (Dial + Mode)' },
+              { value: 'remote', label: 'Telecomando / TV (Rocker + Pulsanti)' },
+              { value: 'media', label: 'Media / Speaker (Player + Volume)' },
+              { value: 'none', label: 'Nessun popup' },
+            ],
+          },
+        },
+      },
+    ];
   }
 
   private _buildContentSchema(): unknown[] {
@@ -226,25 +247,6 @@ export class M3EStatusCardEditor extends LitElement {
       this._config?.tap_action === 'navigate' || this._config?.hold_action === 'navigate';
 
     const schema: unknown[] = [
-      {
-        name: 'popup_type',
-        selector: {
-          select: {
-            mode: 'dropdown',
-            options: [
-              { value: 'auto', label: 'Automatico (in base al dispositivo)' },
-              { value: 'power_strip', label: 'Power Strip (Multipresa a 2 colonne)' },
-              { value: 'selector', label: 'Selettore (Scelta opzioni M3 Expressive)' },
-              { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
-              { value: 'sensor', label: 'Sensore (Anello di stato + Storico)' },
-              { value: 'climate', label: 'Clima / Termostato (Dial + Mode)' },
-              { value: 'remote', label: 'Telecomando / TV (Rocker + Pulsanti)' },
-              { value: 'media', label: 'Media / Speaker (Player + Volume)' },
-              { value: 'none', label: 'Nessun popup' },
-            ],
-          },
-        },
-      },
       {
         type: 'grid',
         name: '',

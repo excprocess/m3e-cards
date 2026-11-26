@@ -11432,7 +11432,28 @@ let ot = class extends E {
     return "sensor";
   }
   _buildEntitySchema() {
-    return [{ name: "entity", required: !0, selector: { entity: {} } }];
+    return [
+      { name: "entity", required: !0, selector: { entity: {} } },
+      {
+        name: "popup_type",
+        selector: {
+          select: {
+            mode: "dropdown",
+            options: [
+              { value: "auto", label: "Automatico (in base al dispositivo)" },
+              { value: "power_strip", label: "Power Strip (Multipresa a 2 colonne)" },
+              { value: "selector", label: "Selettore (Scelta opzioni M3 Expressive)" },
+              { value: "custom", label: "Personalizzata (stato/attributi liberi)" },
+              { value: "sensor", label: "Sensore (Anello di stato + Storico)" },
+              { value: "climate", label: "Clima / Termostato (Dial + Mode)" },
+              { value: "remote", label: "Telecomando / TV (Rocker + Pulsanti)" },
+              { value: "media", label: "Media / Speaker (Player + Volume)" },
+              { value: "none", label: "Nessun popup" }
+            ]
+          }
+        }
+      }
+    ];
   }
   _buildContentSchema() {
     const t = this._resolvedType(), e = this._config?.subtitle_entity?.trim() || this._config?.entity || "", i = [
@@ -11573,25 +11594,6 @@ let ot = class extends E {
   }
   _buildInteractionsSchema() {
     const t = this._resolvedType(), e = this._config?.tap_action === "navigate" || this._config?.hold_action === "navigate", i = [
-      {
-        name: "popup_type",
-        selector: {
-          select: {
-            mode: "dropdown",
-            options: [
-              { value: "auto", label: "Automatico (in base al dispositivo)" },
-              { value: "power_strip", label: "Power Strip (Multipresa a 2 colonne)" },
-              { value: "selector", label: "Selettore (Scelta opzioni M3 Expressive)" },
-              { value: "custom", label: "Personalizzata (stato/attributi liberi)" },
-              { value: "sensor", label: "Sensore (Anello di stato + Storico)" },
-              { value: "climate", label: "Clima / Termostato (Dial + Mode)" },
-              { value: "remote", label: "Telecomando / TV (Rocker + Pulsanti)" },
-              { value: "media", label: "Media / Speaker (Player + Volume)" },
-              { value: "none", label: "Nessun popup" }
-            ]
-          }
-        }
-      },
       {
         type: "grid",
         name: "",
