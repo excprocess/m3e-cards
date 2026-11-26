@@ -125,13 +125,15 @@ registerCard({
   preview: true,
 });
 
-registerCard({
+const assistCardEntry: CustomCardEntry = {
   type: 'm3e-assist-card',
   name: 'Assist & Mode Bar',
   description:
     'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector.',
   preview: true,
-});
+};
+registerCard(assistCardEntry);
+registerBadge(assistCardEntry);
 
 registerCard({
   type: 'm3e-glance-card',
