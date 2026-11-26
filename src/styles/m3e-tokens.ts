@@ -44,6 +44,10 @@ export const m3eBaseStyles = css`
       --md-sys-motion-expressive-effects-default,
       250ms cubic-bezier(0.2, 0, 0, 1)
     );
+    --m3e-spring-bouncy: 520ms linear(
+      0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
+      1.038 56%, 0.992 71%, 1.005 86%, 1
+    );
 
     /* M3 Expressive Shape Scale */
     --m3e-corner-xs: var(--md-sys-shape-corner-extra-small, 4px);

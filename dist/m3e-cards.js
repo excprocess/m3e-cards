@@ -625,6 +625,10 @@ const B = T`
       --md-sys-motion-expressive-effects-default,
       250ms cubic-bezier(0.2, 0, 0, 1)
     );
+    --m3e-spring-bouncy: 520ms linear(
+      0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
+      1.038 56%, 0.992 71%, 1.005 86%, 1
+    );
 
     /* M3 Expressive Shape Scale */
     --m3e-corner-xs: var(--md-sys-shape-corner-extra-small, 4px);
@@ -11563,11 +11567,23 @@ X.styles = [
         align-items: center;
         gap: 4px;
         cursor: pointer;
-        transition: transform var(--m3e-spring-spatial-fast);
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-fast);
+      }
+
+      .source-chip:hover {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 8%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
       }
 
       .source-chip:active {
-        transform: scale(0.95);
+        transform: scale(0.94);
+        border-radius: 12px;
       }
 
       .source-chip-label {
@@ -11612,8 +11628,17 @@ X.styles = [
         border-radius: 14px;
       }
 
+      .power-btn:hover:not(.is-on) {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 8%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
+      }
+
       .power-btn:active {
-        transform: scale(0.92);
+        transform: scale(0.9);
+        border-radius: 12px;
       }
 
       .power-btn svg {
@@ -11787,20 +11812,23 @@ X.styles = [
         transition:
           background-color var(--m3e-spring-effects-fast),
           color var(--m3e-spring-effects-fast),
+          border-radius var(--m3e-spring-bouncy),
           transform var(--m3e-spring-spatial-fast);
       }
 
-      .vol-btn:hover {
+      .vol-btn:hover:not(.is-muted) {
         background: color-mix(in srgb, currentColor 8%, transparent);
       }
 
       .vol-btn:active {
-        transform: scale(0.92);
+        transform: scale(0.9);
+        border-radius: 16px;
       }
 
       .vol-btn.is-muted {
         background: var(--md-sys-color-primary-container, #364067);
         color: var(--md-sys-color-on-primary-container, #dce2ff);
+        border-radius: 18px;
       }
 
       .vol-btn svg {
@@ -11844,13 +11872,21 @@ X.styles = [
         color: var(--md-sys-color-surface, #141418);
       }
 
-      .essential-btn:hover {
-        filter: brightness(1.06);
+      .essential-btn:hover:not(.is-assist) {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 8%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
+      }
+
+      .essential-btn.is-assist:hover {
+        opacity: 0.92;
       }
 
       .essential-btn:active {
         transform: scale(0.92);
-        border-radius: 16px;
+        border-radius: 18px;
       }
 
       .essential-btn svg {
@@ -11913,20 +11949,29 @@ X.styles = [
       }
 
       .transport-circle {
-        width: 54px;
-        height: 54px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         background: var(--md-sys-color-surface-container-high, #282930);
       }
 
+      .transport-circle:hover:not(.is-active) {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #e3e2e6) 8%,
+          var(--md-sys-color-surface-container-high, #282930)
+        );
+      }
+
       .transport-circle.is-active {
-        border-radius: 16px;
+        border-radius: 18px;
         background: var(--md-sys-color-primary-container, #364067);
         color: var(--md-sys-color-on-primary-container, #dce2ff);
       }
 
       .transport-circle:active {
         transform: scale(0.92);
+        border-radius: 16px;
       }
 
       .transport-circle svg {
@@ -11955,10 +12000,17 @@ X.styles = [
         display: grid;
         place-items: center;
         cursor: pointer;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
       }
 
       .channel-btn:hover {
         background: color-mix(in srgb, currentColor 8%, transparent);
+      }
+
+      .channel-btn:active {
+        transform: scale(0.9);
       }
 
       .channel-btn svg {
