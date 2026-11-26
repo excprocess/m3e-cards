@@ -1127,7 +1127,7 @@ export class M3ELightCard extends LitElement {
       }
 
       .tile-card.is-pressed:not(.is-dragging) {
-        transform: scale(0.985);
+        transform: scale(var(--m3e-press-scale-tile, 0.965));
       }
 
       .tile-card:focus-visible {

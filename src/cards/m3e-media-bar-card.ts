@@ -18,6 +18,7 @@ export class M3EMediaBarCard extends LitElement {
   @state() private _selectedEntityId?: string;
   @state() private _marqueeActive = false;
   @state() private _marqueeDuration = 12;
+  @state() private _pressed = false;
 
   @query('.media-bar') private _barEl?: HTMLElement;
   @query('.marquee-viewport') private _marqueeViewport?: HTMLDivElement;
@@ -126,7 +127,8 @@ export class M3EMediaBarCard extends LitElement {
       changedProps.has('_config') ||
       changedProps.has('_selectedEntityId') ||
       changedProps.has('_marqueeActive') ||
-      changedProps.has('_marqueeDuration')
+      changedProps.has('_marqueeDuration') ||
+      changedProps.has('_pressed')
     ) {
       return true;
     }
@@ -315,10 +317,18 @@ export class M3EMediaBarCard extends LitElement {
 
     return html`
       <ha-card
-        class="media-bar ${isPlaying ? 'is-playing' : ''} ${isUnavailable ? 'is-unavailable' : ''}"
+        class="media-bar is-wide-card ${isPlaying ? 'is-playing' : ''} ${this._pressed ? 'is-pressed' : ''} ${isUnavailable ? 'is-unavailable' : ''}"
         role="button"
         tabindex="0"
         aria-label="${title}, ${meta}"
+        @pointerdown=${(e: PointerEvent) => {
+          if (isUnavailable || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          if ((e.target as HTMLElement | null)?.closest('button')) return;
+          this._pressed = true;
+        }}
+        @pointerup=${() => (this._pressed = false)}
+        @pointerleave=${() => (this._pressed = false)}
+        @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._onBarClick()}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -469,6 +479,10 @@ export class M3EMediaBarCard extends LitElement {
 
       .media-bar:hover .state-layer {
         opacity: 0.04;
+      }
+
+      .media-bar.is-pressed .state-layer {
+        opacity: 0.08;
       }
 
       .bar-inner {

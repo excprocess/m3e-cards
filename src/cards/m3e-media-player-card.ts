@@ -38,6 +38,7 @@ export class M3EMediaPlayerCard extends LitElement {
   @state() private _scrubbing = false;
   @state() private _scrubPct: number | null = null;
   @state() private _activeEntityId?: string;
+  @state() private _pressed = false;
 
   @query('.media-player-card') private _cardEl?: HTMLElement;
   @query('m3e-media-popup') private _popupEl?: M3EMediaPopup;
@@ -161,7 +162,8 @@ export class M3EMediaPlayerCard extends LitElement {
       changedProps.has('_nowTick') ||
       changedProps.has('_scrubbing') ||
       changedProps.has('_scrubPct') ||
-      changedProps.has('_activeEntityId')
+      changedProps.has('_activeEntityId') ||
+      changedProps.has('_pressed')
     ) {
       return true;
     }
@@ -393,11 +395,19 @@ export class M3EMediaPlayerCard extends LitElement {
 
     return html`
       <ha-card
-        class="media-player-card ${isPlaying ? 'is-playing' : 'is-paused'} ${artwork ? 'has-artwork' : 'no-artwork'} ${isUnavailable ? 'is-unavailable' : ''}"
+        class="media-player-card is-wide-card ${isPlaying ? 'is-playing' : 'is-paused'} ${artwork ? 'has-artwork' : 'no-artwork'} ${this._pressed ? 'is-pressed' : ''} ${isUnavailable ? 'is-unavailable' : ''}"
         style=${paletteStyle}
         role="button"
         tabindex="0"
         aria-label="${mediaTitle}, ${mediaArtist}"
+        @pointerdown=${(e: PointerEvent) => {
+          if (isUnavailable || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          if ((e.target as HTMLElement | null)?.closest('button, [role="slider"]')) return;
+          this._pressed = true;
+        }}
+        @pointerup=${() => (this._pressed = false)}
+        @pointerleave=${() => (this._pressed = false)}
+        @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._onCardClick()}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {

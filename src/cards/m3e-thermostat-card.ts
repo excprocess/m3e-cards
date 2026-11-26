@@ -16,6 +16,7 @@ export class M3EThermostatCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3EThermostatCardConfig;
   @state() private _optimisticTemp: number | null = null;
+  @state() private _pressed = false;
   @query('.thermostat-card') private _cardEl?: HTMLElement;
 
   private _optimisticTimer: number | null = null;
@@ -317,10 +318,18 @@ export class M3EThermostatCard extends LitElement {
 
     return html`
       <ha-card
-        class="thermostat-card tone-${tone} ${isDark ? 'is-dark' : 'is-light'} ${unavailable ? 'is-unavailable' : ''}"
+        class="thermostat-card is-wide-card tone-${tone} ${isDark ? 'is-dark' : 'is-light'} ${this._pressed ? 'is-pressed' : ''} ${unavailable ? 'is-unavailable' : ''}"
         role="button"
         tabindex="0"
         aria-label="${name}, ${unavailable ? 'Offline' : target !== null ? `${target}°` : hvacState}"
+        @pointerdown=${(e: PointerEvent) => {
+          if (unavailable || (e.pointerType === 'mouse' && e.button !== 0)) return;
+          if ((e.target as HTMLElement | null)?.closest('button')) return;
+          this._pressed = true;
+        }}
+        @pointerup=${() => (this._pressed = false)}
+        @pointerleave=${() => (this._pressed = false)}
+        @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._openPopup()}
         @keydown=${(e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {

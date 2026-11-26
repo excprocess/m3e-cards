@@ -596,7 +596,11 @@ export class M3ELightGroupCard extends LitElement {
       }
 
       .group-header.is-pressed:not(.is-dragging) {
-        transform: scale(0.985);
+        transform: scale(var(--m3e-press-scale-card, 0.978));
+      }
+
+      .group-header.is-compact.is-pressed:not(.is-dragging) {
+        transform: scale(var(--m3e-press-scale-tile, 0.965));
       }
 
       .header-track {

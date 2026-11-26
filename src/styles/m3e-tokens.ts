@@ -52,6 +52,10 @@ export const m3eBaseStyles = css`
     --m3e-corner-lg: var(--md-sys-shape-corner-large, 16px);
     --m3e-corner-xl: var(--md-sys-shape-corner-extra-large, 28px);
     --m3e-corner-full: var(--md-sys-shape-corner-full, 9999px);
+
+    /* Uniform Tactile Press-Rebound Scale (tiles vs wide cards) */
+    --m3e-press-scale-tile: 0.965;
+    --m3e-press-scale-card: 0.978;
   }
 
   *,
@@ -73,9 +77,19 @@ export const m3eBaseStyles = css`
     border-radius: var(--m3e-card-border-radius, var(--ha-card-border-radius, 28px));
     color: var(--md-sys-color-on-surface, #1b1b1f);
     transition:
+      transform var(--m3e-spring-spatial-fast),
       background-color var(--m3e-spring-effects-default),
       border-color var(--m3e-spring-effects-default),
       box-shadow var(--m3e-spring-effects-default);
+  }
+
+  /* Uniform Tactile Spring Press-Rebound across all interactive cards */
+  ha-card.is-pressed:not(.is-dragging):not(.is-unavailable) {
+    transform: scale(var(--m3e-press-scale-tile, 0.965));
+  }
+
+  ha-card.is-wide-card.is-pressed:not(.is-dragging):not(.is-unavailable) {
+    transform: scale(var(--m3e-press-scale-card, 0.978));
   }
 
   /* =========================================================================

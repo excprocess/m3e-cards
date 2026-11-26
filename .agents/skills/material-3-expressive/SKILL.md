@@ -43,6 +43,12 @@ For the complete list of CSS tokens exposed by `material-you-utilities` and Mate
      - Leading icon: `24px × 24px` snug against the left edge (`14px` inset); trailing chevron: `18px × 18px` (`12px` right inset, `margin-inline-start: -8px` to reclaim the SVG's built-in left optical padding without shifting the chevron).
      - Tile title: `14.5px` / `line-height: 18px`, `font-weight: 600`, **2-line clamp** (`display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;`) so longer Italian names (`Temperatura`, `Illuminazione`, `Termometro cameretta`, `Growlight`) never truncate prematurely on 2-column mobile grids.
      - Tile subtitle: `13px` / `line-height: 17px`, single-line ellipsis, `tabular-nums`.
+   - **Uniform Tactile Press-Rebound Physics (MANDATORY on ALL interactive cards, small and large):**
+     - Every interactive `<ha-card>` (both 6-column tiles AND 12-column wide cards such as `Thermostat`, `Media Player`, `Media Bar`, `Light Group`, `Assist`) MUST implement spring press-rebound via `.is-pressed` (`@pointerdown` ignoring nested `button`/`[role="slider"]`/`hui-card-features`, cleared on `pointerup`/`pointerleave`/`pointercancel`).
+     - Shared tokens in `m3eBaseStyles` (`src/styles/m3e-tokens.ts`):
+       - Half-width tiles (`6 cols`): `transform: scale(var(--m3e-press-scale-tile, 0.965))` with `transition: transform var(--m3e-spring-spatial-fast)`.
+       - Full-width / wide cards (`12 cols`, marked with `.is-wide-card`): `transform: scale(var(--m3e-press-scale-card, 0.978))` with `transition: transform var(--m3e-spring-spatial-fast)`.
+     - Never leave a large interactive card static on press while smaller sibling tiles bounce.
 
 ---
 
