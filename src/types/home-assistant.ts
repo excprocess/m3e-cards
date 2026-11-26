@@ -1,3 +1,8 @@
+import type {
+  LovelaceCardFeatureConfig,
+  M3EFeaturesPosition,
+} from '../utils/ha-card-features';
+
 export interface HassEntity {
   entity_id: string;
   state: string;
@@ -281,6 +286,10 @@ export interface M3EToggleCardConfig extends LovelaceCardConfig {
   navigation_path?: string;
   /** Material 3 Expressive tile shape style */
   card_style?: M3ECardStyle;
+  /** Native Home Assistant & HACS Card Features rendered in a sub-row */
+  features?: LovelaceCardFeatureConfig[];
+  /** Position of Card Features: bottom (stacked sub-row) or inline */
+  features_position?: M3EFeaturesPosition;
 }
 
 export interface M3ERemoteButtonsConfig {
@@ -347,4 +356,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   remote_buttons?: M3ERemoteButtonsConfig;
   /** Action for "Media & Controls" button in Media popup: popup (default M3E Now Playing) or more-info (native HA) */
   media_controls_action?: 'popup' | 'more-info';
+  /** Native Home Assistant & HACS Card Features rendered in a sub-row */
+  features?: LovelaceCardFeatureConfig[];
+  /** Position of Card Features: bottom (stacked sub-row) or inline */
+  features_position?: M3EFeaturesPosition;
 }

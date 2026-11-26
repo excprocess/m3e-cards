@@ -15,6 +15,10 @@ import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import {
+  ensureCardFeaturesLoaded,
+  stopFeatureEventPropagation,
+} from '../utils/ha-card-features';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
@@ -163,6 +167,7 @@ export class M3EStatusCard extends LitElement {
   @state() private _historyLoading = false;
   @state() private _historyEntityId: string | null = null;
   @state() private _historyHoverIdx: number | null = null;
+  @state() private _featuresLoaded = false;
 
   @query('dialog.status-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.status-tile') private _tileEl?: HTMLElement;
@@ -209,11 +214,21 @@ export class M3EStatusCard extends LitElement {
       ...config,
     };
     this._syncRelativeTimer();
+    this._ensureFeatures();
   }
 
   public connectedCallback(): void {
     super.connectedCallback();
     this._syncRelativeTimer();
+    this._ensureFeatures();
+  }
+
+  private _ensureFeatures(): void {
+    if ((this._config?.features?.length ?? 0) > 0 && !this._featuresLoaded) {
+      void ensureCardFeaturesLoaded().then((ok) => {
+        if (ok) this._featuresLoaded = true;
+      });
+    }
   }
 
   public disconnectedCallback(): void {
@@ -245,10 +260,20 @@ export class M3EStatusCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return 2;
+    const featuresCount = this._config?.features?.length ?? 0;
+    const isInline = this._config?.features_position === 'inline';
+    return featuresCount > 0 && !isInline ? 2 + featuresCount : 2;
   }
 
   public getGridOptions() {
+    const featuresCount = this._config?.features?.length ?? 0;
+    const isInline = this._config?.features_position === 'inline';
+    if (featuresCount > 0) {
+      if (isInline) {
+        return { rows: 'auto', columns: 12, min_columns: 6 };
+      }
+      return { rows: 1 + featuresCount, columns: 6, min_columns: 3 };
+    }
     return { rows: 'auto', columns: 6, min_columns: 3 };
   }
 
@@ -265,12 +290,16 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_historyPoints') ||
       changedProps.has('_historyLoading') ||
       changedProps.has('_historyHoverIdx') ||
-      changedProps.has('_relativeTick')
+      changedProps.has('_relativeTick') ||
+      changedProps.has('_featuresLoaded')
     ) {
       return true;
     }
 
     if (changedProps.has('hass') && this._config && this.hass) {
+      if ((this._config.features?.length ?? 0) > 0) {
+        return true;
+      }
       const watched = [
         this._config.entity,
         this._config.status_entity,
@@ -2183,12 +2212,16 @@ export class M3EStatusCard extends LitElement {
       ? formatLastChanged(this._statusEntity?.last_changed)
       : null;
 
+    const features = this._config.features ?? [];
+    const hasFeatures = features.length > 0;
+    const featuresPos = this._config.features_position ?? 'bottom';
+
     return html`
       ${this.popupOnly
         ? nothing
         : html`
             <ha-card
-              class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
+              class="status-tile ${styleClass} ${isActive ? 'is-active' : 'is-inactive'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''} ${hasFeatures ? `has-features features-${featuresPos}` : ''}"
               role="button"
               tabindex="0"
               aria-label="${name}, ${this._stateLabel}"
@@ -2239,6 +2272,25 @@ export class M3EStatusCard extends LitElement {
                       `
                     : nothing}
               </div>
+              ${hasFeatures
+                ? html`
+                    <div
+                      class="features-wrap"
+                      @click=${stopFeatureEventPropagation}
+                      @pointerdown=${stopFeatureEventPropagation}
+                      @pointerup=${stopFeatureEventPropagation}
+                      @contextmenu=${stopFeatureEventPropagation}
+                    >
+                      <hui-card-features
+                        .hass=${this.hass}
+                        .context=${{ entity_id: this._config.entity }}
+                        .stateObj=${this._entity}
+                        .features=${features}
+                        .position=${featuresPos}
+                      ></hui-card-features>
+                    </div>
+                  `
+                : nothing}
             </ha-card>
           `}
 
@@ -2353,6 +2405,44 @@ export class M3EStatusCard extends LitElement {
         width: 100%;
         height: auto;
         margin-bottom: 14px;
+      }
+
+      /* Native HA Card Features Sub-Row */
+      .status-tile.has-features.features-bottom {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .status-tile.has-features.features-bottom .tile-inner {
+        height: auto;
+        min-height: 68px;
+      }
+
+      .status-tile.has-features.features-inline {
+        display: flex;
+        align-items: center;
+      }
+
+      .status-tile.has-features.features-inline .tile-inner {
+        flex: 1 1 50%;
+        min-width: 0;
+      }
+
+      .features-wrap {
+        position: relative;
+        z-index: 2;
+        --feature-border-radius: 18px;
+        --feature-color: var(--md-sys-color-primary, #4c5c92);
+      }
+
+      .status-tile.features-bottom .features-wrap {
+        padding: 0 12px 12px;
+      }
+
+      .status-tile.features-inline .features-wrap {
+        flex: 1 1 50%;
+        min-width: 0;
+        padding: 8px 12px 8px 0;
       }
 
       /* =====================================================================

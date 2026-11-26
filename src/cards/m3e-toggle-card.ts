@@ -7,6 +7,11 @@ import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import {
+  ensureCardFeaturesLoaded,
+  stopFeatureEventPropagation,
+} from '../utils/ha-card-features';
+import '../editors/m3e-toggle-card-editor';
 
 const LONG_PRESS_MS = 420;
 
@@ -16,6 +21,7 @@ export class M3EToggleCard extends LitElement {
   @state() private _config?: M3EToggleCardConfig;
   @state() private _pressed = false;
   @state() private _popupOpen = false;
+  @state() private _featuresLoaded = false;
 
   @query('dialog.toggle-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.toggle-tile') private _tileEl?: HTMLElement;
@@ -38,81 +44,8 @@ export class M3EToggleCard extends LitElement {
     };
   }
 
-  public static getConfigForm() {
-    return {
-      schema: [
-        {
-          name: 'entity',
-          required: true,
-          selector: {
-            entity: {
-              domain: ['switch', 'input_boolean', 'fan', 'light', 'automation', 'humidifier'],
-            },
-          },
-        },
-        { name: 'name', selector: { text: {} } },
-        {
-          name: 'card_style',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'default', label: 'Google Home (Default 28px)' },
-                { value: 'morph', label: 'Google Home Morph (28px ↔ Pillola)' },
-                { value: 'pill', label: 'Pillola piena (M3 Stadium)' },
-                { value: 'expressive', label: 'M3 Expressive Morph (20px ↔ Pillola)' },
-                { value: 'compact', label: 'Compatta (56px / 18px)' },
-              ],
-            },
-          },
-        },
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'icon_on', selector: { icon: {} } },
-            { name: 'icon_off', selector: { icon: {} } },
-          ],
-        },
-        {
-          type: 'grid',
-          name: '',
-          schema: [
-            { name: 'label_on', selector: { text: {} } },
-            { name: 'label_off', selector: { text: {} } },
-          ],
-        },
-        {
-          name: 'hold_action',
-          selector: {
-            select: {
-              mode: 'dropdown',
-              options: [
-                { value: 'popup', label: 'Apri popup Material 3 Expressive' },
-                { value: 'more-info', label: 'Schermata nativa Home Assistant' },
-                { value: 'navigate', label: 'Apri percorso / Bubble Card (#hash) / Browser Mod' },
-                { value: 'none', label: 'Nessuna azione' },
-              ],
-            },
-          },
-        },
-        { name: 'navigation_path', selector: { text: {} } },
-      ],
-      computeLabel: (schema: { name: string }) => {
-        const labels: Record<string, string> = {
-          entity: 'Entità (switch, presa, input_boolean…)',
-          name: 'Nome personalizzato',
-          card_style: 'Design della pillola (Material 3)',
-          icon_on: 'Icona acceso (vuoto = standard Google Home)',
-          icon_off: 'Icona spento (vuoto = standard Google Home)',
-          label_on: 'Testo acceso (default: On)',
-          label_off: 'Testo spento (default: Off)',
-          hold_action: 'Azione pressione prolungata (Hold)',
-          navigation_path: 'Percorso / #popup Bubble Card / script o browser_mod',
-        };
-        return labels[schema.name] ?? schema.name;
-      },
-    };
+  public static getConfigElement(): HTMLElement {
+    return document.createElement('m3e-toggle-card-editor');
   }
 
   public setConfig(config: M3EToggleCardConfig): void {
@@ -123,13 +56,37 @@ export class M3EToggleCard extends LitElement {
       hold_action: 'popup',
       ...config,
     };
+    this._ensureFeatures();
+  }
+
+  public connectedCallback(): void {
+    super.connectedCallback();
+    this._ensureFeatures();
+  }
+
+  private _ensureFeatures(): void {
+    if ((this._config?.features?.length ?? 0) > 0 && !this._featuresLoaded) {
+      void ensureCardFeaturesLoaded().then((ok) => {
+        if (ok) this._featuresLoaded = true;
+      });
+    }
   }
 
   public getCardSize(): number {
-    return 2;
+    const featuresCount = this._config?.features?.length ?? 0;
+    const isInline = this._config?.features_position === 'inline';
+    return featuresCount > 0 && !isInline ? 2 + featuresCount : 2;
   }
 
   public getGridOptions() {
+    const featuresCount = this._config?.features?.length ?? 0;
+    const isInline = this._config?.features_position === 'inline';
+    if (featuresCount > 0) {
+      if (isInline) {
+        return { rows: 'auto', columns: 12, min_columns: 6 };
+      }
+      return { rows: 1 + featuresCount, columns: 6, min_columns: 3 };
+    }
     return { rows: 'auto', columns: 6, min_columns: 3 };
   }
 
@@ -142,12 +99,16 @@ export class M3EToggleCard extends LitElement {
     if (
       changedProps.has('_config') ||
       changedProps.has('_pressed') ||
-      changedProps.has('_popupOpen')
+      changedProps.has('_popupOpen') ||
+      changedProps.has('_featuresLoaded')
     ) {
       return true;
     }
 
     if (changedProps.has('hass') && this._config && this.hass) {
+      if ((this._config.features?.length ?? 0) > 0) {
+        return true;
+      }
       const next = this.hass.states[this._config.entity];
       if (next !== this._prevEntityState) {
         this._prevEntityState = next;
@@ -400,10 +361,13 @@ export class M3EToggleCard extends LitElement {
     const styleClass = `style-${this._config.card_style ?? 'default'}`;
     const lastChanged = this._popupOpen ? formatLastChanged(entity?.last_changed) : null;
     const powerSiblings = this._popupOpen ? this._getPowerSiblings() : [];
+    const features = this._config.features ?? [];
+    const hasFeatures = features.length > 0;
+    const featuresPos = this._config.features_position ?? 'bottom';
 
     return html`
       <ha-card
-        class="toggle-tile ${styleClass} ${isOn ? 'is-on' : 'is-off'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''}"
+        class="toggle-tile ${styleClass} ${isOn ? 'is-on' : 'is-off'} ${this._pressed ? 'is-pressed' : ''} ${this._isUnavailable ? 'is-unavailable' : ''} ${hasFeatures ? `has-features features-${featuresPos}` : ''}"
         role="switch"
         tabindex="0"
         aria-checked=${String(isOn)}
@@ -450,6 +414,26 @@ export class M3EToggleCard extends LitElement {
               `
             : nothing}
         </div>
+        ${hasFeatures
+          ? html`
+              <div
+                class="features-wrap"
+                @click=${stopFeatureEventPropagation}
+                @pointerdown=${stopFeatureEventPropagation}
+                @pointermove=${stopFeatureEventPropagation}
+                @pointerup=${stopFeatureEventPropagation}
+                @contextmenu=${stopFeatureEventPropagation}
+              >
+                <hui-card-features
+                  .hass=${this.hass}
+                  .context=${{ entity_id: this._config.entity }}
+                  .stateObj=${entity}
+                  .features=${features}
+                  .position=${featuresPos}
+                ></hui-card-features>
+              </div>
+            `
+          : nothing}
       </ha-card>
 
       <dialog
@@ -624,6 +608,44 @@ export class M3EToggleCard extends LitElement {
         align-items: center;
         gap: 10px;
         pointer-events: none;
+      }
+
+      /* Native HA Card Features Sub-Row */
+      .toggle-tile.has-features.features-bottom {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .toggle-tile.has-features.features-bottom .tile-inner {
+        height: auto;
+        min-height: 68px;
+      }
+
+      .toggle-tile.has-features.features-inline {
+        display: flex;
+        align-items: center;
+      }
+
+      .toggle-tile.has-features.features-inline .tile-inner {
+        flex: 1 1 50%;
+        min-width: 0;
+      }
+
+      .features-wrap {
+        position: relative;
+        z-index: 2;
+        --feature-border-radius: 18px;
+        --feature-color: var(--md-sys-color-primary, #4c5c92);
+      }
+
+      .toggle-tile.features-bottom .features-wrap {
+        padding: 0 12px 12px;
+      }
+
+      .toggle-tile.features-inline .features-wrap {
+        flex: 1 1 50%;
+        min-width: 0;
+        padding: 8px 12px 8px 0;
       }
 
       .tile-icon {

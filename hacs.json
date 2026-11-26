@@ -1,6 +1,7 @@
 {
   "name": "Material Native",
   "filename": "m3e-cards.js",
+  "homeassistant": "2025.2.0",
   "render_readme": true,
   "content_in_root": false
 }

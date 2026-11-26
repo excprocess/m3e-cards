@@ -12,6 +12,11 @@
 - **Integrazione nativa con [`Nerwyn/material-you-utilities`](https://github.com/Nerwyn/material-you-utilities):** eredita automaticamente `card_type` (`elevated`, `filled`, `outlined`, `transparent`), livello di contrasto (`-1.0` → `+1.0`), `color scheme` e modalità Light/Dark tramite i token `--md-sys-color-*` e `--ha-card-*`.
 - **100% configurabile da GUI Home Assistant:** ogni card dispone di form visuale nativo o editor dedicato per scegliere entità, attributi, icone, azioni e stile senza dover scrivere YAML a mano.
 - **Coerenza grafica rigorosa:** stessa geometria (`28px` / `9999px` pillola), stesso header dei popup (`×` chiusura a sinistra, titolo al centro, toggle/controlli a destra), stesse curve di animazione e blocco dello scroll della dashboard dietro ai popup su Android/iOS.
+- **Compatibilità nativa con Home Assistant Card Features (incluse custom features HACS):** Status Card e Toggle Card supportano nativamente `<hui-card-features>` e `<hui-card-features-editor>` (`Content / Interactions / Features`), compatibili con tutte le feature di sistema e plugin HACS come `custom-card-features`.
+
+### Requisiti minimi / Requirements
+- **Home Assistant `2025.2.0` o superiore** (richiesto per le API moderne di Card Features con `context` e `features_position: bottom | inline`).
+- **Consigliato:** [`Nerwyn/material-you-utilities`](https://github.com/Nerwyn/material-you-utilities) per la generazione dinamica completa dei token Material You.
 
 ---
 
