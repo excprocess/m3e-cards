@@ -345,6 +345,58 @@ export interface M3ERemoteButtonsConfig {
   ch_down?: string;
 }
 
+export type M3ERemoteCustomActionType = 'player' | 'entity' | 'remote_command' | 'source';
+
+export interface M3ERemoteCustomSegment {
+  label: string;
+  icon?: string;
+  action_type?: M3ERemoteCustomActionType;
+  player_action?: keyof M3ERemoteButtonsConfig;
+  entity?: string;
+  entity_action?: 'auto' | 'toggle' | 'turn_on' | 'turn_off' | 'select_option';
+  value?: string;
+  command?: string;
+  device?: string;
+  active_state?: string;
+}
+
+export interface M3ERemoteCustomControl {
+  type: 'button' | 'segmented';
+  label?: string;
+  icon?: string;
+  action_type?: M3ERemoteCustomActionType;
+  player_action?: keyof M3ERemoteButtonsConfig;
+  entity?: string;
+  entity_action?: 'auto' | 'toggle' | 'turn_on' | 'turn_off' | 'select_option';
+  value?: string;
+  command?: string;
+  device?: string;
+  state_entity?: string;
+  active_state?: string;
+  segments?: M3ERemoteCustomSegment[];
+}
+
+export interface M3ERemoteCardConfig extends LovelaceCardConfig {
+  entity: string;
+  status_entity?: string;
+  name?: EntityNameConfig;
+  icon?: string;
+  use_entity_icon?: boolean;
+  /** Navigation pad mode: 'touchpad' (Google Home gesture pad) or 'dpad' (4-way buttons) */
+  pad_mode?: 'touchpad' | 'dpad';
+  show_touchpad?: boolean;
+  show_volume?: boolean;
+  show_essentials?: boolean;
+  show_transport?: boolean;
+  show_channels?: boolean;
+  show_source?: boolean;
+  show_power?: boolean;
+  remote_device?: string;
+  remote_buttons?: M3ERemoteButtonsConfig;
+  /** Custom native M3 buttons & segmented pills rendered at the bottom */
+  remote_custom_controls?: M3ERemoteCustomControl[];
+}
+
 export type M3EStatusBadgeStyle = 'glance' | 'split' | 'dot' | 'alert';
 
 export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
@@ -416,6 +468,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   remote_device?: string;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */
   remote_buttons?: M3ERemoteButtonsConfig;
+  /** Optional custom native M3 buttons & segmented pills at the bottom of Remote popup */
+  remote_custom_controls?: M3ERemoteCustomControl[];
   /** Action for "Media & Controls" button in Media popup: popup (default M3E Now Playing) or more-info (native HA) */
   media_controls_action?: 'popup' | 'more-info';
   /** Native Home Assistant & HACS Card Features rendered in a sub-row */

@@ -22,6 +22,10 @@ import { resolveEntityName, resolveStateContent } from '../utils/entity-display'
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
 import { t } from '../utils/i18n';
 import { executeRemoteCommand, type RemoteActionKey } from '../utils/remote-commands';
+import {
+  remoteCustomControlStyles,
+  renderRemoteCustomControls,
+} from '../utils/remote-custom-controls';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
@@ -2075,6 +2079,14 @@ export class M3EStatusCard extends LitElement {
           <span>${sourceLabel}</span>
           <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
         </button>
+
+        ${renderRemoteCustomControls(
+          this.hass,
+          this._config!.entity,
+          this._config?.remote_custom_controls,
+          this._config?.remote_buttons,
+          this._config?.remote_device,
+        )}
       </div>
 
       ${this._remoteSourceSheetOpen && sourceList.length > 0 && media
@@ -2717,6 +2729,7 @@ export class M3EStatusCard extends LitElement {
 
   static styles = [
     m3eBaseStyles,
+    remoteCustomControlStyles,
     css`
       :host {
         --m3e-spring-bouncy: 520ms linear(

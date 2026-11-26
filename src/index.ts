@@ -6,6 +6,7 @@ import './cards/m3e-light-group-card';
 import './cards/m3e-media-bar-card';
 import './cards/m3e-media-player-card';
 import './cards/m3e-people-card';
+import './cards/m3e-remote-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
 import './cards/m3e-status-badge';
@@ -21,6 +22,7 @@ export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3EMediaBarCard } from './cards/m3e-media-bar-card';
 export { M3EMediaPlayerCard } from './cards/m3e-media-player-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
+export { M3ERemoteCard } from './cards/m3e-remote-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
 export { M3EStatusBadge } from './cards/m3e-status-badge';
@@ -40,6 +42,9 @@ export type {
   M3EMediaPlayerCardConfig,
   M3EPeopleCardConfig,
   M3EPeopleItemConfig,
+  M3ERemoteCardConfig,
+  M3ERemoteCustomControl,
+  M3ERemoteCustomSegment,
   M3ESceneCardConfig,
   M3EStackCardConfig,
   M3EStackItemConfig,
@@ -180,6 +185,14 @@ registerCard({
   name: 'Media Player',
   description:
     'Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-remote-card',
+  name: 'Remote Card',
+  description:
+    'Google Home–style Material 3 Expressive TV & Media remote card with gesture touchpad / D-Pad, volume rocker, out-of-the-box multi-platform commands, and custom native buttons & segmented pills.',
   preview: true,
 });
 

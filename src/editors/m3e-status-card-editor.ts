@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import type {
   HomeAssistant,
+  M3ERemoteCustomControl,
   M3EStatusCardConfig,
   M3EStatusPopupType,
 } from '../types/home-assistant';
@@ -12,6 +13,7 @@ import {
   type SubElementEditorConfig,
 } from '../utils/ha-card-features';
 import '../utils/m3e-feature-sub-editor';
+import './m3e-remote-custom-controls-editor';
 
 @customElement('m3e-status-card-editor')
 export class M3EStatusCardEditor extends LitElement {
@@ -574,6 +576,32 @@ export class M3EStatusCardEditor extends LitElement {
             ></ha-form>
           </div>
         </ha-expansion-panel>
+
+        ${this._resolvedType() === 'remote'
+          ? html`
+              <ha-expansion-panel outlined>
+                <ha-icon slot="leading-icon" icon="mdi:remote"></ha-icon>
+                <span slot="header">
+                  Pulsanti e Pillole Personalizzate (${this._config.remote_custom_controls?.length ?? 0})
+                </span>
+                <div class="panel-body">
+                  <m3e-remote-custom-controls-editor
+                    .hass=${this.hass}
+                    .controls=${this._config.remote_custom_controls ?? []}
+                    @controls-changed=${(
+                      e: CustomEvent<{ controls: M3ERemoteCustomControl[] }>,
+                    ) => {
+                      if (!this._config) return;
+                      this._emitConfig({
+                        ...this._config,
+                        remote_custom_controls: e.detail.controls,
+                      });
+                    }}
+                  ></m3e-remote-custom-controls-editor>
+                </div>
+              </ha-expansion-panel>
+            `
+          : nothing}
 
         <ha-expansion-panel outlined>
           <ha-icon slot="leading-icon" icon="mdi:list-box"></ha-icon>
