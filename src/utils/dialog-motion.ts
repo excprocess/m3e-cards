@@ -12,6 +12,12 @@ export function animateDialogOpen(
   originRect?: DOMRect | null,
 ): void {
   if (!surface) return;
+  const dialog = surface.closest('dialog');
+  dialog?.classList.remove('is-closing');
+  for (const a of surface.getAnimations()) {
+    a.cancel();
+  }
+
   const isMobile = window.matchMedia('(max-width: 600px)').matches;
 
   if (originRect && !isMobile) {
@@ -47,15 +53,15 @@ export function animateDialogOpen(
   surface.animate(
     isMobile
       ? [
-          { transform: 'translateY(48px)', opacity: 0 },
-          { transform: 'translateY(0px)', opacity: 1 },
+          { transform: 'translate3d(0, 100%, 0)' },
+          { transform: 'translate3d(0, 0, 0)' },
         ]
       : [
-          { transform: 'scale(0.92)', opacity: 0 },
-          { transform: 'scale(1)', opacity: 1 },
+          { transform: 'scale(0.92) translateY(10px)', opacity: 0 },
+          { transform: 'scale(1) translateY(0px)', opacity: 1 },
         ],
     {
-      duration: isMobile ? 280 : 250,
+      duration: isMobile ? 320 : 260,
       easing: M3_EMPHASIZED_DECEL,
     },
   );
@@ -71,26 +77,36 @@ export function animateDialogClose(
     return;
   }
 
+  if (dialog.classList.contains('is-closing')) {
+    return;
+  }
+
   if (!surface) {
     dialog.close();
     onDone();
     return;
   }
 
+  dialog.classList.add('is-closing');
+  for (const a of surface.getAnimations()) {
+    a.cancel();
+  }
+
   const isMobile = window.matchMedia('(max-width: 600px)').matches;
   const anim = surface.animate(
     isMobile
       ? [
-          { transform: 'translateY(0px)', opacity: 1 },
-          { transform: 'translateY(36px)', opacity: 0 },
+          { transform: 'translate3d(0, 0, 0)' },
+          { transform: 'translate3d(0, 100%, 0)' },
         ]
       : [
-          { transform: 'scale(1)', opacity: 1 },
-          { transform: 'scale(0.93)', opacity: 0 },
+          { transform: 'scale(1) translateY(0px)', opacity: 1 },
+          { transform: 'scale(0.92) translateY(12px)', opacity: 0 },
         ],
     {
-      duration: 170,
+      duration: isMobile ? 240 : 200,
       easing: M3_EMPHASIZED_ACCEL,
+      fill: 'forwards',
     },
   );
 
@@ -99,6 +115,8 @@ export function animateDialogClose(
     if (finished) return;
     finished = true;
     if (dialog.open) dialog.close();
+    dialog.classList.remove('is-closing');
+    anim.cancel();
     onDone();
   };
 

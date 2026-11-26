@@ -22,7 +22,7 @@ let Oe = class {
     return this.cssText;
   }
 };
-const Ge = (t) => new Oe(typeof t == "string" ? t : t + "", void 0, ne), E = (t, ...e) => {
+const Ge = (t) => new Oe(typeof t == "string" ? t : t + "", void 0, ne), T = (t, ...e) => {
   const i = t.length === 1 ? t[0] : e.reduce((s, r, a) => s + ((o) => {
     if (o._$cssResult$ === !0) return o.cssText;
     if (typeof o == "number") return o;
@@ -75,7 +75,7 @@ const { is: qe, defineProperty: Xe, getOwnPropertyDescriptor: Ye, getOwnProperty
   return i;
 } }, le = (t, e) => !qe(t, e), _e = { attribute: !0, type: String, converter: Vt, reflect: !1, useDefault: !1, hasChanged: le };
 Symbol.metadata ??= Symbol("metadata"), Ft.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let pt = class extends HTMLElement {
+let ht = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
@@ -256,15 +256,15 @@ let pt = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-pt.elementStyles = [], pt.shadowRootOptions = { mode: "open" }, pt[St("elementProperties")] = /* @__PURE__ */ new Map(), pt[St("finalized")] = /* @__PURE__ */ new Map(), ei?.({ ReactiveElement: pt }), (Ft.reactiveElementVersions ??= []).push("2.1.2");
+ht.elementStyles = [], ht.shadowRootOptions = { mode: "open" }, ht[St("elementProperties")] = /* @__PURE__ */ new Map(), ht[St("finalized")] = /* @__PURE__ */ new Map(), ei?.({ ReactiveElement: ht }), (Ft.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ce = globalThis, be = (t) => t, Ut = ce.trustedTypes, ye = Ut ? Ut.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Ie = "$lit$", K = `lit$${Math.random().toFixed(9).slice(2)}$`, ze = "?" + K, ii = `<${ze}>`, at = document, Pt = () => at.createComment(""), Et = (t) => t === null || typeof t != "object" && typeof t != "function", de = Array.isArray, si = (t) => de(t) || typeof t?.[Symbol.iterator] == "function", ee = `[ 	
+const ce = globalThis, be = (t) => t, Ut = ce.trustedTypes, ye = Ut ? Ut.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Ie = "$lit$", Q = `lit$${Math.random().toFixed(9).slice(2)}$`, ze = "?" + Q, ii = `<${ze}>`, at = document, Pt = () => at.createComment(""), Et = (t) => t === null || typeof t != "object" && typeof t != "function", de = Array.isArray, si = (t) => de(t) || typeof t?.[Symbol.iterator] == "function", ee = `[ 	
 \f\r]`, wt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, xe = /-->/g, we = />/g, et = RegExp(`>|${ee}(?:([^\\s"'>=/]+)(${ee}*=${ee}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), $e = /'/g, ke = /"/g, Le = /^(?:script|style|textarea|title)$/i, De = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = De(1), ie = De(2), ht = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), Se = /* @__PURE__ */ new WeakMap(), rt = at.createTreeWalker(at, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), $e = /'/g, ke = /"/g, Le = /^(?:script|style|textarea|title)$/i, De = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = De(1), ie = De(2), ut = Symbol.for("lit-noChange"), p = Symbol.for("lit-nothing"), Se = /* @__PURE__ */ new WeakMap(), rt = at.createTreeWalker(at, 129);
 function He(t, e) {
   if (!de(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return ye !== void 0 ? ye.createHTML(e) : e;
@@ -274,10 +274,10 @@ const ri = (t, e) => {
   let r, a = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = wt;
   for (let n = 0; n < i; n++) {
     const c = t[n];
-    let d, h, u = -1, m = 0;
-    for (; m < c.length && (o.lastIndex = m, h = o.exec(c), h !== null); ) m = o.lastIndex, o === wt ? h[1] === "!--" ? o = xe : h[1] !== void 0 ? o = we : h[2] !== void 0 ? (Le.test(h[2]) && (r = RegExp("</" + h[2], "g")), o = et) : h[3] !== void 0 && (o = et) : o === et ? h[0] === ">" ? (o = r ?? wt, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, d = h[1], o = h[3] === void 0 ? et : h[3] === '"' ? ke : $e) : o === ke || o === $e ? o = et : o === xe || o === we ? o = wt : (o = et, r = void 0);
-    const g = o === et && t[n + 1].startsWith("/>") ? " " : "";
-    a += o === wt ? c + ii : u >= 0 ? (s.push(d), c.slice(0, u) + Ie + c.slice(u) + K + g) : c + K + (u === -2 ? n : g);
+    let d, h, u = -1, g = 0;
+    for (; g < c.length && (o.lastIndex = g, h = o.exec(c), h !== null); ) g = o.lastIndex, o === wt ? h[1] === "!--" ? o = xe : h[1] !== void 0 ? o = we : h[2] !== void 0 ? (Le.test(h[2]) && (r = RegExp("</" + h[2], "g")), o = et) : h[3] !== void 0 && (o = et) : o === et ? h[0] === ">" ? (o = r ?? wt, u = -1) : h[1] === void 0 ? u = -2 : (u = o.lastIndex - h[2].length, d = h[1], o = h[3] === void 0 ? et : h[3] === '"' ? ke : $e) : o === ke || o === $e ? o = et : o === xe || o === we ? o = wt : (o = et, r = void 0);
+    const m = o === et && t[n + 1].startsWith("/>") ? " " : "";
+    a += o === wt ? c + ii : u >= 0 ? (s.push(d), c.slice(0, u) + Ie + c.slice(u) + Q + m) : c + Q + (u === -2 ? n : m);
   }
   return [He(t, a + (t[i] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
 };
@@ -294,21 +294,21 @@ class Tt {
     for (; (r = rt.nextNode()) !== null && c.length < n; ) {
       if (r.nodeType === 1) {
         if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(Ie)) {
-          const m = h[o++], g = r.getAttribute(u).split(K), v = /([.?@])?(.*)/.exec(m);
-          c.push({ type: 1, index: a, name: v[2], strings: g, ctor: v[1] === "." ? oi : v[1] === "?" ? ni : v[1] === "@" ? li : Gt }), r.removeAttribute(u);
-        } else u.startsWith(K) && (c.push({ type: 6, index: a }), r.removeAttribute(u));
+          const g = h[o++], m = r.getAttribute(u).split(Q), v = /([.?@])?(.*)/.exec(g);
+          c.push({ type: 1, index: a, name: v[2], strings: m, ctor: v[1] === "." ? oi : v[1] === "?" ? ni : v[1] === "@" ? li : Gt }), r.removeAttribute(u);
+        } else u.startsWith(Q) && (c.push({ type: 6, index: a }), r.removeAttribute(u));
         if (Le.test(r.tagName)) {
-          const u = r.textContent.split(K), m = u.length - 1;
-          if (m > 0) {
+          const u = r.textContent.split(Q), g = u.length - 1;
+          if (g > 0) {
             r.textContent = Ut ? Ut.emptyScript : "";
-            for (let g = 0; g < m; g++) r.append(u[g], Pt()), rt.nextNode(), c.push({ type: 2, index: ++a });
-            r.append(u[m], Pt());
+            for (let m = 0; m < g; m++) r.append(u[m], Pt()), rt.nextNode(), c.push({ type: 2, index: ++a });
+            r.append(u[g], Pt());
           }
         }
       } else if (r.nodeType === 8) if (r.data === ze) c.push({ type: 2, index: a });
       else {
         let u = -1;
-        for (; (u = r.data.indexOf(K, u + 1)) !== -1; ) c.push({ type: 7, index: a }), u += K.length - 1;
+        for (; (u = r.data.indexOf(Q, u + 1)) !== -1; ) c.push({ type: 7, index: a }), u += Q.length - 1;
       }
       a++;
     }
@@ -318,11 +318,11 @@ class Tt {
     return s.innerHTML = e, s;
   }
 }
-function ut(t, e, i = t, s) {
-  if (e === ht) return e;
+function ft(t, e, i = t, s) {
+  if (e === ut) return e;
   let r = s !== void 0 ? i._$Co?.[s] : i._$Cl;
   const a = Et(e) ? void 0 : e._$litDirective$;
-  return r?.constructor !== a && (r?._$AO?.(!1), a === void 0 ? r = void 0 : (r = new a(t), r._$AT(t, i, s)), s !== void 0 ? (i._$Co ??= [])[s] = r : i._$Cl = r), r !== void 0 && (e = ut(t, r._$AS(t, e.values), r, s)), e;
+  return r?.constructor !== a && (r?._$AO?.(!1), a === void 0 ? r = void 0 : (r = new a(t), r._$AT(t, i, s)), s !== void 0 ? (i._$Co ??= [])[s] = r : i._$Cl = r), r !== void 0 && (e = ft(t, r._$AS(t, e.values), r, s)), e;
 }
 class ai {
   constructor(e, i) {
@@ -371,7 +371,7 @@ class zt {
     return this._$AB;
   }
   _$AI(e, i = this) {
-    e = ut(this, e, i), Et(e) ? e === p || e == null || e === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : e !== this._$AH && e !== ht && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : si(e) ? this.k(e) : this._(e);
+    e = ft(this, e, i), Et(e) ? e === p || e == null || e === "" ? (this._$AH !== p && this._$AR(), this._$AH = p) : e !== this._$AH && e !== ut && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : si(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -424,11 +424,11 @@ class Gt {
   _$AI(e, i = this, s, r) {
     const a = this.strings;
     let o = !1;
-    if (a === void 0) e = ut(this, e, i, 0), o = !Et(e) || e !== this._$AH && e !== ht, o && (this._$AH = e);
+    if (a === void 0) e = ft(this, e, i, 0), o = !Et(e) || e !== this._$AH && e !== ut, o && (this._$AH = e);
     else {
       const n = e;
       let c, d;
-      for (e = a[0], c = 0; c < a.length - 1; c++) d = ut(this, n[s + c], i, c), d === ht && (d = this._$AH[c]), o ||= !Et(d) || d !== this._$AH[c], d === p ? e = p : e !== p && (e += (d ?? "") + a[c + 1]), this._$AH[c] = d;
+      for (e = a[0], c = 0; c < a.length - 1; c++) d = ft(this, n[s + c], i, c), d === ut && (d = this._$AH[c]), o ||= !Et(d) || d !== this._$AH[c], d === p ? e = p : e !== p && (e += (d ?? "") + a[c + 1]), this._$AH[c] = d;
     }
     o && !r && this.j(e);
   }
@@ -457,7 +457,7 @@ class li extends Gt {
     super(e, i, s, r, a), this.type = 5;
   }
   _$AI(e, i = this) {
-    if ((e = ut(this, e, i, 0) ?? p) === ht) return;
+    if ((e = ft(this, e, i, 0) ?? p) === ut) return;
     const s = this._$AH, r = e === p && s !== p || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, a = e !== p && (s === p || r);
     r && this.element.removeEventListener(this.name, this, s), a && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
@@ -473,7 +473,7 @@ class ci {
     return this._$AM._$AU;
   }
   _$AI(e) {
-    ut(this, e);
+    ft(this, e);
   }
 }
 const di = ce.litHtmlPolyfillSupport;
@@ -493,7 +493,7 @@ const pi = (t, e, i) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const pe = globalThis;
-let S = class extends pt {
+let S = class extends ht {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -512,7 +512,7 @@ let S = class extends pt {
     super.disconnectedCallback(), this._$Do?.setConnected(!1);
   }
   render() {
-    return ht;
+    return ut;
   }
 };
 S._$litElement$ = !0, S.finalized = !0, pe.litElementHydrateSupport?.({ LitElement: S });
@@ -524,7 +524,7 @@ hi?.({ LitElement: S });
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const I = (t) => (e, i) => {
+const L = (t) => (e, i) => {
   i !== void 0 ? i.addInitializer(() => {
     customElements.define(t, e);
   }) : customElements.define(t, e);
@@ -580,7 +580,7 @@ const mi = (t, e, i) => (i.configurable = !0, i.enumerable = !0, Reflect.decorat
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function w(t, e) {
+function $(t, e) {
   return (i, s, r) => {
     const a = (o) => o.renderRoot?.querySelector(t) ?? null;
     return mi(i, s, { get() {
@@ -588,7 +588,7 @@ function w(t, e) {
     } });
   };
 }
-const B = E`
+const Z = T`
   :host {
     display: block;
     height: 100%;
@@ -800,7 +800,15 @@ const B = E`
   }
 
   dialog[open]::backdrop {
-    animation: m3e-fade-in 200ms cubic-bezier(0.2, 0, 0, 1);
+    animation: m3e-fade-in 220ms cubic-bezier(0.2, 0, 0, 1);
+    transition:
+      opacity 220ms cubic-bezier(0.3, 0, 0.8, 0.15),
+      background-color 220ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  }
+
+  dialog.is-closing::backdrop {
+    opacity: 0 !important;
+    background-color: transparent !important;
   }
 `;
 function Lt(t, e) {
@@ -820,7 +828,7 @@ var gi = Object.defineProperty, vi = Object.getOwnPropertyDescriptor, lt = (t, e
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && gi(e, i, r), r;
 };
-let X = class extends S {
+let Y = class extends S {
   constructor() {
     super(...arguments), this._pressed = !1, this._selectorOpen = !1;
   }
@@ -1098,9 +1106,9 @@ let X = class extends S {
     `;
   }
 };
-X.styles = [
-  B,
-  E`
+Y.styles = [
+  Z,
+  T`
       :host {
         --m3e-spring-bouncy: 500ms linear(
           0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
@@ -1407,25 +1415,25 @@ X.styles = [
 ];
 lt([
   C({ attribute: !1 })
-], X.prototype, "hass", 2);
+], Y.prototype, "hass", 2);
 lt([
   f()
-], X.prototype, "_config", 2);
+], Y.prototype, "_config", 2);
 lt([
   f()
-], X.prototype, "_pressed", 2);
+], Y.prototype, "_pressed", 2);
 lt([
   f()
-], X.prototype, "_selectorOpen", 2);
+], Y.prototype, "_selectorOpen", 2);
 lt([
-  w("dialog.mode-dialog")
-], X.prototype, "_dialogEl", 2);
+  $("dialog.mode-dialog")
+], Y.prototype, "_dialogEl", 2);
 lt([
-  w(".dialog-surface")
-], X.prototype, "_dialogSurfaceEl", 2);
-X = lt([
-  I("m3e-assist-card")
-], X);
+  $(".dialog-surface")
+], Y.prototype, "_dialogSurfaceEl", 2);
+Y = lt([
+  L("m3e-assist-card")
+], Y);
 function Nt(t, e, i) {
   const s = t?.entity_id ?? "", r = s.split(".")[0], a = String(t?.attributes.device_class ?? "").toLowerCase(), o = String(t?.state ?? "").toLowerCase();
   return a === "outlet" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-3 9H7.5V7.5H9V11Zm7.5 0H15V7.5h1.5V11ZM12 16.5a1.5 1.5 0 0 1-1.5-1.5h3a1.5 1.5 0 0 1-1.5 1.5Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm-3-9H7.5V7.5H9V11Zm7.5 0H15V7.5h1.5V11ZM12 16.5a1.5 1.5 0 0 1-1.5-1.5h3a1.5 1.5 0 0 1-1.5 1.5Z"/></svg>` : r === "light" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26A7 7 0 0 0 12 2Zm-3 18a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-4 12.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26A7 7 0 0 0 12 2Zm2 11.7-.5.35V16h-3v-1.95l-.5-.35a5 5 0 1 1 4 0ZM9 20a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9v1Z"/></svg>` : r === "switch" || r === "input_boolean" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-4 14H9V7h6v10Zm-4-8v3h2V9h-2Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V5h14v14ZM9 7h6v10H9V7Zm2 5v3h2v-3h-2Z"/></svg>` : a === "door" || a === "opening" || a === "garage_door" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 19V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v14H3v2h18v-2h-2Zm-6-6h-2v-2h2v2Zm4 6h-2V5h2v14Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M19 19V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v14H3v2h18v-2h-2ZM7 19V5h10v14H7Zm8-8h-2v2h2v-2Z"/></svg>` : a === "window" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm1 2v6h6V5H5Zm8 0v6h6V5h-6Zm-8 8v6h14v-6H5Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm1 2v6h6V5H5Zm8 0v6h6V5h-6Zm-8 8v6h6v-6H5Zm8 0v6h6v-6h-6Z"/></svg>` : r === "lock" || a === "lock" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 8h-1V6a5 5 0 0 0-9.58-2l1.84.78A3 3 0 0 1 15 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2Zm-6 9a2 2 0 1 1 2-2 2 2 0 0 1-2 2Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2ZM9 6a3 3 0 0 1 6 0v2H9V6Zm9 14H6V10h12v10Zm-6-3a2 2 0 1 0-2-2 2 2 0 0 0 2 2Z"/></svg>` : r === "fan" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 11a1 1 0 1 0 1 1 1 1 0 0 0-1-1Zm.5-9C17 2 17.1 5.57 14.73 6.75a3.36 3.36 0 0 0-1.62 2.47 3.17 3.17 0 0 1 1.23.91C18 8.13 22 8.92 22 12.5c0 4.5-3.58 4.6-4.75 2.23a3.44 3.44 0 0 0-2.5-1.62 3.24 3.24 0 0 1-.91 1.23c2 3.69 1.2 7.66-2.38 7.66C7 22 6.89 18.42 9.26 17.24a3.46 3.46 0 0 0 1.62-2.45 3.17 3.17 0 0 1-1.25-.92C5.94 15.85 2 15.07 2 11.5 2 7 5.54 6.89 6.72 9.26a3.39 3.39 0 0 0 2.48 1.61 3.24 3.24 0 0 1 .92-1.22C8.16 5.95 8.92 2 12.5 2Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 9.8C12 6.5 14.5 4 15.8 5.4c1 1.1-.5 3.4-2.1 4.8M14.2 12c3.3 0 5.8 2.5 4.4 3.8-1.1 1-3.4-.5-4.8-2.1M12 14.2c0 3.3-2.5 5.8-3.8 4.4-1-1.1.5-3.4 2.1-4.8M9.8 12c-3.3 0-5.8-2.5-4.4-3.8 1.1-1 3.4.5 4.8 2.1"/></svg>` : r === "climate" || i === "climate" ? o === "heat" || o === "heating" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 19c1.5-2 1.5-4 0-6s-1.5-4 0-6M12 19c1.5-2 1.5-4 0-6s-1.5-4 0-6M17 19c1.5-2 1.5-4 0-6s-1.5-4 0-6" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" fill="none"/></svg>` : o === "cool" || o === "cooling" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2h2v4.17l2.59-2.58L17 5l-4 4v2h2l4-4 1.41 1.41L17.83 11H22v2h-4.17l2.58 2.59L19 17l-4-4h-2v2l4 4-1.41 1.41L13 17.83V22h-2v-4.17l-2.59 2.58L7 19l4-4v-2H9l-4 4-1.41-1.41L6.17 13H2v-2h4.17L3.59 8.41 5 7l4 4h2V9L7 5l1.41-1.41L11 6.17V2Z"/></svg>` : e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 14a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm0-12a4 4 0 1 0 4 4 4 4 0 0 0-4-4Z"/></svg>` : a === "tv" || r === "remote" || i === "remote" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z"/></svg>` : r === "media_player" || i === "media" ? e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>` : r === "weather" ? o === "sunny" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.9"/><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>` : o === "clear-night" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M20.2 14.4A8.2 8.2 0 0 1 9.6 3.8a8.5 8.5 0 1 0 10.6 10.6Z"/></svg>` : o === "rainy" || o === "pouring" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.8 15.5h10.4a3.6 3.6 0 0 0 .5-7.16A5.4 5.4 0 0 0 7.2 7.2a4.1 4.1 0 0 0-.4 8.3ZM8.5 18.2l-.9 2.3M12.5 18.2l-.9 2.3M16.5 18.2l-.9 2.3"/></svg>` : o === "lightning" || o === "lightning-rainy" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.8 15.5h2.4M15.4 15.5h1.8a3.6 3.6 0 0 0 .5-7.16A5.4 5.4 0 0 0 7.2 7.2a4.1 4.1 0 0 0-.4 8.3ZM13 12.5l-2 4.2h2.6l-1.6 3.8"/></svg>` : o === "snowy" || o === "snowy-rainy" || o === "hail" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.8 15.5h10.4a3.6 3.6 0 0 0 .5-7.16A5.4 5.4 0 0 0 7.2 7.2a4.1 4.1 0 0 0-.4 8.3Z"/><circle cx="8.5" cy="19.2" r="1.1" fill="currentColor"/><circle cx="12.5" cy="19.2" r="1.1" fill="currentColor"/><circle cx="16.5" cy="19.2" r="1.1" fill="currentColor"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M6.8 18h10.4a3.8 3.8 0 0 0 .6-7.55A5.6 5.6 0 0 0 7.1 9.1 4.4 4.4 0 0 0 6.8 18Z"/></svg>` : a === "aqi" || a === "pm25" || a === "pm10" || a === "carbon_dioxide" || a === "volatile_organic_compounds" || s.includes("aqi") || s.includes("air_quality") ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 8.2c2.2-1.8 4.4-1.8 6.6 0s4.4 1.8 6.6 0 2.2-1.3 2.8-.8M4 12.2c2.2-1.8 4.4-1.8 6.6 0s4.4 1.8 6.6 0 2.2-1.3 2.8-.8M4 16.2c2.2-1.8 4.4-1.8 6.6 0s4.4 1.8 6.6 0 2.2-1.3 2.8-.8"/></svg>` : a === "temperature" || s.includes("temp") ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15 13V5a3 3 0 0 0-6 0v8a5 5 0 1 0 6 0Zm-3-9a1 1 0 0 1 1 1v4h-2V5a1 1 0 0 1 1-1Z"/></svg>` : a === "humidity" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0L12 2.69Z"/></svg>` : a === "power" || a === "energy" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 21h-1l1-7H7.5c-.58 0-.57-.32-.38-.66l.19-.35L13 3h1l-1 7h3.5c.49 0 .56.33.47.51l-.07.15L11 21Z"/></svg>` : a === "illuminance" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm-1-5h2v3h-2V2Zm0 17h2v3h-2v-3ZM2 11h3v2H2v-2Zm17 0h3v2h-3v-2ZM4.93 6.34l1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12Zm10.61 10.61 1.41-1.41 2.12 2.12-1.41 1.41-2.12-2.12ZM17.66 4.93l1.41 1.41-2.12 2.12-1.41-1.41 2.12-2.12ZM6.34 19.07l-1.41-1.41 2.12-2.12 1.41 1.41-2.12 2.12Z"/></svg>` : a === "battery" ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.67 4H14V2h-4v2H8.33A1.33 1.33 0 0 0 7 5.33v15.33A1.34 1.34 0 0 0 8.33 22h7.33A1.34 1.34 0 0 0 17 20.67V5.33A1.33 1.33 0 0 0 15.67 4Z"/></svg>` : e ? l`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.8" fill="currentColor"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M5.5 7.5a7 7 0 0 0 0 9M18.5 7.5a7 7 0 0 1 0 9"/></svg>` : l`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M5.8 7.8a6.8 6.8 0 0 0 0 8.4M18.2 7.8a6.8 6.8 0 0 1 0 8.4"/></svg>`;
@@ -1461,7 +1469,7 @@ var _i = Object.defineProperty, bi = Object.getOwnPropertyDescriptor, Wt = (t, e
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && _i(e, i, r), r;
 };
-let ft = class extends S {
+let mt = class extends S {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeItemLabel = (t) => ({
       entity: "Entità",
@@ -1673,7 +1681,7 @@ let ft = class extends S {
     `;
   }
 };
-ft.styles = E`
+mt.styles = T`
     :host {
       display: block;
     }
@@ -1834,16 +1842,16 @@ ft.styles = E`
   `;
 Wt([
   C({ attribute: !1 })
-], ft.prototype, "hass", 2);
+], mt.prototype, "hass", 2);
 Wt([
   f()
-], ft.prototype, "_config", 2);
+], mt.prototype, "_config", 2);
 Wt([
   f()
-], ft.prototype, "_expandedIndex", 2);
-ft = Wt([
-  I("m3e-glance-card-editor")
-], ft);
+], mt.prototype, "_expandedIndex", 2);
+mt = Wt([
+  L("m3e-glance-card-editor")
+], mt);
 var yi = Object.defineProperty, xi = Object.getOwnPropertyDescriptor, qt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? xi(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -1866,7 +1874,7 @@ const wi = /* @__PURE__ */ new Set([
   "active",
   "true"
 ]);
-let mt = class extends S {
+let gt = class extends S {
   constructor() {
     super(...arguments), this._isMouseDragging = !1, this._dragMoved = !1, this._dragStartX = 0, this._dragScrollLeft = 0;
   }
@@ -2052,9 +2060,9 @@ let mt = class extends S {
     return e ? i : l`<ha-card>${i}</ha-card>`;
   }
 };
-mt.styles = [
-  B,
-  E`
+gt.styles = [
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -2193,16 +2201,16 @@ mt.styles = [
 ];
 qt([
   C({ attribute: !1 })
-], mt.prototype, "hass", 2);
+], gt.prototype, "hass", 2);
 qt([
   f()
-], mt.prototype, "_config", 2);
+], gt.prototype, "_config", 2);
 qt([
-  w(".glance-strip")
-], mt.prototype, "_stripEl", 2);
-mt = qt([
-  I("m3e-glance-card")
-], mt);
+  $(".glance-strip")
+], gt.prototype, "_stripEl", 2);
+gt = qt([
+  L("m3e-glance-card")
+], gt);
 function he(t) {
   if (!t) return null;
   const e = Date.parse(t);
@@ -2223,15 +2231,18 @@ function he(t) {
 const Ce = "cubic-bezier(0.05, 0.7, 0.1, 1.0)", $i = "cubic-bezier(0.3, 0.0, 0.8, 0.15)";
 function Xt(t, e) {
   if (!t) return;
-  const i = window.matchMedia("(max-width: 600px)").matches;
-  if (e && !i) {
-    const s = t.getBoundingClientRect();
-    if (s.width > 0 && s.height > 0) {
-      const r = e.left + e.width / 2 - (s.left + s.width / 2), a = e.top + e.height / 2 - (s.top + s.height / 2), o = Math.max(0.35, Math.min(1, e.width / s.width)), n = Math.max(0.22, Math.min(1, e.height / s.height));
+  t.closest("dialog")?.classList.remove("is-closing");
+  for (const r of t.getAnimations())
+    r.cancel();
+  const s = window.matchMedia("(max-width: 600px)").matches;
+  if (e && !s) {
+    const r = t.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      const a = e.left + e.width / 2 - (r.left + r.width / 2), o = e.top + e.height / 2 - (r.top + r.height / 2), n = Math.max(0.35, Math.min(1, e.width / r.width)), c = Math.max(0.22, Math.min(1, e.height / r.height));
       t.animate(
         [
           {
-            transform: `translate(${r}px, ${a}px) scale(${o}, ${n})`,
+            transform: `translate(${a}px, ${o}px) scale(${n}, ${c})`,
             borderRadius: "28px",
             opacity: 0.65
           },
@@ -2250,15 +2261,15 @@ function Xt(t, e) {
     }
   }
   t.animate(
-    i ? [
-      { transform: "translateY(48px)", opacity: 0 },
-      { transform: "translateY(0px)", opacity: 1 }
+    s ? [
+      { transform: "translate3d(0, 100%, 0)" },
+      { transform: "translate3d(0, 0, 0)" }
     ] : [
-      { transform: "scale(0.92)", opacity: 0 },
-      { transform: "scale(1)", opacity: 1 }
+      { transform: "scale(0.92) translateY(10px)", opacity: 0 },
+      { transform: "scale(1) translateY(0px)", opacity: 1 }
     ],
     {
-      duration: i ? 280 : 250,
+      duration: s ? 320 : 260,
       easing: Ce
     }
   );
@@ -2268,30 +2279,36 @@ function Yt(t, e, i) {
     i();
     return;
   }
+  if (t.classList.contains("is-closing"))
+    return;
   if (!e) {
     t.close(), i();
     return;
   }
+  t.classList.add("is-closing");
+  for (const n of e.getAnimations())
+    n.cancel();
   const s = window.matchMedia("(max-width: 600px)").matches, r = e.animate(
     s ? [
-      { transform: "translateY(0px)", opacity: 1 },
-      { transform: "translateY(36px)", opacity: 0 }
+      { transform: "translate3d(0, 0, 0)" },
+      { transform: "translate3d(0, 100%, 0)" }
     ] : [
-      { transform: "scale(1)", opacity: 1 },
-      { transform: "scale(0.93)", opacity: 0 }
+      { transform: "scale(1) translateY(0px)", opacity: 1 },
+      { transform: "scale(0.92) translateY(12px)", opacity: 0 }
     ],
     {
-      duration: 170,
-      easing: $i
+      duration: s ? 240 : 200,
+      easing: $i,
+      fill: "forwards"
     }
   );
   let a = !1;
   const o = () => {
-    a || (a = !0, t.open && t.close(), i());
+    a || (a = !0, t.open && t.close(), t.classList.remove("is-closing"), r.cancel(), i());
   };
   r.onfinish = o, r.oncancel = o;
 }
-var ki = Object.defineProperty, Si = Object.getOwnPropertyDescriptor, H = (t, e, i, s) => {
+var ki = Object.defineProperty, Si = Object.getOwnPropertyDescriptor, B = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Si(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && ki(e, i, r), r;
@@ -2339,7 +2356,7 @@ function Ti([t, e, i]) {
   });
   return 0.2126 * s + 0.7152 * r + 0.0722 * a;
 }
-let L = class extends S {
+let D = class extends S {
   constructor() {
     super(...arguments), this._dragging = !1, this._pressed = !1, this._dragPct = null, this._popupOpen = !1, this._popupDragging = !1, this._popupDragPct = null, this._selectedPresetId = null, this._scenesSheetOpen = !1, this._activeSceneId = null, this._pointerId = null, this._pointerStartX = 0, this._pointerStartY = 0, this._hasMoved = !1, this._longPressTriggered = !1, this._longPressTimer = null, this._onDialogBackdropClick = (t) => {
       t.target === this._dialogEl && this.closePopup();
@@ -2942,11 +2959,11 @@ let L = class extends S {
                           </div>
                           <div class="scenes-sheet-list">
                             ${c.map((u) => {
-      const m = String(this._entity?.attributes.effect ?? ""), g = u.kind === "effect" ? m.toLowerCase() === u.effect.toLowerCase() : this._activeSceneId === u.id;
+      const g = String(this._entity?.attributes.effect ?? ""), m = u.kind === "effect" ? g.toLowerCase() === u.effect.toLowerCase() : this._activeSceneId === u.id;
       return l`
                                 <button
                                   type="button"
-                                  class="scene-option ${g ? "selected" : ""}"
+                                  class="scene-option ${m ? "selected" : ""}"
                                   @click=${() => this._activateSceneItem(u)}
                                 >
                                   <span class="scene-option-left">
@@ -2957,7 +2974,7 @@ let L = class extends S {
                                         ></ha-state-icon>` : l`<svg viewBox="0 0 24 24" class="scene-svg"><path fill="currentColor" d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"/></svg>`}
                                     <span>${u.label}</span>
                                   </span>
-                                  ${g ? l`<span>✓</span>` : p}
+                                  ${m ? l`<span>✓</span>` : p}
                                 </button>
                               `;
     })}
@@ -2971,9 +2988,9 @@ let L = class extends S {
     `;
   }
 };
-L.styles = [
-  B,
-  E`
+D.styles = [
+  Z,
+  T`
       :host {
         /* MediumBouncy, Low stiffness spring for M3 Expressive On <-> Off morphing */
         --m3e-spring-bouncy: 560ms linear(
@@ -3588,57 +3605,57 @@ L.styles = [
       }
     `
 ];
-H([
+B([
   C({ attribute: !1 })
-], L.prototype, "hass", 2);
-H([
+], D.prototype, "hass", 2);
+B([
   f()
-], L.prototype, "_config", 2);
-H([
+], D.prototype, "_config", 2);
+B([
   f()
-], L.prototype, "_dragging", 2);
-H([
+], D.prototype, "_dragging", 2);
+B([
   f()
-], L.prototype, "_pressed", 2);
-H([
+], D.prototype, "_pressed", 2);
+B([
   f()
-], L.prototype, "_dragPct", 2);
-H([
+], D.prototype, "_dragPct", 2);
+B([
   f()
-], L.prototype, "_popupOpen", 2);
-H([
+], D.prototype, "_popupOpen", 2);
+B([
   f()
-], L.prototype, "_popupDragging", 2);
-H([
+], D.prototype, "_popupDragging", 2);
+B([
   f()
-], L.prototype, "_popupDragPct", 2);
-H([
+], D.prototype, "_popupDragPct", 2);
+B([
   f()
-], L.prototype, "_selectedPresetId", 2);
-H([
+], D.prototype, "_selectedPresetId", 2);
+B([
   f()
-], L.prototype, "_scenesSheetOpen", 2);
-H([
+], D.prototype, "_scenesSheetOpen", 2);
+B([
   f()
-], L.prototype, "_activeSceneId", 2);
-H([
-  w("dialog.light-dialog")
-], L.prototype, "_dialogEl", 2);
-H([
-  w(".tile-card")
-], L.prototype, "_tileEl", 2);
-H([
-  w(".dialog-surface")
-], L.prototype, "_dialogSurfaceEl", 2);
-L = H([
-  I("m3e-light-card")
-], L);
+], D.prototype, "_activeSceneId", 2);
+B([
+  $("dialog.light-dialog")
+], D.prototype, "_dialogEl", 2);
+B([
+  $(".tile-card")
+], D.prototype, "_tileEl", 2);
+B([
+  $(".dialog-surface")
+], D.prototype, "_dialogSurfaceEl", 2);
+D = B([
+  L("m3e-light-card")
+], D);
 var Ai = Object.defineProperty, Oi = Object.getOwnPropertyDescriptor, Kt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Oi(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Ai(e, i, r), r;
 };
-let gt = class extends S {
+let vt = class extends S {
   constructor() {
     super(...arguments), this._optimisticOn = null, this._optimisticTimer = null;
   }
@@ -3771,9 +3788,9 @@ let gt = class extends S {
     `;
   }
 };
-gt.styles = [
-  B,
-  E`
+vt.styles = [
+  Z,
+  T`
       .control-pill {
         position: relative;
         height: 100%;
@@ -3885,16 +3902,16 @@ gt.styles = [
 ];
 Kt([
   C({ attribute: !1 })
-], gt.prototype, "hass", 2);
+], vt.prototype, "hass", 2);
 Kt([
   f()
-], gt.prototype, "_config", 2);
+], vt.prototype, "_config", 2);
 Kt([
   f()
-], gt.prototype, "_optimisticOn", 2);
-gt = Kt([
-  I("m3e-light-control-card")
-], gt);
+], vt.prototype, "_optimisticOn", 2);
+vt = Kt([
+  L("m3e-light-control-card")
+], vt);
 /**
  * @license
  * Copyright 2020 Google LLC
@@ -4012,7 +4029,7 @@ var Vi = Object.defineProperty, Ui = Object.getOwnPropertyDescriptor, ct = (t, e
   return s && r && Vi(e, i, r), r;
 };
 const Pe = 8;
-let Y = class extends S {
+let K = class extends S {
   constructor() {
     super(...arguments), this._expanded = !1, this._dragging = !1, this._pressed = !1, this._dragPct = null, this._pointerId = null, this._pointerStartX = 0, this._pointerStartY = 0, this._hasMoved = !1, this._prevStates = {}, this._onHeaderPointerDown = (t) => {
       if (t.button !== 0 || this._aggregateStats.isUnavailable) return;
@@ -4185,7 +4202,7 @@ let Y = class extends S {
           @pointerdown=${this._onHeaderPointerDown}
           @pointermove=${this._onHeaderPointerMove}
           @pointerup=${this._onHeaderPointerUp}
-          @pointercancel=${(m) => this._resetPointer(m.currentTarget)}
+          @pointercancel=${(g) => this._resetPointer(g.currentTarget)}
         >
           <div class="header-track" aria-hidden="true">
             <div class="header-fill"></div>
@@ -4214,7 +4231,7 @@ let Y = class extends S {
                       class="expand-btn ${this._expanded ? "is-expanded" : ""}"
                       aria-expanded=${String(this._expanded)}
                       aria-label=${this._expanded ? "Collapse lights" : "Expand lights"}
-                      @pointerdown=${(m) => m.stopPropagation()}
+                      @pointerdown=${(g) => g.stopPropagation()}
                       @click=${this._toggleExpand}
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -4233,10 +4250,10 @@ let Y = class extends S {
                 <div class="group-grid-inner">
                   <div class="child-grid">
                     ${s.map(
-      (m) => l`
+      (g) => l`
                         <m3e-light-card
                           .hass=${this.hass}
-                          ${Ve(this._attachChildConfig(m))}
+                          ${Ve(this._attachChildConfig(g))}
                         ></m3e-light-card>
                       `
     )}
@@ -4260,9 +4277,9 @@ let Y = class extends S {
     };
   }
 };
-Y.styles = [
-  B,
-  E`
+K.styles = [
+  Z,
+  T`
       .group-wrapper {
         display: flex;
         flex-direction: column;
@@ -4464,25 +4481,25 @@ Y.styles = [
 ];
 ct([
   C({ attribute: !1 })
-], Y.prototype, "hass", 2);
+], K.prototype, "hass", 2);
 ct([
   f()
-], Y.prototype, "_config", 2);
+], K.prototype, "_config", 2);
 ct([
   f()
-], Y.prototype, "_expanded", 2);
+], K.prototype, "_expanded", 2);
 ct([
   f()
-], Y.prototype, "_dragging", 2);
+], K.prototype, "_dragging", 2);
 ct([
   f()
-], Y.prototype, "_pressed", 2);
+], K.prototype, "_pressed", 2);
 ct([
   f()
-], Y.prototype, "_dragPct", 2);
-Y = ct([
-  I("m3e-light-group-card")
-], Y);
+], K.prototype, "_dragPct", 2);
+K = ct([
+  L("m3e-light-group-card")
+], K);
 const Ee = [
   [/spotify/i, "spotify"],
   [/music\s*assistant|mass/i, "music_assistant"],
@@ -4586,35 +4603,35 @@ async function Ne(t) {
         }
         a.drawImage(i, 0, 0, 24, 24);
         const o = a.getImageData(0, 0, 24, 24).data, n = new Array(24);
-        for (let x = 0; x < 24; x++) n[x] = { w: 0, hSin: 0, hCos: 0, s: 0 };
+        for (let y = 0; y < 24; y++) n[y] = { w: 0, hSin: 0, hCos: 0, s: 0 };
         let c = 0, d = 0;
-        for (let x = 0; x < o.length; x += 4) {
-          if (o[x + 3] < 128) continue;
-          const [_, P, j] = Fi(o[x], o[x + 1], o[x + 2]);
-          if (d++, c += P, P < 12 || j < 10 || j > 92) continue;
-          const Z = Math.floor(_ % 360 / 15) % 24, y = 1 - Math.abs(j - 50) / 52, R = P / 100 * (0.4 + 0.6 * y), b = _ * Math.PI / 180;
-          n[Z].w += R, n[Z].hSin += Math.sin(b) * R, n[Z].hCos += Math.cos(b) * R, n[Z].s += P * R;
+        for (let y = 0; y < o.length; y += 4) {
+          if (o[y + 3] < 128) continue;
+          const [k, P, x] = Fi(o[y], o[y + 1], o[y + 2]);
+          if (d++, c += P, P < 12 || x < 10 || x > 92) continue;
+          const R = Math.floor(k % 360 / 15) % 24, b = 1 - Math.abs(x - 50) / 52, V = P / 100 * (0.4 + 0.6 * b), _ = k * Math.PI / 180;
+          n[R].w += V, n[R].hSin += Math.sin(_) * V, n[R].hCos += Math.cos(_) * V, n[R].s += P * V;
         }
         let h = n[0];
-        for (let x = 1; x < 24; x++)
-          n[x].w > h.w && (h = n[x]);
+        for (let y = 1; y < 24; y++)
+          n[y].w > h.w && (h = n[y]);
         if (h.w < 1.5 || d > 0 && c / d < 8) {
-          const x = {
+          const y = {
             scrim: "hsl(240, 6%, 11%)",
             accent: "hsl(20, 14%, 91%)",
             onAccent: "hsl(240, 8%, 13%)"
           };
-          it.set(t, x), e(x);
+          it.set(t, y), e(y);
           return;
         }
         let u = Math.atan2(h.hSin, h.hCos) * 180 / Math.PI;
         u < 0 && (u += 360);
-        const m = h.s / h.w, g = Math.round(Math.max(18, Math.min(46, m * 0.55))), v = Math.round(Math.max(42, Math.min(82, m * 0.95))), A = Math.round(Math.max(28, Math.min(60, m * 0.65))), k = {
-          scrim: `hsl(${Math.round(u)}, ${g}%, 12%)`,
+        const g = h.s / h.w, m = Math.round(Math.max(18, Math.min(46, g * 0.55))), v = Math.round(Math.max(42, Math.min(82, g * 0.95))), O = Math.round(Math.max(28, Math.min(60, g * 0.65))), M = {
+          scrim: `hsl(${Math.round(u)}, ${m}%, 12%)`,
           accent: `hsl(${Math.round(u)}, ${v}%, 86%)`,
-          onAccent: `hsl(${Math.round(u)}, ${A}%, 14%)`
+          onAccent: `hsl(${Math.round(u)}, ${O}%, 14%)`
         };
-        it.set(t, k), e(k);
+        it.set(t, M), e(M);
       } catch {
         it.set(t, null), e(null);
       }
@@ -4623,7 +4640,7 @@ async function Ne(t) {
     }, i.src = t;
   }) : null;
 }
-var Gi = Object.defineProperty, Wi = Object.getOwnPropertyDescriptor, D = (t, e, i, s) => {
+var Gi = Object.defineProperty, Wi = Object.getOwnPropertyDescriptor, H = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Wi(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Gi(e, i, r), r;
@@ -4638,7 +4655,7 @@ function Te(t) {
   }
   return `${s}:${a}`;
 }
-let O = class extends S {
+let z = class extends S {
   constructor() {
     super(...arguments), this.entityId = "", this.playerIds = [], this._open = !1, this._castSheetOpen = !1, this._nowTick = Date.now(), this._scrubbing = !1, this._scrubPct = null, this._volDragging = !1, this._volPct = null, this._palette = null, this._tickTimer = null, this._volPendingTimer = null, this._lastVolSentAt = 0, this._lastArtworkUrl = "", this._lastTrackKey = "", this._pendingTrackDir = "next", this._onSeekDown = (t) => {
       if (this._duration <= 0 || t.pointerType === "mouse" && t.button !== 0) return;
@@ -4807,24 +4824,24 @@ let O = class extends S {
   render() {
     const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "playing", s = !!t?.attributes.is_volume_muted, r = t?.attributes.friendly_name || this.entityId || "Media", a = String(t?.attributes.media_title ?? "").trim() || r, o = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "In riproduzione" : e.charAt(0).toUpperCase() + e.slice(1)), n = String(
       t?.attributes.entity_picture_local || t?.attributes.entity_picture || ""
-    ).trim(), c = this._duration, d = this._progressPct, h = this._scrubPct !== null ? this._scrubPct / 100 * c : this._currentPosition, u = i && !this._scrubbing && c > 0, m = this._volumePct, g = !!t?.attributes.shuffle, v = String(t?.attributes.repeat ?? "off").toLowerCase(), A = Array.from(
+    ).trim(), c = this._duration, d = this._progressPct, h = this._scrubPct !== null ? this._scrubPct / 100 * c : this._currentPosition, u = i && !this._scrubbing && c > 0, g = this._volumePct, m = !!t?.attributes.shuffle, v = String(t?.attributes.repeat ?? "off").toLowerCase(), O = Array.from(
       new Set([this.entityId, ...this.playerIds ?? []].filter(Boolean))
-    ), k = Array.isArray(t?.attributes.source_list) ? Array.from(
+    ), M = Array.isArray(t?.attributes.source_list) ? Array.from(
       new Set(
-        t.attributes.source_list.map((b) => String(b ?? "").trim()).filter(Boolean)
+        t.attributes.source_list.map((_) => String(_ ?? "").trim()).filter(Boolean)
       )
-    ) : [], x = String(t?.attributes.source ?? ""), _ = !t || e === "unavailable" || e === "unknown", P = Number(t?.attributes.supported_features ?? 0), j = !_ && (P === 0 || (P & qi) !== 0 || typeof t?.attributes.volume_level == "number"), Z = k.length > 0 || A.length > 1, y = s ? 0 : m, R = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    ) : [], y = String(t?.attributes.source ?? ""), k = !t || e === "unavailable" || e === "unknown", P = Number(t?.attributes.supported_features ?? 0), x = !k && (P === 0 || (P & qi) !== 0 || typeof t?.attributes.volume_level == "number"), R = M.length > 0 || O.length > 1, b = s ? 0 : g, V = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <dialog
         class="media-dialog"
-        style=${R}
-        @click=${(b) => {
-      b.target === this._dialogEl && this.close();
+        style=${V}
+        @click=${(_) => {
+      _.target === this._dialogEl && this.close();
     }}
-        @cancel=${(b) => {
-      b.preventDefault(), this.close();
+        @cancel=${(_) => {
+      _.preventDefault(), this.close();
     }}
-        @touchmove=${(b) => Lt(b, this._dialogEl)}
+        @touchmove=${(_) => Lt(_, this._dialogEl)}
       >
         ${this._open ? l`
               <div class="dialog-surface">
@@ -4921,10 +4938,10 @@ let O = class extends S {
                 <div class="transport-row">
                   <button
                     type="button"
-                    class="ctrl-btn toggle-ctrl ${g ? "is-active" : ""}"
+                    class="ctrl-btn toggle-ctrl ${m ? "is-active" : ""}"
                     aria-label="Casuale"
-                    aria-pressed=${String(g)}
-                    title=${g ? "Casuale attivo" : "Attiva casuale"}
+                    aria-pressed=${String(m)}
+                    title=${m ? "Casuale attivo" : "Attiva casuale"}
                     @click=${() => this._toggleShuffle()}
                   >
                     <svg viewBox="0 0 24 24">
@@ -4998,7 +5015,7 @@ let O = class extends S {
                 </div>
 
                 <!-- Authentic M3 Expressive Volume Slider (50px Pill Track + Gap + Vertical Handle + Stop Dot) -->
-                ${j ? l`
+                ${x ? l`
                       <div class="m3-vol-row">
                         <button
                           type="button"
@@ -5009,7 +5026,7 @@ let O = class extends S {
                           <svg viewBox="0 0 24 24">
                             <path
                               fill="currentColor"
-                              d=${s || m === 0 ? "M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z" : m < 50 ? "M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"}
+                              d=${s || g === 0 ? "M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z" : g < 50 ? "M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"}
                             />
                           </svg>
                         </button>
@@ -5020,37 +5037,37 @@ let O = class extends S {
                           aria-label="Volume"
                           aria-valuemin="0"
                           aria-valuemax="100"
-                          aria-valuenow=${y}
+                          aria-valuenow=${b}
                           @pointerdown=${this._onVolDown}
                           @pointermove=${this._onVolMove}
                           @pointerup=${this._onVolUp}
                           @pointercancel=${this._onVolUp}
                         >
-                          ${this._volDragging ? l`<span class="m3-vol-tooltip" style="left: ${y}%;">${y}%</span>` : p}
+                          ${this._volDragging ? l`<span class="m3-vol-tooltip" style="left: ${b}%;">${b}%</span>` : p}
                           <div
                             class="m3-vol-active"
-                            style="width: max(0px, calc(${y}% - 6px));"
+                            style="width: max(0px, calc(${b}% - 6px));"
                           ></div>
-                          <div class="m3-vol-handle" style="left: ${y}%;"></div>
+                          <div class="m3-vol-handle" style="left: ${b}%;"></div>
                           <div
                             class="m3-vol-inactive"
-                            style="left: calc(${y}% + 6px);"
+                            style="left: calc(${b}% + 6px);"
                           >
-                            ${y < 96 ? l`<span class="m3-vol-stop" aria-hidden="true"></span>` : p}
+                            ${b < 96 ? l`<span class="m3-vol-stop" aria-hidden="true"></span>` : p}
                           </div>
                         </div>
 
-                        <span class="m3-vol-readout">${s ? "Muto" : `${m}%`}</span>
+                        <span class="m3-vol-readout">${s ? "Muto" : `${g}%`}</span>
                       </div>
                     ` : p}
 
                 <!-- M3 Expressive Compact Pill Source / Output Selector -->
                 <button
                   type="button"
-                  class="cast-pill-btn ${_ ? "is-disabled" : ""}"
-                  ?disabled=${_}
+                  class="cast-pill-btn ${k ? "is-disabled" : ""}"
+                  ?disabled=${k}
                   @click=${() => {
-      Z ? this._castSheetOpen = !0 : this._openMoreInfo();
+      R ? this._castSheetOpen = !0 : this._openMoreInfo();
     }}
                 >
                   <span class="cast-pill-left">
@@ -5061,10 +5078,10 @@ let O = class extends S {
                       />
                     </svg>
                     <span class="cast-pill-label">
-                      ${x ? `${r} · ${x}` : r}
+                      ${y || r}
                     </span>
                   </span>
-                  ${Z ? l`
+                  ${R ? l`
                         <svg viewBox="0 0 24 24" class="cast-pill-chevron" aria-hidden="true">
                           <path
                             fill="currentColor"
@@ -5080,7 +5097,7 @@ let O = class extends S {
                         class="cast-sheet-backdrop"
                         @click=${() => this._castSheetOpen = !1}
                       >
-                        <div class="cast-sheet" @click=${(b) => b.stopPropagation()}>
+                        <div class="cast-sheet" @click=${(_) => _.stopPropagation()}>
                           <div class="sheet-handle" aria-hidden="true"></div>
 
                           <div class="cast-sheet-header">
@@ -5121,28 +5138,28 @@ let O = class extends S {
 
                           <!-- Output Devices (M3 Expressive Pill = Selected, 20px = Unselected) -->
                           <div class="cast-list" role="radiogroup" aria-label="Dispositivi Cast">
-                            ${A.map((b) => {
-      const z = this.hass?.states[b], F = b === this.entityId, yt = z?.attributes.friendly_name || b, J = typeof z?.attributes.volume_level == "number" ? Math.round(z.attributes.volume_level * 100) : null, tt = z?.attributes.device_class === "tv" || b.toLowerCase().includes("tv") || b.toLowerCase().includes("chromecast");
+                            ${O.map((_) => {
+      const I = this.hass?.states[_], F = _ === this.entityId, xt = I?.attributes.friendly_name || _, dt = String(I?.attributes.source ?? "").trim(), tt = dt || xt, G = typeof I?.attributes.volume_level == "number" ? Math.round(I.attributes.volume_level * 100) : null, w = I?.attributes.device_class === "tv" || _.toLowerCase().includes("tv") || _.toLowerCase().includes("chromecast") || dt.toLowerCase().includes("tv") || dt.toLowerCase().includes("chromecast");
       return l`
                                 <button
                                   type="button"
                                   class="cast-row ${F ? "is-selected" : ""}"
                                   role="radio"
                                   aria-checked=${String(F)}
-                                  @click=${() => this._selectPlayer(b)}
+                                  @click=${() => this._selectPlayer(_)}
                                 >
-                                  ${F && J !== null ? l`<span class="cast-row-fill" style="width: ${J}%;"></span>` : p}
+                                  ${F && G !== null ? l`<span class="cast-row-fill" style="width: ${G}%;"></span>` : p}
                                   <span class="cast-row-inner">
                                     <span class="cast-row-left">
                                       <svg viewBox="0 0 24 24" class="cast-dev-icon" aria-hidden="true">
                                         <path
                                           fill="currentColor"
-                                          d=${tt ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
+                                          d=${w ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
                                         />
                                       </svg>
                                       <span class="cast-row-text">
-                                        <span class="cast-row-name">${yt}</span>
-                                        ${F && J !== null ? l`<span class="cast-row-sub">${J}%</span>` : p}
+                                        <span class="cast-row-name">${tt}</span>
+                                        ${F && G !== null ? l`<span class="cast-row-sub">${G}%</span>` : p}
                                       </span>
                                     </span>
                                     <span class="cast-check ${F ? "checked" : ""}" aria-hidden="true">
@@ -5162,20 +5179,20 @@ let O = class extends S {
                           </div>
 
                           <!-- Sources (M3 Expressive Filter Chips with Checkmark & Shape Morph) -->
-                          ${k.length > 0 ? l`
+                          ${M.length > 0 ? l`
                                 <div class="cast-section-label">Sorgenti</div>
                                 <div class="source-chips" role="radiogroup" aria-label="Sorgenti">
-                                  ${k.map((b) => {
-      const z = b === x;
+                                  ${M.map((_) => {
+      const I = _ === y;
       return l`
                                       <button
                                         type="button"
-                                        class="source-chip ${z ? "is-selected" : ""}"
+                                        class="source-chip ${I ? "is-selected" : ""}"
                                         role="radio"
-                                        aria-checked=${String(z)}
-                                        @click=${() => this._selectSource(b)}
+                                        aria-checked=${String(I)}
+                                        @click=${() => this._selectSource(_)}
                                       >
-                                        ${z ? l`
+                                        ${I ? l`
                                               <svg viewBox="0 0 24 24" class="chip-check" aria-hidden="true">
                                                 <path
                                                   fill="currentColor"
@@ -5183,7 +5200,7 @@ let O = class extends S {
                                                 />
                                               </svg>
                                             ` : p}
-                                        <span>${b}</span>
+                                        <span>${_}</span>
                                       </button>
                                     `;
     })}
@@ -5218,9 +5235,9 @@ let O = class extends S {
     `;
   }
 };
-O.styles = [
-  B,
-  E`
+z.styles = [
+  Z,
+  T`
       :host {
         display: contents;
         --m3e-spring-bouncy: 520ms linear(
@@ -6189,61 +6206,61 @@ O.styles = [
       }
     `
 ];
-D([
+H([
   C({ attribute: !1 })
-], O.prototype, "hass", 2);
-D([
+], z.prototype, "hass", 2);
+H([
   C({ type: String })
-], O.prototype, "entityId", 2);
-D([
+], z.prototype, "entityId", 2);
+H([
   C({ attribute: !1 })
-], O.prototype, "playerIds", 2);
-D([
+], z.prototype, "playerIds", 2);
+H([
   f()
-], O.prototype, "_open", 2);
-D([
+], z.prototype, "_open", 2);
+H([
   f()
-], O.prototype, "_castSheetOpen", 2);
-D([
+], z.prototype, "_castSheetOpen", 2);
+H([
   f()
-], O.prototype, "_nowTick", 2);
-D([
+], z.prototype, "_nowTick", 2);
+H([
   f()
-], O.prototype, "_scrubbing", 2);
-D([
+], z.prototype, "_scrubbing", 2);
+H([
   f()
-], O.prototype, "_scrubPct", 2);
-D([
+], z.prototype, "_scrubPct", 2);
+H([
   f()
-], O.prototype, "_volDragging", 2);
-D([
+], z.prototype, "_volDragging", 2);
+H([
   f()
-], O.prototype, "_volPct", 2);
-D([
+], z.prototype, "_volPct", 2);
+H([
   f()
-], O.prototype, "_palette", 2);
-D([
-  w("dialog.media-dialog")
-], O.prototype, "_dialogEl", 2);
-D([
-  w(".dialog-surface")
-], O.prototype, "_dialogSurfaceEl", 2);
-D([
-  w(".artwork-frame")
-], O.prototype, "_artworkFrameEl", 2);
-D([
-  w(".meta-block")
-], O.prototype, "_metaBlockEl", 2);
-O = D([
-  I("m3e-media-popup")
-], O);
-var Xi = Object.defineProperty, Yi = Object.getOwnPropertyDescriptor, W = (t, e, i, s) => {
+], z.prototype, "_palette", 2);
+H([
+  $("dialog.media-dialog")
+], z.prototype, "_dialogEl", 2);
+H([
+  $(".dialog-surface")
+], z.prototype, "_dialogSurfaceEl", 2);
+H([
+  $(".artwork-frame")
+], z.prototype, "_artworkFrameEl", 2);
+H([
+  $(".meta-block")
+], z.prototype, "_metaBlockEl", 2);
+z = H([
+  L("m3e-media-popup")
+], z);
+var Xi = Object.defineProperty, Yi = Object.getOwnPropertyDescriptor, q = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Yi(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Xi(e, i, r), r;
 };
 const Ki = 2048;
-let U = class extends S {
+let N = class extends S {
   constructor() {
     super(...arguments), this._marqueeActive = !1, this._marqueeDuration = 12, this._prevStates = {};
   }
@@ -6426,9 +6443,9 @@ let U = class extends S {
       return p;
     const a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, o = this._getMetadataText(t), n = r ? "" : String(t?.attributes.entity_picture_local || t?.attributes.entity_picture || "").trim(), c = Array.isArray(t?.attributes.source_list) ? Array.from(
       new Set(
-        t.attributes.source_list.map((g) => String(g ?? "").trim()).filter(Boolean)
+        t.attributes.source_list.map((m) => String(m ?? "").trim()).filter(Boolean)
       )
-    ) : [], h = (Number(t?.attributes.supported_features ?? 0) & Ki) !== 0 || c.length > 0, u = this._allEntityIds.length > 1, m = this._config.show_cast !== !1 && !i && (h || u);
+    ) : [], h = (Number(t?.attributes.supported_features ?? 0) & Ki) !== 0 || c.length > 0, u = this._allEntityIds.length > 1, g = this._config.show_cast !== !1 && !i && (h || u);
     return l`
       <ha-card
         class="media-bar ${s ? "is-playing" : ""} ${i ? "is-unavailable" : ""}"
@@ -6436,8 +6453,8 @@ let U = class extends S {
         tabindex="0"
         aria-label="${a}, ${o}"
         @click=${() => this._onBarClick()}
-        @keydown=${(g) => {
-      (g.key === "Enter" || g.key === " ") && (g.preventDefault(), this._onBarClick());
+        @keydown=${(m) => {
+      (m.key === "Enter" || m.key === " ") && (m.preventDefault(), this._onBarClick());
     }}
       >
         <div class="state-layer" aria-hidden="true"></div>
@@ -6474,13 +6491,13 @@ let U = class extends S {
 
           <!-- Right Slot: Cast / Output + Squircle Play/Pause -->
           <div class="actions-col">
-            ${m ? l`
+            ${g ? l`
                   <button
                     type="button"
                     class="cast-btn"
                     aria-label="Sorgente o dispositivo"
                     title="Sorgente / Output"
-                    @click=${(g) => this._openCastDialog(g)}
+                    @click=${(m) => this._openCastDialog(m)}
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path
@@ -6496,7 +6513,7 @@ let U = class extends S {
               class="play-btn ${s ? "is-playing" : ""}"
               aria-label=${s ? "Pausa" : "Riproduci"}
               ?disabled=${i}
-              @click=${(g) => this._togglePlayPause(g)}
+              @click=${(m) => this._togglePlayPause(m)}
             >
               ${s ? l`
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -6521,16 +6538,16 @@ let U = class extends S {
         .hass=${this.hass}
         .entityId=${t?.entity_id ?? this._config.entity}
         .playerIds=${this._allEntityIds}
-        @m3e-player-selected=${(g) => {
-      this._selectedEntityId = g.detail.entityId;
+        @m3e-player-selected=${(m) => {
+      this._selectedEntityId = m.detail.entityId;
     }}
       ></m3e-media-popup>
     `;
   }
 };
-U.styles = [
-  B,
-  E`
+N.styles = [
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -6959,37 +6976,37 @@ U.styles = [
       }
     `
 ];
-W([
+q([
   C({ attribute: !1 })
-], U.prototype, "hass", 2);
-W([
+], N.prototype, "hass", 2);
+q([
   f()
-], U.prototype, "_config", 2);
-W([
+], N.prototype, "_config", 2);
+q([
   f()
-], U.prototype, "_selectedEntityId", 2);
-W([
+], N.prototype, "_selectedEntityId", 2);
+q([
   f()
-], U.prototype, "_marqueeActive", 2);
-W([
+], N.prototype, "_marqueeActive", 2);
+q([
   f()
-], U.prototype, "_marqueeDuration", 2);
-W([
-  w(".media-bar")
-], U.prototype, "_barEl", 2);
-W([
-  w(".marquee-viewport")
-], U.prototype, "_marqueeViewport", 2);
-W([
-  w(".marquee-measure")
-], U.prototype, "_marqueeMeasure", 2);
-W([
-  w("m3e-media-popup")
-], U.prototype, "_popupEl", 2);
-U = W([
-  I("m3e-media-bar-card")
-], U);
-var Qi = Object.defineProperty, Ji = Object.getOwnPropertyDescriptor, q = (t, e, i, s) => {
+], N.prototype, "_marqueeDuration", 2);
+q([
+  $(".media-bar")
+], N.prototype, "_barEl", 2);
+q([
+  $(".marquee-viewport")
+], N.prototype, "_marqueeViewport", 2);
+q([
+  $(".marquee-measure")
+], N.prototype, "_marqueeMeasure", 2);
+q([
+  $("m3e-media-popup")
+], N.prototype, "_popupEl", 2);
+N = q([
+  L("m3e-media-bar-card")
+], N);
+var Qi = Object.defineProperty, Ji = Object.getOwnPropertyDescriptor, X = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Ji(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Qi(e, i, r), r;
@@ -7004,7 +7021,7 @@ function Ae(t) {
   }
   return `${s}:${a}`;
 }
-let N = class extends S {
+let j = class extends S {
   constructor() {
     super(...arguments), this._palette = null, this._nowTick = Date.now(), this._scrubbing = !1, this._scrubPct = null, this._lastArtworkUrl = "", this._tickTimer = null, this._onSliderPointerDown = (t) => {
       if (t.stopPropagation(), this._duration <= 0 || t.pointerType === "mouse" && t.button !== 0) return;
@@ -7202,21 +7219,21 @@ let N = class extends S {
   }
   render() {
     if (!this._config) return p;
-    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", r = i || e === "off" || e === "idle", a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, o = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : r ? a : "In riproduzione"), n = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : r ? "Nessuna riproduzione" : a), c = this._artworkUrl, d = this._progressPct, h = this._duration, u = Number(t?.attributes.supported_features ?? 0), m = !i && (u === 0 || (u & es) !== 0), g = !i && (u === 0 || (u & is) !== 0), v = !i && h > 0 && (u === 0 || (u & ts) !== 0), A = s && !this._scrubbing && h > 0, k = this._scrubPct !== null ? this._scrubPct / 100 * h : this._currentPosition, x = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", r = i || e === "off" || e === "idle", a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, n = String(t?.attributes.source ?? "").trim() || a, c = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : r ? a : "In riproduzione"), d = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : r ? "Nessuna riproduzione" : a), h = this._artworkUrl, u = this._progressPct, g = this._duration, m = Number(t?.attributes.supported_features ?? 0), v = !i && (m === 0 || (m & es) !== 0), O = !i && (m === 0 || (m & is) !== 0), M = !i && g > 0 && (m === 0 || (m & ts) !== 0), y = s && !this._scrubbing && g > 0, k = this._scrubPct !== null ? this._scrubPct / 100 * g : this._currentPosition, P = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <ha-card
-        class="media-player-card ${s ? "is-playing" : "is-paused"} ${c ? "has-artwork" : "no-artwork"} ${i ? "is-unavailable" : ""}"
-        style=${x}
+        class="media-player-card ${s ? "is-playing" : "is-paused"} ${h ? "has-artwork" : "no-artwork"} ${i ? "is-unavailable" : ""}"
+        style=${P}
         role="button"
         tabindex="0"
-        aria-label="${o}, ${n}"
+        aria-label="${c}, ${d}"
         @click=${() => this._onCardClick()}
-        @keydown=${(_) => {
-      (_.key === "Enter" || _.key === " ") && (_.preventDefault(), this._onCardClick());
+        @keydown=${(x) => {
+      (x.key === "Enter" || x.key === " ") && (x.preventDefault(), this._onCardClick());
     }}
       >
         <!-- Full-bleed Artwork + Tonal Scrim/Vignette -->
-        ${c ? l`<img class="bg-artwork" src=${c} alt="" loading="lazy" />` : p}
+        ${h ? l`<img class="bg-artwork" src=${h} alt="" loading="lazy" />` : p}
         <div class="bg-scrim" aria-hidden="true"></div>
 
         <div class="card-content">
@@ -7227,7 +7244,7 @@ let N = class extends S {
                   <button
                     type="button"
                     class="device-chip"
-                    @click=${(_) => this._onDeviceChipClick(_)}
+                    @click=${(x) => this._onDeviceChipClick(x)}
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path
@@ -7235,7 +7252,7 @@ let N = class extends S {
                         d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
                       />
                     </svg>
-                    <span>${a}</span>
+                    <span>${n}</span>
                   </button>
                 ` : p}
           </div>
@@ -7243,8 +7260,8 @@ let N = class extends S {
           <!-- Middle Row: Bold Typography + Shape-Morphing Play/Pause -->
           <div class="mid-row">
             <div class="track-meta">
-              <div class="track-title">${o}</div>
-              <div class="track-artist">${n}</div>
+              <div class="track-title">${c}</div>
+              <div class="track-artist">${d}</div>
             </div>
 
             <button
@@ -7252,7 +7269,7 @@ let N = class extends S {
               class="play-fab ${s ? "is-playing" : "is-paused"}"
               aria-label=${s ? "Pausa" : "Riproduci"}
               ?disabled=${i}
-              @click=${(_) => this._callService("media_play_pause", {}, _)}
+              @click=${(x) => this._callService("media_play_pause", {}, x)}
             >
               ${s ? l`
                     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -7276,8 +7293,8 @@ let N = class extends S {
               type="button"
               class="transport-btn is-prev"
               aria-label="Traccia precedente"
-              ?disabled=${!m}
-              @click=${(_) => this._callService("media_previous_track", {}, _)}
+              ?disabled=${!v}
+              @click=${(x) => this._callService("media_previous_track", {}, x)}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M6 6h2v12H6V6Zm3.5 6 8.5 6V6l-8.5 6Z" />
@@ -7285,26 +7302,26 @@ let N = class extends S {
             </button>
 
             <div
-              class="wavy-slider ${A ? "is-wavy" : "is-flat"} ${this._scrubbing ? "is-scrubbing" : ""} ${v ? "is-seekable" : ""}"
+              class="wavy-slider ${y ? "is-wavy" : "is-flat"} ${this._scrubbing ? "is-scrubbing" : ""} ${M ? "is-seekable" : ""}"
               role="slider"
               aria-label="Avanzamento riproduzione"
               aria-valuemin="0"
-              aria-valuemax=${h}
+              aria-valuemax=${g}
               aria-valuenow=${Math.round(k)}
-              @click=${(_) => _.stopPropagation()}
+              @click=${(x) => x.stopPropagation()}
               @pointerdown=${this._onSliderPointerDown}
               @pointermove=${this._onSliderPointerMove}
               @pointerup=${this._onSliderPointerUp}
               @pointercancel=${this._onSliderPointerUp}
             >
-              ${this._scrubbing && h > 0 ? l`
-                    <span class="scrub-badge" style="left: ${d}%;">
-                      ${Ae(k)} / ${Ae(h)}
+              ${this._scrubbing && g > 0 ? l`
+                    <span class="scrub-badge" style="left: ${u}%;">
+                      ${Ae(k)} / ${Ae(g)}
                     </span>
                   ` : p}
 
               <!-- Active Wavy / Flat Segment -->
-              <div class="wavy-active-wrap" style="width: calc(${d}% - 7px);">
+              <div class="wavy-active-wrap" style="width: calc(${u}% - 7px);">
                 <div class="wavy-svg-scroller">
                   <svg class="wavy-svg" viewBox="0 0 280 14" preserveAspectRatio="none" aria-hidden="true">
                     <path
@@ -7317,18 +7334,18 @@ let N = class extends S {
               </div>
 
               <!-- M3 Expressive Vertical Pill Thumb -->
-              <div class="wavy-thumb" style="left: ${d}%;"></div>
+              <div class="wavy-thumb" style="left: ${u}%;"></div>
 
               <!-- Inactive Remaining Track -->
-              <div class="wavy-inactive-line" style="left: calc(${d}% + 7px);"></div>
+              <div class="wavy-inactive-line" style="left: calc(${u}% + 7px);"></div>
             </div>
 
             <button
               type="button"
               class="transport-btn is-next"
               aria-label="Traccia successiva"
-              ?disabled=${!g}
-              @click=${(_) => this._callService("media_next_track", {}, _)}
+              ?disabled=${!O}
+              @click=${(x) => this._callService("media_next_track", {}, x)}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M16 6h2v12h-2V6ZM6 18l8.5-6L6 6v12Z" />
@@ -7342,16 +7359,16 @@ let N = class extends S {
         .hass=${this.hass}
         .entityId=${this._currentEntityId}
         .playerIds=${[this._config.entity, ...this._config.entities ?? []].filter(Boolean)}
-        @m3e-player-selected=${(_) => {
-      this._activeEntityId = _.detail.entityId;
+        @m3e-player-selected=${(x) => {
+      this._activeEntityId = x.detail.entityId;
     }}
       ></m3e-media-popup>
     `;
   }
 };
-N.styles = [
-  B,
-  E`
+j.styles = [
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -7365,9 +7382,13 @@ N.styles = [
          1. FULL-BLEED EXPRESSIVE MEDIA CARD
          ===================================================================== */
       .media-player-card {
-        --mp-scrim: var(--md-sys-color-surface-container-highest, #1e2028);
+        --mp-scrim: #181920;
         --mp-accent: var(--md-sys-color-primary-container, #e4e0de);
         --mp-on-accent: var(--md-sys-color-on-primary-container, #1b1b1f);
+        --mp-fg: #ffffff;
+        --mp-fg-muted: rgba(255, 255, 255, 0.84);
+        --mp-track-active: var(--mp-accent, #ffffff);
+        --mp-track-inactive: rgba(255, 255, 255, 0.28);
 
         position: relative;
         min-height: 196px;
@@ -7377,10 +7398,46 @@ N.styles = [
         cursor: pointer;
         outline: none;
         background: var(--mp-scrim);
-        color: #ffffff;
+        color: var(--mp-fg);
         transition:
           background-color 420ms cubic-bezier(0.2, 0, 0, 1),
           transform var(--m3e-spring-spatial-fast);
+      }
+
+      /* No-artwork / Standby / Idle: follow M3 theme surface & on-surface tokens
+         so Light Mode and Dark Mode both maintain high WCAG contrast. */
+      .media-player-card.no-artwork {
+        --mp-fg: var(--md-sys-color-on-surface, #1b1b1f);
+        --mp-fg-muted: var(--md-sys-color-on-surface-variant, #444746);
+        --mp-track-active: var(--md-sys-color-primary, #4285f4);
+        --mp-track-inactive: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 18%,
+          transparent
+        );
+        background: var(
+          --ha-card-background,
+          var(--md-sys-color-surface-container-low, #f3f3fa)
+        );
+      }
+
+      .media-player-card.no-artwork.is-unavailable {
+        --mp-fg: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 62%, transparent);
+        --mp-fg-muted: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 48%,
+          transparent
+        );
+        --mp-track-active: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 28%,
+          transparent
+        );
+        --mp-track-inactive: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 14%,
+          transparent
+        );
       }
 
       .media-player-card:focus-visible {
@@ -7422,9 +7479,13 @@ N.styles = [
       .media-player-card.no-artwork .bg-scrim {
         background: linear-gradient(
           135deg,
-          color-mix(in srgb, var(--mp-accent) 20%, var(--mp-scrim)) 0%,
-          var(--mp-scrim) 100%
+          color-mix(in srgb, var(--md-sys-color-primary-container, transparent) 26%, transparent) 0%,
+          transparent 100%
         );
+      }
+
+      .media-player-card.no-artwork.is-unavailable .bg-scrim {
+        display: none;
       }
 
       .card-content {
@@ -7497,12 +7558,21 @@ N.styles = [
         max-width: 68%;
         padding: 5px 12px;
         border-radius: 9999px;
-        background: color-mix(in srgb, var(--mp-scrim) 72%, rgba(0, 0, 0, 0.35));
-        color: rgba(255, 255, 255, 0.92);
+        background: color-mix(in srgb, var(--mp-scrim) 72%, rgba(0, 0, 0, 0.38));
+        color: rgba(255, 255, 255, 0.94);
         font-size: 12.5px;
         font-weight: 500;
         line-height: 16px;
         transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .media-player-card.no-artwork .device-chip {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 10%,
+          transparent
+        );
+        color: var(--mp-fg);
       }
 
       .device-chip:active {
@@ -7545,7 +7615,7 @@ N.styles = [
         font-weight: 600;
         line-height: 1.2;
         letter-spacing: -0.02em;
-        color: #ffffff;
+        color: var(--mp-fg);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -7555,7 +7625,7 @@ N.styles = [
         font-size: 14.5px;
         font-weight: 400;
         line-height: 1.28;
-        color: rgba(255, 255, 255, 0.84);
+        color: var(--mp-fg-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -7595,6 +7665,12 @@ N.styles = [
         cursor: not-allowed;
       }
 
+      .media-player-card.no-artwork.is-unavailable .play-fab:disabled {
+        opacity: 1;
+        background: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 12%, transparent);
+        color: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 38%, transparent);
+      }
+
       .play-fab svg {
         width: 26px;
         height: 26px;
@@ -7616,7 +7692,7 @@ N.styles = [
         border: 0;
         border-radius: 50%;
         background: transparent;
-        color: #ffffff;
+        color: var(--mp-fg);
         display: grid;
         place-items: center;
         cursor: pointer;
@@ -7628,7 +7704,7 @@ N.styles = [
       }
 
       .transport-btn:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.12);
+        background: color-mix(in srgb, var(--mp-fg) 12%, transparent);
       }
 
       .transport-btn.is-prev:active:not(:disabled) {
@@ -7704,7 +7780,7 @@ N.styles = [
 
       .wavy-path {
         fill: none;
-        stroke: var(--mp-accent, #ffffff);
+        stroke: var(--mp-track-active);
         stroke-width: 3.2;
         stroke-linecap: round;
         transition: stroke 360ms cubic-bezier(0.2, 0, 0, 1);
@@ -7727,7 +7803,7 @@ N.styles = [
         height: 4px;
         border-radius: 9999px;
         transform: translateY(-50%);
-        background: var(--mp-accent, #ffffff);
+        background: var(--mp-track-active);
         opacity: 1;
         transition:
           opacity 200ms cubic-bezier(0.2, 0, 0, 1),
@@ -7746,7 +7822,7 @@ N.styles = [
         height: 18px;
         border-radius: 9999px;
         transform: translate(-50%, -50%);
-        background: var(--mp-accent, #ffffff);
+        background: var(--mp-track-active);
         pointer-events: none;
         transition:
           height var(--m3e-spring-spatial-fast),
@@ -7766,7 +7842,7 @@ N.styles = [
         height: 4px;
         border-radius: 9999px;
         transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.28);
+        background: var(--mp-track-inactive);
         pointer-events: none;
       }
 
@@ -7787,42 +7863,42 @@ N.styles = [
       }
     `
 ];
-q([
+X([
   C({ attribute: !1 })
-], N.prototype, "hass", 2);
-q([
+], j.prototype, "hass", 2);
+X([
   f()
-], N.prototype, "_config", 2);
-q([
+], j.prototype, "_config", 2);
+X([
   f()
-], N.prototype, "_palette", 2);
-q([
+], j.prototype, "_palette", 2);
+X([
   f()
-], N.prototype, "_nowTick", 2);
-q([
+], j.prototype, "_nowTick", 2);
+X([
   f()
-], N.prototype, "_scrubbing", 2);
-q([
+], j.prototype, "_scrubbing", 2);
+X([
   f()
-], N.prototype, "_scrubPct", 2);
-q([
+], j.prototype, "_scrubPct", 2);
+X([
   f()
-], N.prototype, "_activeEntityId", 2);
-q([
-  w(".media-player-card")
-], N.prototype, "_cardEl", 2);
-q([
-  w("m3e-media-popup")
-], N.prototype, "_popupEl", 2);
-N = q([
-  I("m3e-media-player-card")
-], N);
+], j.prototype, "_activeEntityId", 2);
+X([
+  $(".media-player-card")
+], j.prototype, "_cardEl", 2);
+X([
+  $("m3e-media-popup")
+], j.prototype, "_popupEl", 2);
+j = X([
+  L("m3e-media-player-card")
+], j);
 var ss = Object.defineProperty, rs = Object.getOwnPropertyDescriptor, Qt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? rs(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && ss(e, i, r), r;
 };
-let vt = class extends S {
+let _t = class extends S {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeTopLabel = (t) => ({
       layout: "Layout visualizzazione",
@@ -8061,7 +8137,7 @@ let vt = class extends S {
     `;
   }
 };
-vt.styles = E`
+_t.styles = T`
     :host {
       display: block;
     }
@@ -8222,22 +8298,22 @@ vt.styles = E`
   `;
 Qt([
   C({ attribute: !1 })
-], vt.prototype, "hass", 2);
+], _t.prototype, "hass", 2);
 Qt([
   f()
-], vt.prototype, "_config", 2);
+], _t.prototype, "_config", 2);
 Qt([
   f()
-], vt.prototype, "_expandedIndex", 2);
-vt = Qt([
-  I("m3e-people-card-editor")
-], vt);
+], _t.prototype, "_expandedIndex", 2);
+_t = Qt([
+  L("m3e-people-card-editor")
+], _t);
 var as = Object.defineProperty, os = Object.getOwnPropertyDescriptor, Jt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? os(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && as(e, i, r), r;
 };
-let _t = class extends S {
+let bt = class extends S {
   constructor() {
     super(...arguments), this._isMouseDragging = !1, this._dragMoved = !1, this._dragStartX = 0, this._dragScrollLeft = 0;
   }
@@ -8358,15 +8434,17 @@ let _t = class extends S {
         @mouseleave=${this._onMouseUpOrLeave}
       >
         ${t.length === 0 ? l`<div class="empty-hint">Aggiungi persone dalla configurazione della card</div>` : t.map((o) => {
-      const n = o.entity ? this.hass?.states[o.entity] : void 0, c = !n || n.state === "unavailable" || n.state === "unknown", d = !c && String(n.state ?? "").toLowerCase() === "home", h = o.name || n?.attributes.friendly_name || o.entity || "Persona", u = this._formatLocation(n), m = (o.tap_action ?? "more-info") !== "none" && !!o.entity;
+      const n = o.entity ? this.hass?.states[o.entity] : void 0, c = !n || n.state === "unavailable" || n.state === "unknown", d = !c && String(n.state ?? "").toLowerCase() === "home", h = o.name || n?.attributes.friendly_name || o.entity || "Persona", u = this._formatLocation(n), g = (o.tap_action ?? "more-info") !== "none" && !!o.entity, m = !o.icon && !!(o.image?.trim() || n?.attributes.entity_picture?.trim()), v = this.hass?.themes?.darkMode === !1;
       return l`
                 <button
                   type="button"
-                  class="person-item ${c ? "is-dimmed" : ""} ${m ? "is-clickable" : ""}"
+                  class="person-item ${c ? "is-dimmed" : ""} ${g ? "is-clickable" : ""}"
                   @click=${() => this._onItemTap(o)}
                 >
                   <span class="avatar-wrap" aria-hidden="true">
-                    <span class="avatar-circle ${d ? "is-home" : ""}">
+                    <span
+                      class="avatar-circle ${d ? "is-home" : ""} ${m ? "has-picture" : ""} ${v ? "is-light" : "is-dark"}"
+                    >
                       ${this._renderAvatar(o, n, d)}
                     </span>
                     ${r && d ? l`<span class="presence-dot"></span>` : p}
@@ -8384,9 +8462,9 @@ let _t = class extends S {
     return s ? a : l`<ha-card>${a}</ha-card>`;
   }
 };
-_t.styles = [
-  B,
-  E`
+bt.styles = [
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -8548,6 +8626,20 @@ _t.styles = [
         color: var(--md-sys-color-on-primary-container, var(--primary-text-color));
       }
 
+      /* Light mode: ensure transparent light-colored silhouette PNGs keep crisp contrast
+         without affecting opaque user photos (which fully cover the circle background). */
+      .avatar-circle.has-picture.is-light {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface-variant, #444746) 72%,
+          var(--md-sys-color-surface, #ffffff)
+        );
+      }
+
+      .avatar-circle.has-picture.is-light.is-home {
+        background: var(--md-sys-color-primary, #4285f4);
+      }
+
       .avatar-img {
         width: 100%;
         height: 100%;
@@ -8647,16 +8739,16 @@ _t.styles = [
 ];
 Jt([
   C({ attribute: !1 })
-], _t.prototype, "hass", 2);
+], bt.prototype, "hass", 2);
 Jt([
   f()
-], _t.prototype, "_config", 2);
+], bt.prototype, "_config", 2);
 Jt([
-  w(".people-container")
-], _t.prototype, "_containerEl", 2);
-_t = Jt([
-  I("m3e-people-card")
-], _t);
+  $(".people-container")
+], bt.prototype, "_containerEl", 2);
+bt = Jt([
+  L("m3e-people-card")
+], bt);
 var ns = Object.defineProperty, ls = Object.getOwnPropertyDescriptor, Dt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ls(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -8852,8 +8944,8 @@ let ot = class extends S {
   }
 };
 ot.styles = [
-  B,
-  E`
+  Z,
+  T`
       .scene-tile {
         height: 100%;
         min-height: 84px;
@@ -9048,14 +9140,14 @@ Dt([
   f()
 ], ot.prototype, "_activated", 2);
 ot = Dt([
-  I("m3e-scene-card")
+  L("m3e-scene-card")
 ], ot);
 var ds = Object.defineProperty, ps = Object.getOwnPropertyDescriptor, te = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ps(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && ds(e, i, r), r;
 };
-let bt = class extends S {
+let yt = class extends S {
   constructor() {
     super(...arguments), this._expandedIndex = 0, this._computeTopLabel = (t) => ({
       title: "Titolo in alto a sinistra",
@@ -9242,7 +9334,7 @@ let bt = class extends S {
     `;
   }
 };
-bt.styles = E`
+yt.styles = T`
     :host {
       display: block;
     }
@@ -9403,16 +9495,16 @@ bt.styles = E`
   `;
 te([
   C({ attribute: !1 })
-], bt.prototype, "hass", 2);
+], yt.prototype, "hass", 2);
 te([
   f()
-], bt.prototype, "_config", 2);
+], yt.prototype, "_config", 2);
 te([
   f()
-], bt.prototype, "_expandedIndex", 2);
-bt = te([
-  I("m3e-stack-card-editor")
-], bt);
+], yt.prototype, "_expandedIndex", 2);
+yt = te([
+  L("m3e-stack-card-editor")
+], yt);
 var hs = Object.defineProperty, us = Object.getOwnPropertyDescriptor, ue = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? us(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -9526,8 +9618,8 @@ let Ot = class extends S {
   }
 };
 Ot.styles = [
-  B,
-  E`
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -9628,7 +9720,7 @@ ue([
   f()
 ], Ot.prototype, "_config", 2);
 Ot = ue([
-  I("m3e-stack-card")
+  L("m3e-stack-card")
 ], Ot);
 var fs = Object.defineProperty, ms = Object.getOwnPropertyDescriptor, fe = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ms(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -9900,7 +9992,7 @@ let It = class extends S {
     `;
   }
 };
-It.styles = E`
+It.styles = T`
     :host {
       display: block;
     }
@@ -9912,9 +10004,9 @@ fe([
   f()
 ], It.prototype, "_config", 2);
 It = fe([
-  I("m3e-status-card-editor")
+  L("m3e-status-card-editor")
 ], It);
-var gs = Object.defineProperty, vs = Object.getOwnPropertyDescriptor, T = (t, e, i, s) => {
+var gs = Object.defineProperty, vs = Object.getOwnPropertyDescriptor, A = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? vs(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && gs(e, i, r), r;
@@ -9926,28 +10018,28 @@ function $t(t, e) {
   let s = null;
   const r = je.exec(i);
   if (r) {
-    const g = Number(r[1]), v = Number(r[2]), A = Number(r[3] ?? "0");
-    if (g >= 0 && g <= 23 && v >= 0 && v <= 59) {
-      const k = /* @__PURE__ */ new Date();
-      s = new Date(k.getFullYear(), k.getMonth(), k.getDate(), g, v, A), s.getTime() <= k.getTime() && s.setDate(s.getDate() + 1);
+    const m = Number(r[1]), v = Number(r[2]), O = Number(r[3] ?? "0");
+    if (m >= 0 && m <= 23 && v >= 0 && v <= 59) {
+      const M = /* @__PURE__ */ new Date();
+      s = new Date(M.getFullYear(), M.getMonth(), M.getDate(), m, v, O), s.getTime() <= M.getTime() && s.setDate(s.getDate() + 1);
     }
   } else if (kt.test(i)) {
-    const g = new Date(i);
-    Number.isNaN(g.getTime()) || (s = g);
+    const m = new Date(i);
+    Number.isNaN(m.getTime()) || (s = m);
   }
   if (!s) return t;
   const a = s.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   if (e === "time" || e === "auto")
     return a;
   if (e === "datetime") {
-    const g = /* @__PURE__ */ new Date(), v = (_, P) => _.getFullYear() === P.getFullYear() && _.getMonth() === P.getMonth() && _.getDate() === P.getDate(), A = new Date(g.getFullYear(), g.getMonth(), g.getDate() + 1), k = new Date(g.getFullYear(), g.getMonth(), g.getDate() - 1);
-    return v(s, g) ? `Oggi ${a}` : v(s, A) ? `Domani ${a}` : v(s, k) ? `Ieri ${a}` : `${s.toLocaleDateString([], { day: "numeric", month: "short" })} ${a}`;
+    const m = /* @__PURE__ */ new Date(), v = (k, P) => k.getFullYear() === P.getFullYear() && k.getMonth() === P.getMonth() && k.getDate() === P.getDate(), O = new Date(m.getFullYear(), m.getMonth(), m.getDate() + 1), M = new Date(m.getFullYear(), m.getMonth(), m.getDate() - 1);
+    return v(s, m) ? `Oggi ${a}` : v(s, O) ? `Domani ${a}` : v(s, M) ? `Ieri ${a}` : `${s.toLocaleDateString([], { day: "numeric", month: "short" })} ${a}`;
   }
   const o = s.getTime() - Date.now(), n = o >= 0, c = Math.round(Math.abs(o) / 6e4);
   if (c < 1) return "Ora";
   const d = Math.floor(c / 1440), h = Math.floor(c % 1440 / 60), u = c % 60;
-  let m;
-  return d > 0 ? m = h > 0 ? `${d}g ${h}h` : `${d}g` : h > 0 ? m = u > 0 ? `${h}h ${u}m` : `${h}h` : m = `${u}m`, n ? `Tra ${m}` : `${m} fa`;
+  let g;
+  return d > 0 ? g = h > 0 ? `${d}g ${h}h` : `${d}g` : h > 0 ? g = u > 0 ? `${h}h ${u}m` : `${h}h` : g = `${u}m`, n ? `Tra ${g}` : `${g} fa`;
 }
 const _s = /* @__PURE__ */ new Set(["temperature", "humidity"]), bs = /* @__PURE__ */ new Set([
   "on",
@@ -9965,7 +10057,7 @@ const _s = /* @__PURE__ */ new Set(["temperature", "humidity"]), bs = /* @__PURE
   "heating",
   "cooling",
   "true"
-]), dt = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`, ys = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`, Zt = 135, st = 270;
+]), pt = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`, ys = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`, Zt = 135, st = 270;
 function xs(t) {
   return t * Math.PI / 180;
 }
@@ -9977,7 +10069,7 @@ function ws(t, e, i, s, r) {
   const a = Mt(t, e, i, s), o = Mt(t, e, i, r);
   return `M ${a.x.toFixed(2)} ${a.y.toFixed(2)} A ${i} ${i} 0 1 1 ${o.x.toFixed(2)} ${o.y.toFixed(2)}`;
 }
-let M = class extends S {
+let E = class extends S {
   constructor() {
     super(...arguments), this.popupOnly = !1, this._pressed = !1, this._popupOpen = !1, this._dialDragging = !1, this._dialTemp = null, this._activeSheet = null, this._volDragging = !1, this._volPct = null, this._volPendingTimer = null, this._historyPoints = [], this._historyLoading = !1, this._historyEntityId = null, this._historyHoverIdx = null, this._prevStates = {}, this._longPressTimer = null, this._longPressTriggered = !1, this._relativeTimer = null, this._relativeTick = 0, this._onTilePointerDown = (t) => {
       t.button === 0 && (this._pressed = !0, this._longPressTriggered = !1, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
@@ -10279,8 +10371,8 @@ let M = class extends S {
           }
         }
         if (d != null && String(d).trim() !== "") {
-          const h = $t(String(d), i), u = this._config?.subtitle_prefix ?? "", m = this._config?.subtitle_suffix ?? "";
-          return `${u}${h}${m}`;
+          const h = $t(String(d), i), u = this._config?.subtitle_prefix ?? "", g = this._config?.subtitle_suffix ?? "";
+          return `${u}${h}${g}`;
         }
       }
     }
@@ -10610,28 +10702,28 @@ let M = class extends S {
       `;
     const s = this._historyPoints;
     if (s.length < 2) return p;
-    const r = Math.min(...s.map((y) => y.v)), a = Math.max(...s.map((y) => y.v)), o = a - r || 1, n = s[0].t, c = s[s.length - 1].t, d = c - n || 1, h = 320, u = 104, m = 6, g = 12, v = s.map((y) => ({
-      x: m + (y.t - n) / d * (h - m * 2),
-      y: u - g - (y.v - r) / o * (u - g * 2),
-      ...y
+    const r = Math.min(...s.map((b) => b.v)), a = Math.max(...s.map((b) => b.v)), o = a - r || 1, n = s[0].t, c = s[s.length - 1].t, d = c - n || 1, h = 320, u = 104, g = 6, m = 12, v = s.map((b) => ({
+      x: g + (b.t - n) / d * (h - g * 2),
+      y: u - m - (b.v - r) / o * (u - m * 2),
+      ...b
     }));
-    let A = `M ${v[0].x.toFixed(1)} ${v[0].y.toFixed(1)}`;
-    for (let y = 1; y < v.length; y++) {
-      const R = v[y - 1], b = v[y], z = ((R.x + b.x) / 2).toFixed(1);
-      A += ` C ${z} ${R.y.toFixed(1)}, ${z} ${b.y.toFixed(1)}, ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+    let O = `M ${v[0].x.toFixed(1)} ${v[0].y.toFixed(1)}`;
+    for (let b = 1; b < v.length; b++) {
+      const V = v[b - 1], _ = v[b], I = ((V.x + _.x) / 2).toFixed(1);
+      O += ` C ${I} ${V.y.toFixed(1)}, ${I} ${_.y.toFixed(1)}, ${_.x.toFixed(1)} ${_.y.toFixed(1)}`;
     }
-    const k = `${A} L ${v[v.length - 1].x.toFixed(1)} ${u} L ${v[0].x.toFixed(1)} ${u} Z`, x = this._historyHoverIdx, _ = x !== null ? v[x] : v[v.length - 1], P = (y) => new Date(y).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), j = (y) => {
-      const b = y.currentTarget.getBoundingClientRect();
-      if (b.width <= 0) return;
-      const z = Math.max(0, Math.min(1, (y.clientX - b.left) / b.width));
-      this._historyHoverIdx = Math.round(z * (v.length - 1));
-    }, Z = `m3e-hist-${this._historyEntityId?.replace(/[^a-z0-9]/gi, "_") ?? "g"}`;
+    const M = `${O} L ${v[v.length - 1].x.toFixed(1)} ${u} L ${v[0].x.toFixed(1)} ${u} Z`, y = this._historyHoverIdx, k = y !== null ? v[y] : v[v.length - 1], P = (b) => new Date(b).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }), x = (b) => {
+      const _ = b.currentTarget.getBoundingClientRect();
+      if (_.width <= 0) return;
+      const I = Math.max(0, Math.min(1, (b.clientX - _.left) / _.width));
+      this._historyHoverIdx = Math.round(I * (v.length - 1));
+    }, R = `m3e-hist-${this._historyEntityId?.replace(/[^a-z0-9]/gi, "_") ?? "g"}`;
     return l`
       <div class="history-card">
         <div class="history-header">
           <span class="history-title">${i}</span>
           <span class="history-range">
-            ${x !== null ? `${_.v}${e} · ${P(_.t)}` : `${r}${e} – ${a}${e}`}
+            ${y !== null ? `${k.v}${e} · ${P(k.t)}` : `${r}${e} – ${a}${e}`}
           </span>
         </div>
 
@@ -10639,26 +10731,26 @@ let M = class extends S {
           class="history-svg"
           viewBox="0 0 ${h} ${u}"
           preserveAspectRatio="none"
-          @pointerdown=${j}
-          @pointermove=${(y) => {
-      (y.buttons > 0 || y.pointerType === "mouse") && j(y);
+          @pointerdown=${x}
+          @pointermove=${(b) => {
+      (b.buttons > 0 || b.pointerType === "mouse") && x(b);
     }}
           @pointerleave=${() => this._historyHoverIdx = null}
         >
           ${ie`
             <defs>
-              <linearGradient id=${Z} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id=${R} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.28" />
                 <stop offset="100%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.0" />
               </linearGradient>
             </defs>
-            <line x1=${m} y1=${g} x2=${h - m} y2=${g} class="history-grid-line" />
-            <line x1=${m} y1=${u / 2} x2=${h - m} y2=${u / 2} class="history-grid-line" />
-            <line x1=${m} y1=${u - g} x2=${h - m} y2=${u - g} class="history-grid-line" />
-            <path d=${k} fill="url(#${Z})" />
-            <path d=${A} class="history-line" />
-            ${x !== null ? ie`<line x1=${_.x} y1=${g} x2=${_.x} y2=${u - g} class="history-cursor-line" />` : p}
-            <circle cx=${_.x} cy=${_.y} r="4.5" class="history-dot" />
+            <line x1=${g} y1=${m} x2=${h - g} y2=${m} class="history-grid-line" />
+            <line x1=${g} y1=${u / 2} x2=${h - g} y2=${u / 2} class="history-grid-line" />
+            <line x1=${g} y1=${u - m} x2=${h - g} y2=${u - m} class="history-grid-line" />
+            <path d=${M} fill="url(#${R})" />
+            <path d=${O} class="history-line" />
+            ${y !== null ? ie`<line x1=${k.x} y1=${m} x2=${k.x} y2=${u - m} class="history-cursor-line" />` : p}
+            <circle cx=${k.x} cy=${k.y} r="4.5" class="history-dot" />
           `}
         </svg>
 
@@ -10764,9 +10856,9 @@ let M = class extends S {
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), d = r !== null ? this._tempToDeg(r) : null, h = 140, u = 140, m = 114, g = ws(h, u, m, Zt, Zt + st), v = Mt(h, u, m, c), A = d !== null ? Mt(h, u, m, d) : null, k = d !== null ? Mt(h, u, m - 22, d) : null, x = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], _ = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], P = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], j = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], Z = String(t?.attributes.preset_mode ?? "none"), y = String(t?.attributes.fan_mode ?? "auto"), R = String(t?.attributes.swing_mode ?? "off"), b = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find(($) => $.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find(($) => $.attributes.device_class === "humidity").state}%` : null, z = _.length > 0, F = P.length > 0, yt = j.length > 0, J = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", tt = ($) => $.replace(/_/g, " ").replace(/^./, (Bt) => Bt.toUpperCase()), xt = this._activeSheet === "mode" ? { title: "Select a mode", options: x, current: e, onSelect: ($) => this._setClimateMode($) } : this._activeSheet === "preset" ? { title: "Select preset", options: _, current: Z, onSelect: ($) => this._setClimatePreset($) } : this._activeSheet === "fan" ? { title: "Fan speed", options: P, current: y, onSelect: ($) => this._setClimateFan($) } : this._activeSheet === "swing" ? { title: "Swing mode", options: j, current: R, onSelect: ($) => this._setClimateSwing($) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), d = r !== null ? this._tempToDeg(r) : null, h = 140, u = 140, g = 114, m = ws(h, u, g, Zt, Zt + st), v = Mt(h, u, g, c), O = d !== null ? Mt(h, u, g, d) : null, M = d !== null ? Mt(h, u, g - 22, d) : null, y = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], k = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], P = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], x = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], R = String(t?.attributes.preset_mode ?? "none"), b = String(t?.attributes.fan_mode ?? "auto"), V = String(t?.attributes.swing_mode ?? "off"), _ = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((w) => w.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((w) => w.attributes.device_class === "humidity").state}%` : null, I = k.length > 0, F = P.length > 0, xt = x.length > 0, dt = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", tt = (w) => w.replace(/_/g, " ").replace(/^./, (Bt) => Bt.toUpperCase()), G = this._activeSheet === "mode" ? { title: "Select a mode", options: y, current: e, onSelect: (w) => this._setClimateMode(w) } : this._activeSheet === "preset" ? { title: "Select preset", options: k, current: R, onSelect: (w) => this._setClimatePreset(w) } : this._activeSheet === "fan" ? { title: "Fan speed", options: P, current: b, onSelect: (w) => this._setClimateFan(w) } : this._activeSheet === "swing" ? { title: "Swing mode", options: x, current: V, onSelect: (w) => this._setClimateSwing(w) } : null;
     return l`
-      <div class="climate-hero ${J} ${this._dialDragging ? "is-dragging" : ""}">
+      <div class="climate-hero ${dt} ${this._dialDragging ? "is-dragging" : ""}">
         <div
           class="dial-container"
           @pointerdown=${this._onDialPointerDown}
@@ -10776,13 +10868,13 @@ let M = class extends S {
         >
           <svg class="dial-svg" viewBox="0 0 280 280" aria-hidden="true">
             <circle cx=${h} cy=${u} r="132" class="dial-bg-circle" />
-            <path d=${g} class="dial-arc-track" />
+            <path d=${m} class="dial-arc-track" />
 
-            ${A && k ? ie`
-                  <circle cx=${A.x} cy=${A.y} r="3.5" class="dial-ambient-dot" />
+            ${O && M ? ie`
+                  <circle cx=${O.x} cy=${O.y} r="3.5" class="dial-ambient-dot" />
                   <text
-                    x=${k.x}
-                    y=${k.y + 4}
+                    x=${M.x}
+                    y=${M.y + 4}
                     text-anchor="middle"
                     class="dial-ambient-label"
                   >
@@ -10810,7 +10902,7 @@ let M = class extends S {
                   </span>
                 `}
 
-            <div class="dial-steppers" @pointerdown=${($) => $.stopPropagation()}>
+            <div class="dial-steppers" @pointerdown=${(w) => w.stopPropagation()}>
               <button
                 type="button"
                 class="dial-step-btn"
@@ -10834,10 +10926,10 @@ let M = class extends S {
 
       <div class="modular-stack">
         <!-- Adaptive Row 1: Mode (full pill if alone, or 2-col with Preset like Daikin) -->
-        <div class="${z ? "climate-grid-2" : ""}">
+        <div class="${I ? "climate-grid-2" : ""}">
           <button
             type="button"
-            class="mode-pill ${z ? "compact-trait" : ""} ${J}"
+            class="mode-pill ${I ? "compact-trait" : ""} ${dt}"
             @click=${() => this._activeSheet = "mode"}
           >
             <span class="mode-pill-icon">
@@ -10849,7 +10941,7 @@ let M = class extends S {
             </span>
           </button>
 
-          ${z ? l`
+          ${I ? l`
                 <button
                   type="button"
                   class="trait-card"
@@ -10857,16 +10949,16 @@ let M = class extends S {
                 >
                   <span class="mode-pill-text">
                     <span class="mode-pill-title">Preset</span>
-                    <span class="mode-pill-val">${tt(Z)}</span>
+                    <span class="mode-pill-val">${tt(R)}</span>
                   </span>
-                  <span class="trait-chevron">${dt}</span>
+                  <span class="trait-chevron">${pt}</span>
                 </button>
               ` : p}
         </div>
 
         <!-- Adaptive Row 2: Fan speed & Swing (only rendered if entity exposes them) -->
-        ${F || yt ? l`
-              <div class="${F && yt ? "climate-grid-2" : ""}">
+        ${F || xt ? l`
+              <div class="${F && xt ? "climate-grid-2" : ""}">
                 ${F ? l`
                       <button
                         type="button"
@@ -10882,14 +10974,14 @@ let M = class extends S {
                           </svg>
                           <span class="mode-pill-text">
                             <span class="mode-pill-title">Fan speed</span>
-                            <span class="mode-pill-val">${tt(y)}</span>
+                            <span class="mode-pill-val">${tt(b)}</span>
                           </span>
                         </span>
-                        <span class="trait-chevron">${dt}</span>
+                        <span class="trait-chevron">${pt}</span>
                       </button>
                     ` : p}
 
-                ${yt ? l`
+                ${xt ? l`
                       <button
                         type="button"
                         class="trait-card"
@@ -10897,15 +10989,15 @@ let M = class extends S {
                       >
                         <span class="mode-pill-text">
                           <span class="mode-pill-title">Swing</span>
-                          <span class="mode-pill-val">${tt(R)}</span>
+                          <span class="mode-pill-val">${tt(V)}</span>
                         </span>
-                        <span class="trait-chevron">${dt}</span>
+                        <span class="trait-chevron">${pt}</span>
                       </button>
                     ` : p}
               </div>
             ` : p}
 
-        ${r !== null || a || b ? l`
+        ${r !== null || a || _ ? l`
               <div class="telemetry-card">
                 ${r !== null ? l`
                       <div class="telemetry-row">
@@ -10913,10 +11005,10 @@ let M = class extends S {
                         <strong>${r}°</strong>
                       </div>
                     ` : p}
-                ${b ? l`
+                ${_ ? l`
                       <div class="telemetry-row">
                         <span>Humidity</span>
-                        <strong>${b}</strong>
+                        <strong>${_}</strong>
                       </div>
                     ` : p}
                 ${a ? l`
@@ -10930,9 +11022,9 @@ let M = class extends S {
       </div>
 
       <!-- Unified Inline Bottom Sheet for Mode / Preset / Fan / Swing -->
-      ${xt ? l`
+      ${G ? l`
             <div class="mode-sheet-backdrop" @click=${() => this._activeSheet = null}>
-              <div class="mode-sheet" @click=${($) => $.stopPropagation()}>
+              <div class="mode-sheet" @click=${(w) => w.stopPropagation()}>
                 <div class="mode-sheet-header">
                   <button
                     type="button"
@@ -10940,20 +11032,20 @@ let M = class extends S {
                     @click=${() => this._activeSheet = null}
                     aria-label="Close selector"
                   >
-                    ${dt}
+                    ${pt}
                   </button>
-                  <span>${xt.title}</span>
+                  <span>${G.title}</span>
                 </div>
                 <div class="mode-sheet-list">
-                  ${xt.options.map(($) => {
-      const Bt = $.toLowerCase() === xt.current.toLowerCase(), Fe = this._activeSheet === "mode" ? $ === "heat" ? "mode-heat" : $ === "cool" ? "mode-cool" : "mode-off" : "mode-off";
+                  ${G.options.map((w) => {
+      const Bt = w.toLowerCase() === G.current.toLowerCase(), Fe = this._activeSheet === "mode" ? w === "heat" ? "mode-heat" : w === "cool" ? "mode-cool" : "mode-off" : "mode-off";
       return l`
                       <button
                         type="button"
                         class="mode-option ${Bt ? `selected ${Fe}` : ""}"
-                        @click=${() => xt.onSelect($)}
+                        @click=${() => G.onSelect(w)}
                       >
-                        <span>${tt($)}</span>
+                        <span>${tt(w)}</span>
                         ${Bt ? l`<span class="check-mark">✓</span>` : p}
                       </button>
                     `;
@@ -11068,7 +11160,7 @@ let M = class extends S {
             aria-label="Channel down"
             @click=${() => this._triggerRemoteButton("ch_down", "media_previous_track", {}, "ChannelDown")}
           >
-            ${dt}
+            ${pt}
           </button>
           <span class="channel-label">CH</span>
           <button
@@ -11083,7 +11175,7 @@ let M = class extends S {
 
         <div class="secondary-action-card">
           <span>${t}</span>
-          <span class="trait-chevron">${dt}</span>
+          <span class="trait-chevron">${pt}</span>
         </div>
       </div>
     `;
@@ -11428,7 +11520,7 @@ let M = class extends S {
         @touchmove=${(c) => Lt(c, this._dialogEl)}
       >
         ${this._popupOpen ? (() => {
-      const c = r === "power_strip", d = r === "sensor" || r === "custom" ? this._toggleablePowerEntity : void 0, h = c ? this._getPowerStripEntities() : [], u = !!d || c && h.length > 0, m = c ? h.some((v) => v.state === "on") : d?.state === "on", g = l`
+      const c = r === "power_strip", d = r === "sensor" || r === "custom" ? this._toggleablePowerEntity : void 0, h = c ? this._getPowerStripEntities() : [], u = !!d || c && h.length > 0, g = c ? h.some((v) => v.state === "on") : d?.state === "on", m = l`
                 <button
                   type="button"
                   class="icon-btn"
@@ -11446,7 +11538,7 @@ let M = class extends S {
       return l`
                 <div class="dialog-surface">
                   <header class="dialog-header">
-                    ${g}
+                    ${m}
                     <div class="dialog-title-wrap">
                       <span class="dialog-title">${e}</span>
                       ${n ? l`<span class="dialog-last-changed">${n}</span>` : p}
@@ -11454,11 +11546,11 @@ let M = class extends S {
                     ${u ? l`
                           <button
                             type="button"
-                            class="m3-header-switch ${m ? "is-on" : ""}"
+                            class="m3-header-switch ${g ? "is-on" : ""}"
                             role="switch"
-                            aria-checked=${String(m)}
-                            aria-label=${m ? "Spegni" : "Accendi"}
-                            @click=${() => c ? this._togglePowerStripAll(!m) : d && this._togglePowerEntity(d)}
+                            aria-checked=${String(g)}
+                            aria-label=${g ? "Spegni" : "Accendi"}
+                            @click=${() => c ? this._togglePowerStripAll(!g) : d && this._togglePowerEntity(d)}
                           >
                             <span class="m3-header-switch-thumb" aria-hidden="true"></span>
                           </button>
@@ -11473,9 +11565,9 @@ let M = class extends S {
     `;
   }
 };
-M.styles = [
-  B,
-  E`
+E.styles = [
+  Z,
+  T`
       :host {
         --m3e-spring-bouncy: 520ms linear(
           0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
@@ -12834,63 +12926,63 @@ M.styles = [
       }
     `
 ];
-T([
+A([
   C({ attribute: !1 })
-], M.prototype, "hass", 2);
-T([
+], E.prototype, "hass", 2);
+A([
   C({ type: Boolean })
-], M.prototype, "popupOnly", 2);
-T([
+], E.prototype, "popupOnly", 2);
+A([
   f()
-], M.prototype, "_config", 2);
-T([
+], E.prototype, "_config", 2);
+A([
   f()
-], M.prototype, "_pressed", 2);
-T([
+], E.prototype, "_pressed", 2);
+A([
   f()
-], M.prototype, "_popupOpen", 2);
-T([
+], E.prototype, "_popupOpen", 2);
+A([
   f()
-], M.prototype, "_dialDragging", 2);
-T([
+], E.prototype, "_dialDragging", 2);
+A([
   f()
-], M.prototype, "_dialTemp", 2);
-T([
+], E.prototype, "_dialTemp", 2);
+A([
   f()
-], M.prototype, "_activeSheet", 2);
-T([
+], E.prototype, "_activeSheet", 2);
+A([
   f()
-], M.prototype, "_volDragging", 2);
-T([
+], E.prototype, "_volDragging", 2);
+A([
   f()
-], M.prototype, "_volPct", 2);
-T([
+], E.prototype, "_volPct", 2);
+A([
   f()
-], M.prototype, "_historyPoints", 2);
-T([
+], E.prototype, "_historyPoints", 2);
+A([
   f()
-], M.prototype, "_historyLoading", 2);
-T([
+], E.prototype, "_historyLoading", 2);
+A([
   f()
-], M.prototype, "_historyEntityId", 2);
-T([
+], E.prototype, "_historyEntityId", 2);
+A([
   f()
-], M.prototype, "_historyHoverIdx", 2);
-T([
-  w("dialog.status-dialog")
-], M.prototype, "_dialogEl", 2);
-T([
-  w(".status-tile")
-], M.prototype, "_tileEl", 2);
-T([
-  w(".dialog-surface")
-], M.prototype, "_dialogSurfaceEl", 2);
-T([
+], E.prototype, "_historyHoverIdx", 2);
+A([
+  $("dialog.status-dialog")
+], E.prototype, "_dialogEl", 2);
+A([
+  $(".status-tile")
+], E.prototype, "_tileEl", 2);
+A([
+  $(".dialog-surface")
+], E.prototype, "_dialogSurfaceEl", 2);
+A([
   f()
-], M.prototype, "_relativeTick", 2);
-M = T([
-  I("m3e-status-card")
-], M);
+], E.prototype, "_relativeTick", 2);
+E = A([
+  L("m3e-status-card")
+], E);
 var $s = Object.defineProperty, ks = Object.getOwnPropertyDescriptor, Ht = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ks(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -13172,8 +13264,8 @@ let nt = class extends S {
   }
 };
 nt.styles = [
-  B,
-  E`
+  Z,
+  T`
       :host {
         display: block;
         width: 100%;
@@ -13380,18 +13472,18 @@ Ht([
   f()
 ], nt.prototype, "_optimisticTemp", 2);
 Ht([
-  w(".thermostat-card")
+  $(".thermostat-card")
 ], nt.prototype, "_cardEl", 2);
 nt = Ht([
-  I("m3e-thermostat-card")
+  L("m3e-thermostat-card")
 ], nt);
-var Ss = Object.defineProperty, Cs = Object.getOwnPropertyDescriptor, Q = (t, e, i, s) => {
+var Ss = Object.defineProperty, Cs = Object.getOwnPropertyDescriptor, J = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Cs(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Ss(e, i, r), r;
 };
 const Ms = 420;
-let G = class extends S {
+let W = class extends S {
   constructor() {
     super(...arguments), this._pressed = !1, this._popupOpen = !1, this._longPressTimer = null, this._longPressTriggered = !1, this._dragStartY = null, this._downX = 0, this._downY = 0, this._onTilePointerDown = (t) => {
       this._isUnavailable || t.pointerType === "mouse" && t.button !== 0 || (this._pressed = !0, this._longPressTriggered = !1, this._downX = t.clientX, this._downY = t.clientY, this._clearLongPress(), this._longPressTimer = window.setTimeout(() => {
@@ -13776,9 +13868,9 @@ let G = class extends S {
     `;
   }
 };
-G.styles = [
-  B,
-  E`
+W.styles = [
+  Z,
+  T`
       :host {
         --m3e-spring-bouncy: 540ms linear(
           0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
@@ -14126,123 +14218,123 @@ G.styles = [
       }
     `
 ];
-Q([
+J([
   C({ attribute: !1 })
-], G.prototype, "hass", 2);
-Q([
+], W.prototype, "hass", 2);
+J([
   f()
-], G.prototype, "_config", 2);
-Q([
+], W.prototype, "_config", 2);
+J([
   f()
-], G.prototype, "_pressed", 2);
-Q([
+], W.prototype, "_pressed", 2);
+J([
   f()
-], G.prototype, "_popupOpen", 2);
-Q([
-  w("dialog.toggle-dialog")
-], G.prototype, "_dialogEl", 2);
-Q([
-  w(".toggle-tile")
-], G.prototype, "_tileEl", 2);
-Q([
-  w(".dialog-surface")
-], G.prototype, "_dialogSurfaceEl", 2);
-G = Q([
-  I("m3e-toggle-card")
-], G);
-function V(t) {
+], W.prototype, "_popupOpen", 2);
+J([
+  $("dialog.toggle-dialog")
+], W.prototype, "_dialogEl", 2);
+J([
+  $(".toggle-tile")
+], W.prototype, "_tileEl", 2);
+J([
+  $(".dialog-surface")
+], W.prototype, "_dialogSurfaceEl", 2);
+W = J([
+  L("m3e-toggle-card")
+], W);
+function U(t) {
   window.customCards = window.customCards || [], window.customCards.some((e) => e.type === t.type) || window.customCards.push(t);
 }
-V({
+U({
   type: "m3e-light-card",
   name: "Light Card",
   description: "Google Home–style horizontal light slider tile with vertical capsule popup, shape morphing, and Material You integration.",
   preview: !0
 });
-V({
+U({
   type: "m3e-status-card",
   name: "Status Card",
   description: "Google Home–style status tile with dual state icons, device sibling auto-discovery, and modular popups (Sensor, Selector, Climate, Remote, Media).",
   preview: !0
 });
-V({
+U({
   type: "m3e-toggle-card",
   name: "Toggle Card",
   description: "Google Home–style switch/outlet toggle tile with morphing vertical switch popup.",
   preview: !0
 });
-V({
+U({
   type: "m3e-scene-card",
   name: "Scene / Button Card",
   description: "Google Home–style one-tap scene, script, or button tile with animated activation feedback.",
   preview: !0
 });
-V({
+U({
   type: "m3e-light-control-card",
   name: "Light Control (All on / All off)",
   description: "Google Home–style dual-choice pill switch with sliding indicator to turn on/off lights or all home lights.",
   preview: !0
 });
-V({
+U({
   type: "m3e-light-group-card",
   name: "Light Group Card",
   description: "Google Home–style expandable light group bar with aggregate brightness slider and 2-column child light grid.",
   preview: !0
 });
-V({
+U({
   type: "m3e-assist-card",
   name: "Assist & Mode Bar",
   description: 'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector.',
   preview: !0
 });
-V({
+U({
   type: "m3e-glance-card",
   name: "At a Glance Strip",
   description: "Google Home–style horizontally scrollable At a Glance bar with circular tonal icon badges and per-entity state/attribute customization.",
   preview: !0
 });
-V({
+U({
   type: "m3e-people-card",
   name: "People Glance",
   description: "At a Glance card dedicated to people (avatar, name, location) with scrollable, full-row, vertical list, and compact layout modes.",
   preview: !0
 });
-V({
+U({
   type: "m3e-thermostat-card",
   name: "Thermostat Card",
   description: "Full-width Google Home–style thermostat card with +/- pill steppers, heat/cool semantic colors, offline state, and full climate dial popup.",
   preview: !0
 });
-V({
+U({
   type: "m3e-stack-card",
   name: "Stack",
   description: "Google Home–style comparison card to list and compare multiple sensors side-by-side with customizable header icon and title.",
   preview: !0
 });
-V({
+U({
   type: "m3e-media-bar-card",
   name: "Media Bar",
   description: "Footer-ready Google Home–style media player bar with squircle artwork, auto-scrolling marquee metadata, Cast/Source selector, and Play/Pause button.",
   preview: !0
 });
-V({
+U({
   type: "m3e-media-player-card",
   name: "Media Player",
   description: "Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.",
   preview: !0
 });
 export {
-  X as M3EAssistCard,
-  mt as M3EGlanceCard,
-  L as M3ELightCard,
-  gt as M3ELightControlCard,
-  Y as M3ELightGroupCard,
-  U as M3EMediaBarCard,
-  N as M3EMediaPlayerCard,
-  _t as M3EPeopleCard,
+  Y as M3EAssistCard,
+  gt as M3EGlanceCard,
+  D as M3ELightCard,
+  vt as M3ELightControlCard,
+  K as M3ELightGroupCard,
+  N as M3EMediaBarCard,
+  j as M3EMediaPlayerCard,
+  bt as M3EPeopleCard,
   ot as M3ESceneCard,
   Ot as M3EStackCard,
-  M as M3EStatusCard,
+  E as M3EStatusCard,
   nt as M3EThermostatCard,
-  G as M3EToggleCard
+  W as M3EToggleCard
 };

@@ -643,7 +643,7 @@ export class M3EMediaPopup extends LitElement {
                       />
                     </svg>
                     <span class="cast-pill-label">
-                      ${currentSource ? `${deviceName} · ${currentSource}` : deviceName}
+                      ${currentSource || deviceName}
                     </span>
                   </span>
                   ${hasCastOptions
@@ -711,8 +711,10 @@ export class M3EMediaPopup extends LitElement {
                             ${allPlayers.map((pid) => {
                               const st = this.hass?.states[pid];
                               const selected = pid === this.entityId;
-                              const name =
+                              const friendlyName =
                                 (st?.attributes.friendly_name as string | undefined) || pid;
+                              const activeSrc = String(st?.attributes.source ?? '').trim();
+                              const name = activeSrc || friendlyName;
                               const pVol =
                                 typeof st?.attributes.volume_level === 'number'
                                   ? Math.round(st.attributes.volume_level * 100)
@@ -720,7 +722,9 @@ export class M3EMediaPopup extends LitElement {
                               const isTv =
                                 st?.attributes.device_class === 'tv' ||
                                 pid.toLowerCase().includes('tv') ||
-                                pid.toLowerCase().includes('chromecast');
+                                pid.toLowerCase().includes('chromecast') ||
+                                activeSrc.toLowerCase().includes('tv') ||
+                                activeSrc.toLowerCase().includes('chromecast');
 
                               return html`
                                 <button

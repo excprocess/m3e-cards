@@ -215,6 +215,13 @@ export class M3EPeopleCard extends LitElement {
                 'Persona';
               const location = this._formatLocation(entity);
               const clickable = (item.tap_action ?? 'more-info') !== 'none' && Boolean(item.entity);
+              const hasPicture =
+                !item.icon &&
+                Boolean(
+                  item.image?.trim() ||
+                    (entity?.attributes.entity_picture as string | undefined)?.trim(),
+                );
+              const isLight = this.hass?.themes?.darkMode === false;
 
               return html`
                 <button
@@ -223,7 +230,9 @@ export class M3EPeopleCard extends LitElement {
                   @click=${() => this._onItemTap(item)}
                 >
                   <span class="avatar-wrap" aria-hidden="true">
-                    <span class="avatar-circle ${isHome ? 'is-home' : ''}">
+                    <span
+                      class="avatar-circle ${isHome ? 'is-home' : ''} ${hasPicture ? 'has-picture' : ''} ${isLight ? 'is-light' : 'is-dark'}"
+                    >
                       ${this._renderAvatar(item, entity, isHome)}
                     </span>
                     ${showPresence && isHome
@@ -410,6 +419,20 @@ export class M3EPeopleCard extends LitElement {
           var(--md-sys-color-surface-container-highest, rgba(128, 128, 128, 0.2))
         );
         color: var(--md-sys-color-on-primary-container, var(--primary-text-color));
+      }
+
+      /* Light mode: ensure transparent light-colored silhouette PNGs keep crisp contrast
+         without affecting opaque user photos (which fully cover the circle background). */
+      .avatar-circle.has-picture.is-light {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface-variant, #444746) 72%,
+          var(--md-sys-color-surface, #ffffff)
+        );
+      }
+
+      .avatar-circle.has-picture.is-light.is-home {
+        background: var(--md-sys-color-primary, #4285f4);
       }
 
       .avatar-img {

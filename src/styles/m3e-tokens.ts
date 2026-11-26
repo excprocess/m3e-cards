@@ -219,6 +219,14 @@ export const m3eBaseStyles = css`
   }
 
   dialog[open]::backdrop {
-    animation: m3e-fade-in 200ms cubic-bezier(0.2, 0, 0, 1);
+    animation: m3e-fade-in 220ms cubic-bezier(0.2, 0, 0, 1);
+    transition:
+      opacity 220ms cubic-bezier(0.3, 0, 0.8, 0.15),
+      background-color 220ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  }
+
+  dialog.is-closing::backdrop {
+    opacity: 0 !important;
+    background-color: transparent !important;
   }
 `;

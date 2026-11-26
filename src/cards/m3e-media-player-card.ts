@@ -344,6 +344,8 @@ export class M3EMediaPlayerCard extends LitElement {
       this._config.name?.trim() ||
       (entity?.attributes.friendly_name as string | undefined) ||
       this._config.entity;
+    const activeSource = String(entity?.attributes.source ?? '').trim();
+    const chipLabel = activeSource || deviceName;
     const mediaTitle =
       String(entity?.attributes.media_title ?? '').trim() ||
       (isUnavailable ? 'Offline' : isInactive ? deviceName : 'In riproduzione');
@@ -407,7 +409,7 @@ export class M3EMediaPlayerCard extends LitElement {
                         d="M1 18v3h3a3 3 0 0 0-3-3Zm0-4v2a5 5 0 0 1 5 5h2a7 7 0 0 0-7-7Zm0-4v2a9 9 0 0 1 9 9h2A11 11 0 0 0 1 10Zm20-7H3a2 2 0 0 0-2 2v3h2V5h18v14h-7v2h7a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"
                       />
                     </svg>
-                    <span>${deviceName}</span>
+                    <span>${chipLabel}</span>
                   </button>
                 `
               : nothing}
@@ -542,9 +544,13 @@ export class M3EMediaPlayerCard extends LitElement {
          1. FULL-BLEED EXPRESSIVE MEDIA CARD
          ===================================================================== */
       .media-player-card {
-        --mp-scrim: var(--md-sys-color-surface-container-highest, #1e2028);
+        --mp-scrim: #181920;
         --mp-accent: var(--md-sys-color-primary-container, #e4e0de);
         --mp-on-accent: var(--md-sys-color-on-primary-container, #1b1b1f);
+        --mp-fg: #ffffff;
+        --mp-fg-muted: rgba(255, 255, 255, 0.84);
+        --mp-track-active: var(--mp-accent, #ffffff);
+        --mp-track-inactive: rgba(255, 255, 255, 0.28);
 
         position: relative;
         min-height: 196px;
@@ -554,10 +560,46 @@ export class M3EMediaPlayerCard extends LitElement {
         cursor: pointer;
         outline: none;
         background: var(--mp-scrim);
-        color: #ffffff;
+        color: var(--mp-fg);
         transition:
           background-color 420ms cubic-bezier(0.2, 0, 0, 1),
           transform var(--m3e-spring-spatial-fast);
+      }
+
+      /* No-artwork / Standby / Idle: follow M3 theme surface & on-surface tokens
+         so Light Mode and Dark Mode both maintain high WCAG contrast. */
+      .media-player-card.no-artwork {
+        --mp-fg: var(--md-sys-color-on-surface, #1b1b1f);
+        --mp-fg-muted: var(--md-sys-color-on-surface-variant, #444746);
+        --mp-track-active: var(--md-sys-color-primary, #4285f4);
+        --mp-track-inactive: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 18%,
+          transparent
+        );
+        background: var(
+          --ha-card-background,
+          var(--md-sys-color-surface-container-low, #f3f3fa)
+        );
+      }
+
+      .media-player-card.no-artwork.is-unavailable {
+        --mp-fg: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 62%, transparent);
+        --mp-fg-muted: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 48%,
+          transparent
+        );
+        --mp-track-active: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 28%,
+          transparent
+        );
+        --mp-track-inactive: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 14%,
+          transparent
+        );
       }
 
       .media-player-card:focus-visible {
@@ -599,9 +641,13 @@ export class M3EMediaPlayerCard extends LitElement {
       .media-player-card.no-artwork .bg-scrim {
         background: linear-gradient(
           135deg,
-          color-mix(in srgb, var(--mp-accent) 20%, var(--mp-scrim)) 0%,
-          var(--mp-scrim) 100%
+          color-mix(in srgb, var(--md-sys-color-primary-container, transparent) 26%, transparent) 0%,
+          transparent 100%
         );
+      }
+
+      .media-player-card.no-artwork.is-unavailable .bg-scrim {
+        display: none;
       }
 
       .card-content {
@@ -674,12 +720,21 @@ export class M3EMediaPlayerCard extends LitElement {
         max-width: 68%;
         padding: 5px 12px;
         border-radius: 9999px;
-        background: color-mix(in srgb, var(--mp-scrim) 72%, rgba(0, 0, 0, 0.35));
-        color: rgba(255, 255, 255, 0.92);
+        background: color-mix(in srgb, var(--mp-scrim) 72%, rgba(0, 0, 0, 0.38));
+        color: rgba(255, 255, 255, 0.94);
         font-size: 12.5px;
         font-weight: 500;
         line-height: 16px;
         transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .media-player-card.no-artwork .device-chip {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-on-surface, #1b1b1f) 10%,
+          transparent
+        );
+        color: var(--mp-fg);
       }
 
       .device-chip:active {
@@ -722,7 +777,7 @@ export class M3EMediaPlayerCard extends LitElement {
         font-weight: 600;
         line-height: 1.2;
         letter-spacing: -0.02em;
-        color: #ffffff;
+        color: var(--mp-fg);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -732,7 +787,7 @@ export class M3EMediaPlayerCard extends LitElement {
         font-size: 14.5px;
         font-weight: 400;
         line-height: 1.28;
-        color: rgba(255, 255, 255, 0.84);
+        color: var(--mp-fg-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -772,6 +827,12 @@ export class M3EMediaPlayerCard extends LitElement {
         cursor: not-allowed;
       }
 
+      .media-player-card.no-artwork.is-unavailable .play-fab:disabled {
+        opacity: 1;
+        background: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 12%, transparent);
+        color: color-mix(in srgb, var(--md-sys-color-on-surface, #1b1b1f) 38%, transparent);
+      }
+
       .play-fab svg {
         width: 26px;
         height: 26px;
@@ -793,7 +854,7 @@ export class M3EMediaPlayerCard extends LitElement {
         border: 0;
         border-radius: 50%;
         background: transparent;
-        color: #ffffff;
+        color: var(--mp-fg);
         display: grid;
         place-items: center;
         cursor: pointer;
@@ -805,7 +866,7 @@ export class M3EMediaPlayerCard extends LitElement {
       }
 
       .transport-btn:hover:not(:disabled) {
-        background: rgba(255, 255, 255, 0.12);
+        background: color-mix(in srgb, var(--mp-fg) 12%, transparent);
       }
 
       .transport-btn.is-prev:active:not(:disabled) {
@@ -881,7 +942,7 @@ export class M3EMediaPlayerCard extends LitElement {
 
       .wavy-path {
         fill: none;
-        stroke: var(--mp-accent, #ffffff);
+        stroke: var(--mp-track-active);
         stroke-width: 3.2;
         stroke-linecap: round;
         transition: stroke 360ms cubic-bezier(0.2, 0, 0, 1);
@@ -904,7 +965,7 @@ export class M3EMediaPlayerCard extends LitElement {
         height: 4px;
         border-radius: 9999px;
         transform: translateY(-50%);
-        background: var(--mp-accent, #ffffff);
+        background: var(--mp-track-active);
         opacity: 1;
         transition:
           opacity 200ms cubic-bezier(0.2, 0, 0, 1),
@@ -923,7 +984,7 @@ export class M3EMediaPlayerCard extends LitElement {
         height: 18px;
         border-radius: 9999px;
         transform: translate(-50%, -50%);
-        background: var(--mp-accent, #ffffff);
+        background: var(--mp-track-active);
         pointer-events: none;
         transition:
           height var(--m3e-spring-spatial-fast),
@@ -943,7 +1004,7 @@ export class M3EMediaPlayerCard extends LitElement {
         height: 4px;
         border-radius: 9999px;
         transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.28);
+        background: var(--mp-track-inactive);
         pointer-events: none;
       }
 
