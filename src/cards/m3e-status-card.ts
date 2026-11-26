@@ -2592,8 +2592,22 @@ export class M3EStatusCard extends LitElement {
       }
 
       .status-tile.has-features.features-bottom .entity-picture-backdrop {
-        height: 76px;
+        height: 96px;
         bottom: auto;
+        -webkit-mask-image: radial-gradient(
+          ellipse 70% 62% at 26% 36%,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.94) 44%,
+          rgba(0, 0, 0, 0.36) 74%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        mask-image: radial-gradient(
+          ellipse 70% 62% at 26% 36%,
+          rgba(0, 0, 0, 1) 0%,
+          rgba(0, 0, 0, 0.94) 44%,
+          rgba(0, 0, 0, 0.36) 74%,
+          rgba(0, 0, 0, 0) 100%
+        );
       }
 
       .entity-picture-img {

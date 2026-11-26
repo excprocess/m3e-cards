@@ -7,6 +7,7 @@ import {
   type M3EFeaturesPosition,
   type SubElementEditorConfig,
 } from '../utils/ha-card-features';
+import '../utils/m3e-feature-sub-editor';
 
 @customElement('m3e-toggle-card-editor')
 export class M3EToggleCardEditor extends LitElement {
@@ -277,13 +278,14 @@ export class M3EToggleCardEditor extends LitElement {
 
     if (this._subElementEditorConfig) {
       return html`
-        <hui-sub-element-editor
+        <m3e-feature-sub-editor
           .hass=${this.hass}
+          .lovelace=${this.lovelace}
           .config=${this._subElementEditorConfig}
           .context=${featureContext}
           @go-back=${this._onGoBack}
           @config-changed=${this._onSubElementConfigChanged}
-        ></hui-sub-element-editor>
+        ></m3e-feature-sub-editor>
       `;
     }
 
