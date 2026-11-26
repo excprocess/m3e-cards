@@ -2575,39 +2575,71 @@ export class M3EStatusCard extends LitElement {
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
-        -webkit-mask-image: radial-gradient(
-          ellipse 72% 112% at 24% 50%,
+        -webkit-mask-image: linear-gradient(
+          to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 46%,
-          rgba(0, 0, 0, 0.36) 76%,
+          rgba(0, 0, 0, 0.96) 54%,
+          rgba(0, 0, 0, 0.55) 76%,
           rgba(0, 0, 0, 0) 100%
         );
-        mask-image: radial-gradient(
-          ellipse 72% 112% at 24% 50%,
+        mask-image: linear-gradient(
+          to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 46%,
-          rgba(0, 0, 0, 0.36) 76%,
+          rgba(0, 0, 0, 0.96) 54%,
+          rgba(0, 0, 0, 0.55) 76%,
           rgba(0, 0, 0, 0) 100%
         );
       }
 
       .status-tile.has-features.features-bottom .entity-picture-backdrop {
-        height: 96px;
+        height: 98px;
         bottom: auto;
-        -webkit-mask-image: radial-gradient(
-          ellipse 70% 62% at 26% 36%,
-          rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.36) 74%,
-          rgba(0, 0, 0, 0) 100%
-        );
-        mask-image: radial-gradient(
-          ellipse 70% 62% at 26% 36%,
-          rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.36) 74%,
-          rgba(0, 0, 0, 0) 100%
-        );
+        -webkit-mask-image:
+          linear-gradient(
+            to right,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 54%,
+            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 56%,
+            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          radial-gradient(
+            ellipse 106% 106% at 0% 0%,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 66%,
+            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0) 100%
+          );
+        -webkit-mask-composite: source-in, source-in;
+        mask-image:
+          linear-gradient(
+            to right,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 54%,
+            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 56%,
+            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          radial-gradient(
+            ellipse 106% 106% at 0% 0%,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 66%,
+            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0) 100%
+          );
+        mask-composite: intersect;
       }
 
       .entity-picture-img {

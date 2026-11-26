@@ -19,6 +19,7 @@ export class M3EFeatureSubEditor extends LitElement {
 
   @state() private _customEditorEl?: HTMLElement;
   private _mountedType = '';
+  private _lastFeatureCfg?: LovelaceCardFeatureConfig;
 
   protected updated(): void {
     const featureCfg = this.config?.elementConfig;
@@ -30,6 +31,7 @@ export class M3EFeatureSubEditor extends LitElement {
 
     if (!hasSubEditor && !hasFeatureEditor && type && type !== this._mountedType) {
       this._mountedType = type;
+      this._lastFeatureCfg = undefined;
       void this._mountDirectCustomEditor(type, featureCfg!);
     }
 
@@ -39,12 +41,17 @@ export class M3EFeatureSubEditor extends LitElement {
         lovelace?: unknown;
         context?: { entity_id?: string };
         stateObj?: unknown;
+        setConfig?: (cfg: LovelaceCardFeatureConfig) => void;
       };
       el.hass = this.hass;
       el.lovelace = this.lovelace;
       el.context = this.context;
       if (this.context?.entity_id && this.hass?.states) {
         el.stateObj = this.hass.states[this.context.entity_id];
+      }
+      if (featureCfg && featureCfg !== this._lastFeatureCfg) {
+        this._lastFeatureCfg = featureCfg;
+        el.setConfig?.(featureCfg);
       }
     }
   }
@@ -74,6 +81,7 @@ export class M3EFeatureSubEditor extends LitElement {
       if (this.context?.entity_id && this.hass?.states) {
         typed.stateObj = this.hass.states[this.context.entity_id];
       }
+      this._lastFeatureCfg = featureCfg;
       typed.setConfig?.(featureCfg);
       typed.addEventListener('config-changed', (ev: Event) => {
         ev.stopPropagation();

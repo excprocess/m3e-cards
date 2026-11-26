@@ -11174,9 +11174,9 @@ let rt = class extends E {
   }
   updated() {
     const t = this.config?.elementConfig, e = t?.type ?? "", i = typeof customElements < "u" && !!customElements.get("hui-sub-element-editor"), s = typeof customElements < "u" && !!customElements.get("hui-card-feature-editor");
-    if (!i && !s && e && e !== this._mountedType && (this._mountedType = e, this._mountDirectCustomEditor(e, t)), this._customEditorEl) {
+    if (!i && !s && e && e !== this._mountedType && (this._mountedType = e, this._lastFeatureCfg = void 0, this._mountDirectCustomEditor(e, t)), this._customEditorEl) {
       const a = this._customEditorEl;
-      a.hass = this.hass, a.lovelace = this.lovelace, a.context = this.context, this.context?.entity_id && this.hass?.states && (a.stateObj = this.hass.states[this.context.entity_id]);
+      a.hass = this.hass, a.lovelace = this.lovelace, a.context = this.context, this.context?.entity_id && this.hass?.states && (a.stateObj = this.hass.states[this.context.entity_id]), t && t !== this._lastFeatureCfg && (this._lastFeatureCfg = t, a.setConfig?.(t));
     }
   }
   async _mountDirectCustomEditor(t, e) {
@@ -11185,7 +11185,7 @@ let rt = class extends E {
     if (s?.getConfigElement)
       try {
         const r = await s.getConfigElement();
-        r.hass = this.hass, r.lovelace = this.lovelace, r.context = this.context, this.context?.entity_id && this.hass?.states && (r.stateObj = this.hass.states[this.context.entity_id]), r.setConfig?.(e), r.addEventListener("config-changed", (o) => {
+        r.hass = this.hass, r.lovelace = this.lovelace, r.context = this.context, this.context?.entity_id && this.hass?.states && (r.stateObj = this.hass.states[this.context.entity_id]), this._lastFeatureCfg = e, r.setConfig?.(e), r.addEventListener("config-changed", (o) => {
           o.stopPropagation();
           const n = o.detail;
           this._emitConfigChanged(n?.config);
@@ -13547,39 +13547,71 @@ P.styles = [
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
-        -webkit-mask-image: radial-gradient(
-          ellipse 72% 112% at 24% 50%,
+        -webkit-mask-image: linear-gradient(
+          to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 46%,
-          rgba(0, 0, 0, 0.36) 76%,
+          rgba(0, 0, 0, 0.96) 54%,
+          rgba(0, 0, 0, 0.55) 76%,
           rgba(0, 0, 0, 0) 100%
         );
-        mask-image: radial-gradient(
-          ellipse 72% 112% at 24% 50%,
+        mask-image: linear-gradient(
+          to right,
           rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 46%,
-          rgba(0, 0, 0, 0.36) 76%,
+          rgba(0, 0, 0, 0.96) 54%,
+          rgba(0, 0, 0, 0.55) 76%,
           rgba(0, 0, 0, 0) 100%
         );
       }
 
       .status-tile.has-features.features-bottom .entity-picture-backdrop {
-        height: 96px;
+        height: 98px;
         bottom: auto;
-        -webkit-mask-image: radial-gradient(
-          ellipse 70% 62% at 26% 36%,
-          rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.36) 74%,
-          rgba(0, 0, 0, 0) 100%
-        );
-        mask-image: radial-gradient(
-          ellipse 70% 62% at 26% 36%,
-          rgba(0, 0, 0, 1) 0%,
-          rgba(0, 0, 0, 0.94) 44%,
-          rgba(0, 0, 0, 0.36) 74%,
-          rgba(0, 0, 0, 0) 100%
-        );
+        -webkit-mask-image:
+          linear-gradient(
+            to right,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 54%,
+            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 56%,
+            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          radial-gradient(
+            ellipse 106% 106% at 0% 0%,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 66%,
+            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0) 100%
+          );
+        -webkit-mask-composite: source-in, source-in;
+        mask-image:
+          linear-gradient(
+            to right,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 54%,
+            rgba(0, 0, 0, 0.5) 76%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 0.96) 56%,
+            rgba(0, 0, 0, 0.48) 78%,
+            rgba(0, 0, 0, 0) 100%
+          ),
+          radial-gradient(
+            ellipse 106% 106% at 0% 0%,
+            rgba(0, 0, 0, 1) 0%,
+            rgba(0, 0, 0, 1) 66%,
+            rgba(0, 0, 0, 0.45) 86%,
+            rgba(0, 0, 0, 0) 100%
+          );
+        mask-composite: intersect;
       }
 
       .entity-picture-img {
