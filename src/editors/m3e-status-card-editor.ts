@@ -216,7 +216,21 @@ export class M3EStatusCardEditor extends LitElement {
         selector: { entity: { domain: 'sensor' } },
       });
     } else if (type === 'media') {
-      schema.push({ name: 'status_entity', selector: { entity: {} } });
+      schema.push(
+        { name: 'status_entity', selector: { entity: {} } },
+        {
+          name: 'media_controls_action',
+          selector: {
+            select: {
+              mode: 'dropdown',
+              options: [
+                { value: 'popup', label: 'Popup Now Playing M3E (predefinito)' },
+                { value: 'more-info', label: 'Dettagli nativi Home Assistant (More-info)' },
+              ],
+            },
+          },
+        },
+      );
     } else if (type === 'remote') {
       schema.push(
         { name: 'status_entity', selector: { entity: {} } },
@@ -273,6 +287,7 @@ export class M3EStatusCardEditor extends LitElement {
           ? 'Prese della multipresa (vuoto = auto-rileva dallo stesso dispositivo)'
           : 'Pillole entità aggiuntive nel popup (max 10)',
       outdoor_entity: 'Temperatura esterna',
+      media_controls_action: 'Azione pulsante "Media & Controls"',
       remote_device: 'Device ID trasmettitore (multi-dispositivo)',
       volume_up: 'Volume + (es. button.tv_vol_up o VolumeUp)',
       volume_down: 'Volume − (es. button.tv_vol_down o VolumeDown)',

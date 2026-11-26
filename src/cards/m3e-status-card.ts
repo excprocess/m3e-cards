@@ -15,6 +15,9 @@ import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import './m3e-media-player-card';
+import type { M3EMediaPopup } from '../components/m3e-media-popup';
+import '../components/m3e-media-popup';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 const TIME_ONLY_RE = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
@@ -163,6 +166,7 @@ export class M3EStatusCard extends LitElement {
 
   @query('dialog.status-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.status-tile') private _tileEl?: HTMLElement;
+  @query('m3e-media-popup') private _mediaPopupEl?: M3EMediaPopup;
   @query('.dialog-surface') private _dialogSurfaceEl?: HTMLElement;
 
   private _prevStates: Record<string, HassEntity | undefined> = {};
@@ -1838,65 +1842,39 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _openMediaControls(entityId: string): void {
+    if (this._config?.media_controls_action === 'more-info') {
+      this._openMoreInfo(entityId);
+      return;
+    }
+    this.closePopup();
+    window.setTimeout(() => {
+      void this._mediaPopupEl?.open(undefined, false);
+    }, 220);
+  }
+
   private _renderMediaPopup() {
     const entity = this._mediaEntity;
-    const isPlaying = entity?.state === 'playing';
     const isIdle = !entity || entity.state === 'idle' || entity.state === 'off';
-    const mediaTitle = String(entity?.attributes.media_title ?? (isIdle ? 'Nothing playing' : 'Paused'));
-    const mediaArtist = String(entity?.attributes.media_artist ?? '');
-    const appName = String(entity?.attributes.app_name ?? '');
-    const artwork = String(entity?.attributes.entity_picture ?? '');
     const vol = this._mediaVolumePct;
 
     return html`
-      <div
-        class="media-hero-card ${artwork && !isIdle ? 'has-art' : ''}"
-        style=${artwork && !isIdle ? `--media-art: url("${artwork}");` : ''}
-      >
-        <div class="media-hero-top">
-          <span class="media-app-badge">${appName || '▶'}</span>
-        </div>
-
-        <div class="media-hero-mid">
-          <div class="media-meta">
-            <span class="media-title">${mediaTitle}</span>
-            ${mediaArtist ? html`<span class="media-artist">${mediaArtist}</span>` : nothing}
-          </div>
-          ${!isIdle
-            ? html`
-                <button
-                  type="button"
-                  class="media-play-fab"
-                  aria-label=${isPlaying ? 'Pause' : 'Play'}
-                  @click=${() => this._callMediaService('media_play_pause')}
-                >
-                  ${isPlaying ? '⏸' : '▶'}
-                </button>
-              `
-            : nothing}
-        </div>
-
-        <div class="media-scrubber-row">
-          <button
-            type="button"
-            class="scrubber-btn"
-            @click=${() => this._callMediaService('media_previous_track')}
-          >
-            ⏮
-          </button>
-          <div class="scrubber-track">
-            <div class="scrubber-fill" style="width: ${isIdle ? 0 : 28}%"></div>
-            ${!isIdle ? html`<span class="scrubber-dot" style="left: 28%"></span>` : nothing}
-          </div>
-          <button
-            type="button"
-            class="scrubber-btn"
-            @click=${() => this._callMediaService('media_next_track')}
-          >
-            ⏭
-          </button>
-        </div>
-      </div>
+      ${entity
+        ? html`
+            <m3e-media-player-card
+              class="embedded-media-player"
+              .hass=${this.hass}
+              .config=${{
+                type: 'custom:m3e-media-player-card',
+                entity: entity.entity_id,
+                dynamic_color: true,
+                show_device_chip: false,
+                tap_action: 'none',
+              }}
+              @click=${() => this._openMediaControls(entity.entity_id)}
+            ></m3e-media-player-card>
+          `
+        : nothing}
 
       <div class="modular-stack">
         <!-- Shape Coding: Full Pill (9999px) for Active Primary Volume Slider -->
@@ -1949,13 +1927,13 @@ export class M3EStatusCard extends LitElement {
               `
             : nothing}
 
-        <!-- Secondary action: opens native Home Assistant Media Browser / More Info -->
+        <!-- Secondary action: opens M3E Now Playing popup by default (or native HA More Info if configured) -->
         ${entity
           ? html`
               <button
                 type="button"
                 class="secondary-action-card"
-                @click=${() => this._openMoreInfo(entity.entity_id)}
+                @click=${() => this._openMediaControls(entity.entity_id)}
               >
                 <span>Media &amp; Controls</span>
                 <span>↗</span>
@@ -2348,6 +2326,15 @@ export class M3EStatusCard extends LitElement {
             })()
           : nothing}
       </dialog>
+
+      ${popupType === 'media' && this._mediaEntity
+        ? html`
+            <m3e-media-popup
+              .hass=${this.hass}
+              .entityId=${this._mediaEntity.entity_id}
+            ></m3e-media-popup>
+          `
+        : nothing}
     `;
   }
 
@@ -2359,6 +2346,13 @@ export class M3EStatusCard extends LitElement {
           0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
           1.038 56%, 0.992 71%, 1.005 86%, 1
         );
+      }
+
+      .embedded-media-player {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin-bottom: 14px;
       }
 
       /* =====================================================================

@@ -46,6 +46,26 @@ export class M3EMediaPlayerCard extends LitElement {
   private _tickTimer: number | null = null;
   private _prevEntity?: HassEntity;
 
+  @property({ attribute: false })
+  public set config(cfg: M3EMediaPlayerCardConfig | undefined) {
+    if (!cfg || !cfg.entity) return;
+    if (
+      this._config &&
+      this._config.entity === cfg.entity &&
+      this._config.name === cfg.name &&
+      this._config.dynamic_color === (cfg.dynamic_color !== false) &&
+      this._config.show_device_chip === (cfg.show_device_chip !== false) &&
+      this._config.tap_action === (cfg.tap_action ?? 'popup')
+    ) {
+      return;
+    }
+    this.setConfig(cfg);
+  }
+
+  public get config(): M3EMediaPlayerCardConfig | undefined {
+    return this._config;
+  }
+
   public setConfig(config: M3EMediaPlayerCardConfig): void {
     if (!config || !config.entity) {
       throw new Error('m3e-media-player-card: devi specificare un’entità media_player.*');

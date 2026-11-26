@@ -343,4 +343,6 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   remote_device?: string;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */
   remote_buttons?: M3ERemoteButtonsConfig;
+  /** Action for "Media & Controls" button in Media popup: popup (default M3E Now Playing) or more-info (native HA) */
+  media_controls_action?: 'popup' | 'more-info';
 }
