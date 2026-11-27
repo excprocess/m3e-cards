@@ -1117,39 +1117,42 @@ export class M3EPopupCard extends LitElement {
         height: 100%;
       }
 
+      /* Material 3 Expressive Tonal Pill "+ Add card" button */
       .add-card-pill {
         grid-column: 1 / -1;
         width: 100%;
-        height: 56px;
-        margin-top: 4px;
-        border-radius: var(--ha-card-border-radius, 28px);
-        border: 2px dashed var(--outline-color, var(--divider-color, rgba(255, 255, 255, 0.24)));
-        background: transparent;
-        color: var(--primary-text-color, var(--md-sys-color-on-surface, #e3e2e6));
+        height: 52px;
+        margin-top: 6px;
+        border: 0;
+        border-radius: var(--m3e-corner-full);
+        background: var(--md-sys-color-primary-container, #364067);
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
         font: inherit;
-        font-size: 14px;
-        font-weight: 500;
+        font-size: 14.5px;
+        font-weight: 600;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
         cursor: pointer;
         transition:
-          border-color 180ms ease,
-          background-color 180ms ease;
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          filter var(--m3e-spring-effects-fast);
+        -webkit-tap-highlight-color: transparent;
       }
 
       .add-card-pill:hover {
-        border-color: var(--primary-color, var(--md-sys-color-primary, #a8c7fa));
-        background: color-mix(
-          in srgb,
-          var(--primary-color, var(--md-sys-color-primary, #a8c7fa)) 8%,
-          transparent
-        );
+        filter: brightness(1.07);
+      }
+
+      .add-card-pill:active {
+        transform: scale(0.97);
+        border-radius: 18px;
       }
 
       .add-card-pill ha-svg-icon {
-        --mdc-icon-size: 22px;
+        --mdc-icon-size: 20px;
         display: inline-flex;
       }
 

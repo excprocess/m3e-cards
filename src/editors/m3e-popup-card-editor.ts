@@ -1,5 +1,5 @@
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import type {
   HomeAssistant,
   LovelaceCardConfig,
@@ -45,8 +45,10 @@ export class M3EPopupCardEditor extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @property({ attribute: false }) public lovelace?: unknown;
   @state() private _config?: M3EPopupCardConfig;
+  @state() private _modalMode: 'none' | 'pick' | 'edit' = 'none';
   @state() private _editingCardIdx: number | null = null;
-  @state() private _pickingNewCard = false;
+
+  @query('dialog.nested-ha-dialog') private _modalEl?: HTMLDialogElement;
 
   private readonly _bridgeHandle: M3EPopupEditorHandle = {
     getConfig: () => this._config,
@@ -55,18 +57,30 @@ export class M3EPopupCardEditor extends LitElement {
       this._emitConfig({ ...this._config, cards });
     },
     openAddCard: () => {
-      void ensureStackEditorElementsLoaded().then(() => {
-        this._editingCardIdx = null;
-        this._pickingNewCard = true;
-      });
+      void this._openModal('pick');
     },
     openEditCard: (index) => {
-      void ensureStackEditorElementsLoaded().then(() => {
-        this._pickingNewCard = false;
-        this._editingCardIdx = index;
-      });
+      void this._openModal('edit', index);
     },
   };
+
+  private async _openModal(mode: 'pick' | 'edit', index?: number): Promise<void> {
+    await ensureStackEditorElementsLoaded();
+    this._modalMode = mode;
+    this._editingCardIdx = mode === 'edit' ? (index ?? null) : null;
+    await this.updateComplete;
+    if (this._modalEl && !this._modalEl.open) {
+      this._modalEl.showModal();
+    }
+  }
+
+  private _closeModal(): void {
+    if (this._modalEl?.open) {
+      this._modalEl.close();
+    }
+    this._modalMode = 'none';
+    this._editingCardIdx = null;
+  }
 
   public setConfig(config: M3EPopupCardConfig): void {
     this._config = {
@@ -109,9 +123,9 @@ export class M3EPopupCardEditor extends LitElement {
     const picked = e.detail?.config;
     if (!this._config || !picked) return;
     const cards = [...(this._config.cards ?? []), picked];
-    this._pickingNewCard = false;
-    this._editingCardIdx = cards.length - 1;
     this._emitConfig({ ...this._config, cards });
+    this._editingCardIdx = cards.length - 1;
+    this._modalMode = 'edit';
   };
 
   private _onChildCardChanged = (e: CustomEvent<{ config?: LovelaceCardConfig }>): void => {
@@ -137,57 +151,6 @@ export class M3EPopupCardEditor extends LitElement {
 
   protected render() {
     if (!this.hass || !this._config) return nothing;
-
-    // Sub-view 1: Native HA Card Picker (opened by clicking "+ Add card" on the live preview)
-    if (this._pickingNewCard) {
-      return html`
-        <div class="sub-editor">
-          <div class="sub-header">
-            <button
-              type="button"
-              class="back-btn"
-              @click=${() => (this._pickingNewCard = false)}
-            >
-              ← Indietro
-            </button>
-            <span>Aggiungi card al Pop-up</span>
-          </div>
-          <hui-card-picker
-            .hass=${this.hass}
-            .lovelace=${this.lovelace}
-            @config-changed=${this._onCardPicked}
-          ></hui-card-picker>
-        </div>
-      `;
-    }
-
-    // Sub-view 2: Native HA Child Card Editor (opened by clicking the edit pencil on any preview card)
-    if (this._editingCardIdx !== null) {
-      const childCfg = this._config.cards?.[this._editingCardIdx];
-      if (childCfg) {
-        return html`
-          <div class="sub-editor">
-            <div class="sub-header">
-              <button
-                type="button"
-                class="back-btn"
-                @click=${() => (this._editingCardIdx = null)}
-              >
-                ← Indietro
-              </button>
-              <span>Modifica card (${childCfg.type})</span>
-            </div>
-            <hui-card-element-editor
-              .hass=${this.hass}
-              .lovelace=${this.lovelace}
-              .value=${childCfg}
-              @config-changed=${this._onChildCardChanged}
-            ></hui-card-element-editor>
-          </div>
-        `;
-      }
-      this._editingCardIdx = null;
-    }
 
     const schema = [
       {
@@ -230,6 +193,11 @@ export class M3EPopupCardEditor extends LitElement {
       },
     ];
 
+    const editingCfg =
+      this._modalMode === 'edit' && this._editingCardIdx !== null
+        ? this._config.cards?.[this._editingCardIdx]
+        : undefined;
+
     return html`
       <div class="editor-stack">
         <ha-form
@@ -240,6 +208,65 @@ export class M3EPopupCardEditor extends LitElement {
           @value-changed=${this._onValueChanged}
         ></ha-form>
       </div>
+
+      <!-- Full-size native-style modal dialog for Add Card / Edit Card (keeps Pop-up editor intact!) -->
+      <dialog
+        class="nested-ha-dialog"
+        @click=${(e: MouseEvent) => {
+          if (e.target === this._modalEl) this._closeModal();
+        }}
+        @cancel=${(e: Event) => {
+          e.preventDefault();
+          this._closeModal();
+        }}
+      >
+        <div class="nested-surface">
+          <div class="nested-header">
+            <button
+              type="button"
+              class="nested-close"
+              aria-label="Chiudi"
+              @click=${() => this._closeModal()}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+                />
+              </svg>
+            </button>
+            <span class="nested-title">
+              ${this._modalMode === 'pick'
+                ? 'Aggiungi card al Pop-up'
+                : `Modifica card${editingCfg?.type ? ` · ${editingCfg.type}` : ''}`}
+            </span>
+            <button type="button" class="nested-done" @click=${() => this._closeModal()}>
+              Fatto
+            </button>
+          </div>
+
+          <div class="nested-body">
+            ${this._modalMode === 'pick'
+              ? html`
+                  <hui-card-picker
+                    .hass=${this.hass}
+                    .lovelace=${this.lovelace}
+                    @config-changed=${this._onCardPicked}
+                  ></hui-card-picker>
+                `
+              : editingCfg
+                ? html`
+                    <hui-card-element-editor
+                      .hass=${this.hass}
+                      .lovelace=${this.lovelace}
+                      .value=${editingCfg}
+                      @config-changed=${this._onChildCardChanged}
+                    ></hui-card-element-editor>
+                  `
+                : nothing}
+          </div>
+        </div>
+      </dialog>
     `;
   }
 
@@ -250,33 +277,89 @@ export class M3EPopupCardEditor extends LitElement {
       gap: 14px;
     }
 
-    .sub-editor {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+    dialog.nested-ha-dialog {
+      margin: auto;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      width: min(900px, calc(100vw - 32px));
+      max-width: min(900px, calc(100vw - 32px));
+      max-height: calc(100dvh - 32px);
+      overflow: hidden;
+      border-radius: 28px;
+      color: var(--primary-text-color, var(--md-sys-color-on-surface, #e3e2e6));
     }
 
-    .sub-header {
+    dialog.nested-ha-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.62);
+    }
+
+    .nested-surface {
+      background: var(--ha-dialog-surface-background, var(--md-sys-color-surface, #1c1d22));
+      color: inherit;
+      border-radius: 28px;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100dvh - 32px);
+      overflow: hidden;
+    }
+
+    .nested-header {
+      flex: 0 0 auto;
       display: flex;
       align-items: center;
       gap: 12px;
-      padding-bottom: 10px;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
-      font-size: 14.5px;
-      font-weight: 600;
     }
 
-    .back-btn {
-      height: 34px;
-      padding: 0 12px;
+    .nested-close {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .nested-close:hover {
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+
+    .nested-close svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .nested-title {
+      flex: 1 1 auto;
+      font-size: 18px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nested-done {
+      height: 38px;
+      padding: 0 18px;
       border: 0;
       border-radius: 9999px;
-      background: var(--secondary-background-color, rgba(255, 255, 255, 0.08));
-      color: var(--primary-text-color, #e3e2e6);
+      background: var(--md-sys-color-primary-container, var(--primary-color, #364067));
+      color: var(--md-sys-color-on-primary-container, #ffffff);
       font: inherit;
-      font-size: 13px;
-      font-weight: 500;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
+    }
+
+    .nested-body {
+      flex: 1 1 auto;
+      overflow-y: auto;
+      padding: 18px 20px 24px;
     }
   `;
 }
