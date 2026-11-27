@@ -523,10 +523,6 @@ export class M3EStatusBadge extends LitElement {
         display: inline-flex;
         width: auto;
         height: auto;
-        --m3e-spring-morph: 480ms linear(
-          0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
-          1.038 56%, 0.992 71%, 1.005 86%, 1
-        );
       }
 
       .m3e-badge {
@@ -544,7 +540,7 @@ export class M3EStatusBadge extends LitElement {
           transform var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
           color var(--m3e-spring-effects-default),
-          border-radius var(--m3e-spring-morph);
+          border-radius var(--m3e-spring-bouncy);
         -webkit-tap-highlight-color: transparent;
       }
 
@@ -918,7 +914,7 @@ export class M3EStatusBadge extends LitElement {
         background: var(--md-sys-color-surface-container-highest, #34353e);
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         transition:
-          border-radius var(--m3e-spring-morph),
+          border-radius var(--m3e-spring-bouncy),
           background-color var(--m3e-spring-effects-default);
       }
 

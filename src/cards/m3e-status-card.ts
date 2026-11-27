@@ -2786,12 +2786,6 @@ export class M3EStatusCard extends LitElement {
     m3eBaseStyles,
     remoteCustomControlStyles,
     css`
-      :host {
-        --m3e-spring-bouncy: 520ms linear(
-          0, 0.168 7%, 0.618 18%, 0.962 31%, 1.072 43%,
-          1.038 56%, 0.992 71%, 1.005 86%, 1
-        );
-      }
 
       .embedded-media-player {
         display: block;
@@ -4160,36 +4154,6 @@ export class M3EStatusCard extends LitElement {
       /* =====================================================================
          VARIANT 4: MEDIA / SPEAKER (Media Card + Shape-Coded Volume & Actions)
          ===================================================================== */
-      .media-hero-card {
-        position: relative;
-        overflow: hidden;
-        min-height: 178px;
-        border-radius: 28px;
-        padding: 18px 20px;
-        background: var(--md-sys-color-surface-container-high, #2b2b30);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        gap: 14px;
-      }
-
-      .media-hero-card.has-art::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: var(--media-art);
-        background-size: cover;
-        background-position: center;
-        filter: brightness(0.45);
-      }
-
-      .media-hero-top,
-      .media-hero-mid,
-      .media-scrubber-row {
-        position: relative;
-        z-index: 1;
-      }
-
       /* Full Pill Volume Slider */
       .volume-pill {
         position: relative;

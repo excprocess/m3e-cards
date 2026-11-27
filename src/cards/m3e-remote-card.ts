@@ -1,4 +1,4 @@
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import '../editors/m3e-remote-card-editor';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
@@ -69,6 +69,7 @@ export class M3ERemoteCard extends LitElement {
   private _padHoldTimer: number | null = null;
   private _padRepeatTimer: number | null = null;
   private _padPulseTimer: number | null = null;
+  private _prevStates: Record<string, HassEntity | undefined> = {};
 
   public static getStubConfig(hass?: HomeAssistant): M3ERemoteCardConfig {
     const entity = hass
@@ -126,6 +127,48 @@ export class M3ERemoteCard extends LitElement {
       min_columns: 6,
       rows: 'auto' as const,
     };
+  }
+
+  protected shouldUpdate(changedProps: PropertyValues): boolean {
+    if (
+      changedProps.has('_config') ||
+      changedProps.has('_padOffsetX') ||
+      changedProps.has('_padOffsetY') ||
+      changedProps.has('_padActive') ||
+      changedProps.has('_padTapPulse') ||
+      changedProps.has('_selectorSheet')
+    ) {
+      return true;
+    }
+
+    if (changedProps.has('hass') && this.hass && this._config) {
+      const watched = new Set<string>([this._config.entity]);
+      if (this._config.status_entity) watched.add(this._config.status_entity);
+      const mediaId = findSiblingEntityId(this.hass, this._config.entity, 'media_player');
+      if (mediaId) watched.add(mediaId);
+      for (const ctrl of this._config.remote_custom_controls ?? []) {
+        if (ctrl.entity) watched.add(ctrl.entity);
+        if (ctrl.state_entity) watched.add(ctrl.state_entity);
+        for (const seg of ctrl.segments ?? []) {
+          if (seg.entity) watched.add(seg.entity);
+        }
+      }
+
+      let changed = false;
+      for (const id of watched) {
+        const next = this.hass.states[id];
+        if (this._prevStates[id] !== next) {
+          this._prevStates[id] = next;
+          changed = true;
+        }
+      }
+      const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
+      if (oldHass?.themes?.darkMode !== this.hass.themes?.darkMode) {
+        changed = true;
+      }
+      return changed;
+    }
+    return false;
   }
 
   private get _entity(): HassEntity | undefined {

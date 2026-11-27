@@ -1,8 +1,30 @@
 import type { HomeAssistant, LovelaceCardConfig, M3EPopupCardConfig } from '../types/home-assistant';
 
+interface DirtySlice {
+  initial?: unknown;
+  normalizedInitial?: unknown;
+  current?: unknown;
+}
+
 interface HaDialogElement extends HTMLElement {
   _params?: Record<string, unknown>;
-  showDialog?: (params: Record<string, unknown>) => void;
+  _dirtySlices?: Map<string, DirtySlice>;
+  _effectiveNormalize?: (cfg: unknown) => unknown;
+  _publishContext?: () => void;
+  showDialog?: (params: Record<string, unknown>) => unknown;
+  closeDialog?: (...args: unknown[]) => boolean;
+}
+
+interface ProxyLovelace {
+  config: {
+    views: Array<{
+      path: string;
+      title: string;
+      sections: Array<{ type: string; cards: LovelaceCardConfig[] }>;
+    }>;
+  };
+  editMode: boolean;
+  saveConfig: (newConfig: Record<string, unknown>) => Promise<void>;
 }
 
 interface HuiSectionProxy extends HTMLElement {
@@ -10,20 +32,20 @@ interface HuiSectionProxy extends HTMLElement {
   index?: number;
   viewIndex?: number;
   config?: Record<string, unknown>;
-  lovelace?: {
-    config: {
-      views: Array<{
-        path: string;
-        title: string;
-        sections: Array<{ type: string; cards: LovelaceCardConfig[] }>;
-      }>;
-    };
-    editMode: boolean;
-    saveConfig: (newConfig: Record<string, unknown>) => Promise<void>;
-  };
+  lovelace?: ProxyLovelace;
   _initializeConfig?: () => Promise<void>;
   updateComplete?: Promise<unknown>;
   _layoutElement?: HTMLElement;
+}
+
+interface HuiViewProxy extends HTMLElement {
+  hass?: HomeAssistant;
+  index?: number;
+  lovelace?: ProxyLovelace;
+}
+
+function cloneJson<T>(val: T): T {
+  return JSON.parse(JSON.stringify(val)) as T;
 }
 
 function getHomeAssistantHost(): HTMLElement | null {
@@ -37,15 +59,58 @@ function getActiveEditCardDialog(): HaDialogElement | null {
   );
 }
 
+function captureOriginalBaseline(
+  dialog: HaDialogElement | null,
+  fallbackConfig: M3EPopupCardConfig,
+): unknown {
+  try {
+    const sliceInit = dialog?._dirtySlices?.get('__default__')?.initial;
+    if (sliceInit && typeof sliceInit === 'object') {
+      return cloneJson(sliceInit);
+    }
+    if (dialog?._params?.cardConfig) {
+      return cloneJson(dialog._params.cardConfig);
+    }
+  } catch {
+    // ignore
+  }
+  return cloneJson(fallbackConfig);
+}
+
+function applyDialogDirtyBaseline(dialog: HaDialogElement | null, originalConfig: unknown): void {
+  if (!dialog || !originalConfig) return;
+  const apply = (attempt = 0) => {
+    try {
+      const slice = dialog._dirtySlices?.get('__default__');
+      if (!slice) {
+        if (attempt < 8) requestAnimationFrame(() => apply(attempt + 1));
+        return;
+      }
+      slice.initial = cloneJson(originalConfig);
+      const normFn = dialog._effectiveNormalize;
+      slice.normalizedInitial =
+        typeof normFn === 'function' ? normFn(cloneJson(originalConfig)) : cloneJson(originalConfig);
+      dialog._publishContext?.();
+    } catch {
+      // ignore
+    }
+  };
+  requestAnimationFrame(() => apply(0));
+}
+
 function extractCardsFromProxyConfig(cfg: Record<string, unknown>): LovelaceCardConfig[] {
-  const views = cfg?.views as Array<{ sections?: Array<{ cards?: LovelaceCardConfig[] }> }> | undefined;
-  const cards = views?.[0]?.sections?.[0]?.cards;
-  return Array.isArray(cards) ? cards : [];
+  const views = cfg?.views as
+    | Array<{ sections?: Array<{ cards?: LovelaceCardConfig[] }>; cards?: LovelaceCardConfig[] }>
+    | undefined;
+  const sectionCards = views?.[0]?.sections?.[0]?.cards;
+  if (Array.isArray(sectionCards)) return sectionCards;
+  return Array.isArray(views?.[0]?.cards) ? views![0].cards! : [];
 }
 
 function reopenParentPopupDialog(
   parentParams: Record<string, unknown>,
   updatedPopupConfig: M3EPopupCardConfig,
+  originalBaseline: unknown,
 ): void {
   const homeAssistant = getHomeAssistantHost();
   if (!homeAssistant) return;
@@ -56,6 +121,13 @@ function reopenParentPopupDialog(
   };
 
   setTimeout(() => {
+    const existing = getActiveEditCardDialog();
+    if (existing && typeof existing.showDialog === 'function') {
+      existing.showDialog(nextParams);
+      applyDialogDirtyBaseline(existing, originalBaseline);
+      return;
+    }
+
     homeAssistant.dispatchEvent(
       new CustomEvent('show-dialog', {
         bubbles: true,
@@ -67,55 +139,93 @@ function reopenParentPopupDialog(
         },
       }),
     );
-  }, 30);
+    requestAnimationFrame(() => {
+      applyDialogDirtyBaseline(getActiveEditCardDialog(), originalBaseline);
+    });
+  }, 0);
 }
 
 function openChildInOfficialEditDialog(
   childDialogParams: Record<string, unknown>,
   parentParams: Record<string, unknown>,
+  originalBaseline: unknown,
   getUpdatedPopupConfig: () => M3EPopupCardConfig,
+  cleanupProxy: () => void,
 ): boolean {
   const activeDialog = getActiveEditCardDialog();
-  if (!activeDialog || typeof activeDialog.showDialog !== 'function') return false;
+  if (!activeDialog || typeof activeDialog.showDialog !== 'function') {
+    cleanupProxy();
+    return false;
+  }
 
-  const handleClosed = (ev: Event) => {
-    const detail = (ev as CustomEvent<{ dialog?: string }>).detail;
-    if (detail?.dialog !== 'hui-dialog-edit-card') return;
+  let handled = false;
+  const hadOwnClose = Object.prototype.hasOwnProperty.call(activeDialog, 'closeDialog');
+  const origClose = activeDialog.closeDialog;
 
-    const hostRoot = getHomeAssistantHost()?.shadowRoot;
-    if (hostRoot?.contains(activeDialog)) return;
-
-    window.removeEventListener('dialog-closed', handleClosed, true);
-    reopenParentPopupDialog(parentParams, getUpdatedPopupConfig());
+  const restoreClose = () => {
+    if (activeDialog.closeDialog !== wrappedClose) return;
+    if (hadOwnClose) {
+      activeDialog.closeDialog = origClose;
+    } else {
+      delete activeDialog.closeDialog;
+    }
   };
 
-  window.addEventListener('dialog-closed', handleClosed, true);
+  const finishAndReopen = () => {
+    if (handled) return;
+    handled = true;
+    restoreClose();
+    window.removeEventListener('dialog-closed', onDialogClosed, true);
+    cleanupProxy();
+    reopenParentPopupDialog(parentParams, getUpdatedPopupConfig(), originalBaseline);
+  };
+
+  function wrappedClose(this: HaDialogElement, ...args: unknown[]): boolean {
+    restoreClose();
+    const closed = typeof origClose === 'function' ? origClose.apply(this, args) : true;
+    if (closed === false) {
+      activeDialog!.closeDialog = wrappedClose;
+      return false;
+    }
+    finishAndReopen();
+    return true;
+  }
+
+  const onDialogClosed = (ev: Event) => {
+    const detail = (ev as CustomEvent<{ dialog?: string }>).detail;
+    if (detail?.dialog !== 'hui-dialog-edit-card') return;
+    const hostRoot = getHomeAssistantHost()?.shadowRoot;
+    if (hostRoot?.contains(activeDialog)) return;
+    finishAndReopen();
+  };
+
+  activeDialog.closeDialog = wrappedClose;
+  window.addEventListener('dialog-closed', onDialogClosed, true);
   activeDialog.showDialog(childDialogParams);
   return true;
 }
 
-async function dispatchOnProxySection(
+/**
+ * Dispatches `ll-create-card` or `ll-edit-card` for both:
+ * - Home Assistant 2026.11+ (handlers on `hui-view` with `['views', 0, 'sections', 0, 'cards', ...]`)
+ * - Home Assistant 2025.2–2026.10 (handlers on `hui-section` with `[0, 0, index]`)
+ */
+async function dispatchOfficialCardEvent(
   hass: HomeAssistant,
   cards: LovelaceCardConfig[],
   eventName: 'll-create-card' | 'll-edit-card',
-  detail: Record<string, unknown> | undefined,
+  cardIndex: number | undefined,
   onSaveConfig: (newLovelaceConfig: Record<string, unknown>) => Promise<void>,
-): Promise<boolean> {
+): Promise<(() => void) | null> {
   const homeAssistant = getHomeAssistantHost();
-  if (!homeAssistant || !customElements.get('hui-section')) return false;
+  if (!homeAssistant) return null;
 
   const sectionConfig = {
     type: 'grid',
-    cards: cards.map((c) => JSON.parse(JSON.stringify(c))),
+    cards: cloneJson(cards),
   };
 
-  const proxy = document.createElement('hui-section') as HuiSectionProxy;
-  proxy.style.display = 'none';
-  proxy.hass = hass;
-  proxy.index = 0;
-  proxy.viewIndex = 0;
-  proxy.config = sectionConfig;
-  proxy.lovelace = {
+  const lovelaceProxy: ProxyLovelace = {
     config: {
       views: [
         {
@@ -129,20 +239,75 @@ async function dispatchOnProxySection(
     saveConfig: onSaveConfig,
   };
 
-  homeAssistant.appendChild(proxy);
+  const testSection = customElements.get('hui-section')
+    ? (document.createElement('hui-section') as HuiSectionProxy)
+    : null;
+  const usesViewHandlers = Boolean(testSection && 'path' in testSection) || Boolean(customElements.get('hui-view') && !testSection);
+
+  // Path A: Home Assistant 2026.11+ (`hui-view` handles card creation/editing dialogs)
+  if (usesViewHandlers && customElements.get('hui-view')) {
+    const proxyView = document.createElement('hui-view') as HuiViewProxy;
+    proxyView.style.display = 'none';
+    proxyView.hass = hass;
+    proxyView.index = 0;
+    proxyView.lovelace = lovelaceProxy;
+
+    const basePath: Array<string | number> = ['views', 0, 'sections', 0, 'cards'];
+    const path =
+      eventName === 'll-edit-card' && typeof cardIndex === 'number'
+        ? [...basePath, cardIndex]
+        : basePath;
+
+    homeAssistant.appendChild(proxyView);
+    try {
+      proxyView.dispatchEvent(
+        new CustomEvent(eventName, {
+          bubbles: true,
+          composed: true,
+          detail: { path },
+        }),
+      );
+      return () => {
+        if (proxyView.isConnected) proxyView.remove();
+      };
+    } catch {
+      proxyView.remove();
+      return null;
+    } finally {
+      proxyView.remove();
+    }
+  }
+
+  // Path B: Home Assistant 2025.2–2026.10 (`hui-section` handles card creation/editing dialogs)
+  if (!testSection) return null;
+  testSection.style.display = 'none';
+  testSection.hass = hass;
+  testSection.index = 0;
+  testSection.viewIndex = 0;
+  testSection.config = sectionConfig;
+  testSection.lovelace = lovelaceProxy;
+
+  homeAssistant.appendChild(testSection);
+  const cleanup = () => {
+    if (testSection.isConnected) testSection.remove();
+  };
 
   try {
-    if (typeof proxy._initializeConfig === 'function') {
-      await proxy._initializeConfig();
+    if (typeof testSection._initializeConfig === 'function') {
+      await testSection._initializeConfig();
     }
-    if (proxy.updateComplete) {
-      await proxy.updateComplete;
+    if (testSection.updateComplete) {
+      await testSection.updateComplete;
     }
-    const layoutEl = proxy._layoutElement;
+    const layoutEl = testSection._layoutElement;
     if (!layoutEl) {
-      proxy.remove();
-      return false;
+      cleanup();
+      return null;
     }
+    const detail =
+      eventName === 'll-edit-card' && typeof cardIndex === 'number'
+        ? { path: [0, 0, cardIndex] }
+        : undefined;
     layoutEl.dispatchEvent(
       new CustomEvent(eventName, {
         bubbles: true,
@@ -150,19 +315,17 @@ async function dispatchOnProxySection(
         detail,
       }),
     );
-    // Keep proxy alive briefly while dialog reads its lovelace reference
-    setTimeout(() => proxy.remove(), 120000);
-    return true;
+    return cleanup;
   } catch {
-    proxy.remove();
-    return false;
+    cleanup();
+    return null;
   }
 }
 
 /**
  * Opens Home Assistant's official "Add to dashboard" dialog (`hui-dialog-create-card`)
  * or official "Edit card" dialog (`hui-dialog-edit-card` with Config/Visibility/Layout tabs)
- * for a child card inside `m3e-popup-card`, then returns cleanly to the Pop-up editor!
+ * for a child card inside `m3e-popup-card`, then returns cleanly to the Pop-up editor.
  */
 export async function openOfficialHACardDialog(options: {
   hass: HomeAssistant;
@@ -176,6 +339,9 @@ export async function openOfficialHACardDialog(options: {
   const parentParams = activeDialog?._params ? { ...activeDialog._params } : null;
   if (!homeAssistant || !parentParams) return false;
 
+  const originalBaseline = captureOriginalBaseline(activeDialog, options.popupConfig);
+
+  let cardsMutatedDirectly = false;
   let nextPopupConfig: M3EPopupCardConfig = {
     ...options.popupConfig,
     cards: [...(options.popupConfig.cards ?? [])],
@@ -183,12 +349,14 @@ export async function openOfficialHACardDialog(options: {
 
   const handleSaveConfig = async (lovelaceCfg: Record<string, unknown>) => {
     const updatedCards = extractCardsFromProxyConfig(lovelaceCfg);
+    cardsMutatedDirectly = true;
     nextPopupConfig = { ...nextPopupConfig, cards: updatedCards };
     options.onCardsUpdated(updatedCards);
   };
 
   if (options.mode === 'add') {
     let pendingEditParams: Record<string, unknown> | null = null;
+    let cleanupProxy: (() => void) | null = null;
 
     const onShowDialog = (ev: Event) => {
       const detail = (
@@ -210,15 +378,26 @@ export async function openOfficialHACardDialog(options: {
       if (pendingEditParams) {
         const params = pendingEditParams;
         setTimeout(() => {
-          openChildInOfficialEditDialog(params, parentParams, () => nextPopupConfig);
+          openChildInOfficialEditDialog(
+            params,
+            parentParams,
+            originalBaseline,
+            () => nextPopupConfig,
+            () => cleanupProxy?.(),
+          );
         }, 0);
+      } else {
+        cleanupProxy?.();
+        if (cardsMutatedDirectly) {
+          reopenParentPopupDialog(parentParams, nextPopupConfig, originalBaseline);
+        }
       }
     };
 
     homeAssistant.addEventListener('show-dialog', onShowDialog, true);
     window.addEventListener('dialog-closed', onCreateClosed, true);
 
-    const ok = await dispatchOnProxySection(
+    cleanupProxy = await dispatchOfficialCardEvent(
       options.hass,
       nextPopupConfig.cards ?? [],
       'll-create-card',
@@ -226,15 +405,16 @@ export async function openOfficialHACardDialog(options: {
       handleSaveConfig,
     );
 
-    if (!ok) {
+    if (!cleanupProxy) {
       homeAssistant.removeEventListener('show-dialog', onShowDialog, true);
       window.removeEventListener('dialog-closed', onCreateClosed, true);
+      return false;
     }
-    return ok;
+    return true;
   }
 
-  // Edit existing card at `options.index`
   if (typeof options.index !== 'number') return false;
+  let cleanupProxy: (() => void) | null = null;
 
   const onShowDialog = (ev: Event) => {
     const detail = (
@@ -246,29 +426,38 @@ export async function openOfficialHACardDialog(options: {
     ev.stopImmediatePropagation?.();
     ev.stopPropagation();
     if (detail.dialogParams) {
-      openChildInOfficialEditDialog(detail.dialogParams, parentParams, () => nextPopupConfig);
+      openChildInOfficialEditDialog(
+        detail.dialogParams,
+        parentParams,
+        originalBaseline,
+        () => nextPopupConfig,
+        () => cleanupProxy?.(),
+      );
+    } else {
+      cleanupProxy?.();
     }
   };
 
   homeAssistant.addEventListener('show-dialog', onShowDialog, true);
 
-  const ok = await dispatchOnProxySection(
+  cleanupProxy = await dispatchOfficialCardEvent(
     options.hass,
     nextPopupConfig.cards ?? [],
     'll-edit-card',
-    { path: [0, 0, options.index] },
+    options.index,
     handleSaveConfig,
   );
 
-  if (!ok) {
+  if (!cleanupProxy) {
     homeAssistant.removeEventListener('show-dialog', onShowDialog, true);
+    return false;
   }
-  return ok;
+  return true;
 }
 
 /**
  * Expands the right-hand preview pane inside HA's `hui-dialog-edit-card`
- * so multi-row Pop-up previews never clip or force tiny scrollboxes.
+ * so multi-row Pop-up previews scroll cleanly at full viewport height.
  */
 export function expandEditDialogPreviewPane(): void {
   try {
