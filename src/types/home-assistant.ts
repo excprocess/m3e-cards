@@ -434,6 +434,8 @@ export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   navigation_path?: string;
   /** Enable Material 3 Expressive progress fill / ring on the badge */
   progress_enabled?: boolean;
+  /** Optional entity supplying the current progress value (e.g. history_stats, battery, timer; defaults to primary entity) */
+  progress_entity?: string;
   /** Entity providing the start / minimum value (number, counter, date, timestamp, input_datetime) */
   progress_start_entity?: string;
   /** Static start / minimum value (number, HH:MM, ISO date, or "now") */

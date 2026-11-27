@@ -167,12 +167,21 @@ function getOrStoreBaseline(key: string, sig: string, nowMs: number, currentVal?
   return fresh;
 }
 
+const REMAINING_HINT_RE =
+  /(remain|left|rimanent|restant|time_to_full|time_left|charging_time|eta|countdown)/i;
+
+function isRemainingTimeEntity(entity?: HassEntity): boolean {
+  if (!entity) return false;
+  const idAndName = `${entity.entity_id} ${String(entity.attributes.friendly_name ?? '')}`;
+  return REMAINING_HINT_RE.test(idAndName);
+}
+
 /**
  * Computes 0..100 progress for Status Badge across:
  * - HA `timer.*` entities (duration + remaining / finishes_at)
  * - Timestamps, dates, alarms (`next_alarm`, `charging_end`, `start_now`, `start_entity` -> `end_entity`)
- * - Companion app / appliance remaining-time sensors (duration strings or numeric time units)
- * - Numeric sensors, counters, input_number, battery levels (`start` -> `end`)
+ * - Companion app / appliance remaining-time sensors (countdown duration)
+ * - `history_stats`, uptime, counters, numeric sensors, input_number, battery levels (`start` -> `end`)
  */
 export function computeBadgeProgress(
   hass: HomeAssistant | undefined,
@@ -183,7 +192,8 @@ export function computeBadgeProgress(
     return { percent: null, isTimeBased: false };
   }
 
-  const primary = hass.states[config.entity];
+  const progressEntityId = config.progress_entity?.trim() || config.entity;
+  const primary = hass.states[progressEntityId];
   const startEnt = config.progress_start_entity ? hass.states[config.progress_start_entity] : undefined;
   const endEnt = config.progress_end_entity ? hass.states[config.progress_end_entity] : undefined;
 
@@ -291,6 +301,8 @@ export function computeBadgeProgress(
   }
 
   // 3. Remaining-time duration string or numeric time-unit sensor (Companion App charging, appliances)
+  // Note: elapsed sensors like `history_stats` (state_class: measurement, unit: h) fall through to Step 4
+  // so they count UP cleanly from start -> end (e.g. 0 -> 1h = 0% -> 100%).
   const rawPrimary = String(primary?.state ?? '').trim();
   const unit = String(primary?.attributes.unit_of_measurement ?? '').trim();
   const numericVal = parseNumeric(primary?.state, primary);
@@ -298,7 +310,13 @@ export function computeBadgeProgress(
     parseDurationMs(rawPrimary) ??
     (numericVal !== null ? numericTimeUnitToMs(numericVal, unit) : null);
 
+  const treatAsCountdown =
+    isRemainingTimeEntity(primary) ||
+    Boolean(config.progress_start_now) ||
+    (parseDurationMs(rawPrimary) !== null && numericVal === null);
+
   if (
+    treatAsCountdown &&
     remDurationMs !== null &&
     (TIME_UNITS.has(unit.toLowerCase()) ||
       primary?.attributes.device_class === 'duration' ||
@@ -306,7 +324,7 @@ export function computeBadgeProgress(
   ) {
     if (remDurationMs <= 0) return finalize(100, false);
 
-    // Explicit max duration from end_entity or end_value (or start_value)
+    // Explicit max duration from end_entity or end_value
     const maxFromEndEnt = endEnt
       ? parseDurationMs(endEnt.state) ??
         (parseNumeric(endEnt.state, endEnt) !== null
@@ -326,7 +344,7 @@ export function computeBadgeProgress(
     let totalMs = maxFromEndEnt ?? maxFromConfig;
     if (!totalMs || totalMs <= 0) {
       // Auto-snapshot peak remaining time for this session
-      const baseline = getOrStoreBaseline(config.entity, 'rem_session', nowMs, remDurationMs);
+      const baseline = getOrStoreBaseline(progressEntityId, 'rem_session', nowMs, remDurationMs);
       totalMs = Math.max(remDurationMs, baseline.peakVal ?? remDurationMs);
     }
 

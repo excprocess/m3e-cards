@@ -39,6 +39,7 @@ export class M3EStatusBadge extends LitElement {
   @state() private _tick = 0;
 
   private _prevEntity?: HassEntity;
+  private _prevProgressEntity?: HassEntity;
   private _prevStartEntity?: HassEntity;
   private _prevEndEntity?: HassEntity;
   private _tickTimer: number | null = null;
@@ -190,6 +191,7 @@ export class M3EStatusBadge extends LitElement {
                 { name: 'progress_start_now', selector: { boolean: {} } },
               ],
             },
+            { name: 'progress_entity', selector: { entity: {} } },
             { name: 'progress_start_entity', selector: { entity: {} } },
             { name: 'progress_start_value', selector: { text: {} } },
             { name: 'progress_end_entity', selector: { entity: {} } },
@@ -244,6 +246,7 @@ export class M3EStatusBadge extends LitElement {
           navigation_path: 'Percorso / #popup Bubble Card / script',
           progress_enabled: 'Abilita Entity Progress Badge',
           progress_start_now: 'Partenza da ora (sveglie / remaining time)',
+          progress_entity: 'Entità progresso (vuoto = entità principale, es. history_stats)',
           progress_start_entity: 'Entità valore iniziale (numero, counter, data/ora)',
           progress_start_value: 'Valore iniziale fisso (es. 0, 07:30, now)',
           progress_end_entity: 'Entità valore finale (numero, counter, data/ora, timer)',
@@ -263,6 +266,9 @@ export class M3EStatusBadge extends LitElement {
     }
     if (changedProps.has('hass') && this.hass) {
       const next = this.hass.states[this._config.entity];
+      const nextProgress = this._config.progress_entity
+        ? this.hass.states[this._config.progress_entity]
+        : undefined;
       const nextStart = this._config.progress_start_entity
         ? this.hass.states[this._config.progress_start_entity]
         : undefined;
@@ -272,11 +278,13 @@ export class M3EStatusBadge extends LitElement {
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
       if (
         next !== this._prevEntity ||
+        nextProgress !== this._prevProgressEntity ||
         nextStart !== this._prevStartEntity ||
         nextEnd !== this._prevEndEntity ||
         oldHass?.themes?.darkMode !== this.hass.themes?.darkMode
       ) {
         this._prevEntity = next;
+        this._prevProgressEntity = nextProgress;
         this._prevStartEntity = nextStart;
         this._prevEndEntity = nextEnd;
         return true;
