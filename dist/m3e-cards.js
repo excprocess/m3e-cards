@@ -3,7 +3,7 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const he = globalThis, De = he.ShadowRoot && (he.ShadyCSS === void 0 || he.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ze = Symbol(), je = /* @__PURE__ */ new WeakMap();
+const ue = globalThis, De = ue.ShadowRoot && (ue.ShadyCSS === void 0 || ue.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ze = Symbol(), je = /* @__PURE__ */ new WeakMap();
 let gi = class {
   constructor(e, i, s) {
     if (this._$cssResult$ = !0, s !== ze) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
@@ -32,7 +32,7 @@ const Ri = (t) => new gi(typeof t == "string" ? t : t + "", void 0, ze), I = (t,
 }, Ni = (t, e) => {
   if (De) t.adoptedStyleSheets = e.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
   else for (const i of e) {
-    const s = document.createElement("style"), r = he.litNonce;
+    const s = document.createElement("style"), r = ue.litNonce;
     r !== void 0 && s.setAttribute("nonce", r), s.textContent = i.cssText, t.appendChild(s);
   }
 }, We = De ? (t) => t : (t) => t instanceof CSSStyleSheet ? ((e) => {
@@ -264,7 +264,7 @@ Mt.elementStyles = [], Mt.shadowRootOptions = { mode: "open" }, Mt[Xt("elementPr
  */
 const Re = globalThis, Ke = (t) => t, fe = Re.trustedTypes, Xe = fe ? fe.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, vi = "$lit$", lt = `lit$${Math.random().toFixed(9).slice(2)}$`, _i = "?" + lt, Yi = `<${_i}>`, bt = document, Qt = () => bt.createComment(""), te = (t) => t === null || typeof t != "object" && typeof t != "function", Ne = Array.isArray, Ki = (t) => Ne(t) || typeof t?.[Symbol.iterator] == "function", Ee = `[ 	
 \f\r]`, jt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, qe = /-->/g, Je = />/g, mt = RegExp(`>|${Ee}(?:([^\\s"'>=/]+)(${Ee}*=${Ee}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Qe = /'/g, ti = /"/g, bi = /^(?:script|style|textarea|title)$/i, yi = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = yi(1), Me = yi(2), Pt = Symbol.for("lit-noChange"), u = Symbol.for("lit-nothing"), ei = /* @__PURE__ */ new WeakMap(), _t = bt.createTreeWalker(bt, 129);
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Qe = /'/g, ti = /"/g, bi = /^(?:script|style|textarea|title)$/i, yi = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = yi(1), Me = yi(2), Pt = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), ei = /* @__PURE__ */ new WeakMap(), _t = bt.createTreeWalker(bt, 129);
 function xi(t, e) {
   if (!Ne(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Xe !== void 0 ? Xe.createHTML(e) : e;
@@ -274,8 +274,8 @@ const Xi = (t, e) => {
   let r, a = e === 2 ? "<svg>" : e === 3 ? "<math>" : "", o = jt;
   for (let n = 0; n < i; n++) {
     const c = t[n];
-    let p, d, f = -1, h = 0;
-    for (; h < c.length && (o.lastIndex = h, d = o.exec(c), d !== null); ) h = o.lastIndex, o === jt ? d[1] === "!--" ? o = qe : d[1] !== void 0 ? o = Je : d[2] !== void 0 ? (bi.test(d[2]) && (r = RegExp("</" + d[2], "g")), o = mt) : d[3] !== void 0 && (o = mt) : o === mt ? d[0] === ">" ? (o = r ?? jt, f = -1) : d[1] === void 0 ? f = -2 : (f = o.lastIndex - d[2].length, p = d[1], o = d[3] === void 0 ? mt : d[3] === '"' ? ti : Qe) : o === ti || o === Qe ? o = mt : o === qe || o === Je ? o = jt : (o = mt, r = void 0);
+    let p, d, f = -1, u = 0;
+    for (; u < c.length && (o.lastIndex = u, d = o.exec(c), d !== null); ) u = o.lastIndex, o === jt ? d[1] === "!--" ? o = qe : d[1] !== void 0 ? o = Je : d[2] !== void 0 ? (bi.test(d[2]) && (r = RegExp("</" + d[2], "g")), o = mt) : d[3] !== void 0 && (o = mt) : o === mt ? d[0] === ">" ? (o = r ?? jt, f = -1) : d[1] === void 0 ? f = -2 : (f = o.lastIndex - d[2].length, p = d[1], o = d[3] === void 0 ? mt : d[3] === '"' ? ti : Qe) : o === ti || o === Qe ? o = mt : o === qe || o === Je ? o = jt : (o = mt, r = void 0);
     const g = o === mt && t[n + 1].startsWith("/>") ? " " : "";
     a += o === jt ? c + Yi : f >= 0 ? (s.push(p), c.slice(0, f) + vi + c.slice(f) + lt + g) : c + lt + (f === -2 ? n : g);
   }
@@ -294,15 +294,15 @@ class ee {
     for (; (r = _t.nextNode()) !== null && c.length < n; ) {
       if (r.nodeType === 1) {
         if (r.hasAttributes()) for (const f of r.getAttributeNames()) if (f.endsWith(vi)) {
-          const h = d[o++], g = r.getAttribute(f).split(lt), m = /([.?@])?(.*)/.exec(h);
+          const u = d[o++], g = r.getAttribute(f).split(lt), m = /([.?@])?(.*)/.exec(u);
           c.push({ type: 1, index: a, name: m[2], strings: g, ctor: m[1] === "." ? Ji : m[1] === "?" ? Qi : m[1] === "@" ? ts : be }), r.removeAttribute(f);
         } else f.startsWith(lt) && (c.push({ type: 6, index: a }), r.removeAttribute(f));
         if (bi.test(r.tagName)) {
-          const f = r.textContent.split(lt), h = f.length - 1;
-          if (h > 0) {
+          const f = r.textContent.split(lt), u = f.length - 1;
+          if (u > 0) {
             r.textContent = fe ? fe.emptyScript : "";
-            for (let g = 0; g < h; g++) r.append(f[g], Qt()), _t.nextNode(), c.push({ type: 2, index: ++a });
-            r.append(f[h], Qt());
+            for (let g = 0; g < u; g++) r.append(f[g], Qt()), _t.nextNode(), c.push({ type: 2, index: ++a });
+            r.append(f[u], Qt());
           }
         }
       } else if (r.nodeType === 8) if (r.data === _i) c.push({ type: 2, index: a });
@@ -357,7 +357,7 @@ class ae {
     return this._$AM?._$AU ?? this._$Cv;
   }
   constructor(e, i, s, r) {
-    this.type = 2, this._$AH = u, this._$AN = void 0, this._$AA = e, this._$AB = i, this._$AM = s, this.options = r, this._$Cv = r?.isConnected ?? !0;
+    this.type = 2, this._$AH = h, this._$AN = void 0, this._$AA = e, this._$AB = i, this._$AM = s, this.options = r, this._$Cv = r?.isConnected ?? !0;
   }
   get parentNode() {
     let e = this._$AA.parentNode;
@@ -371,7 +371,7 @@ class ae {
     return this._$AB;
   }
   _$AI(e, i = this) {
-    e = Tt(this, e, i), te(e) ? e === u || e == null || e === "" ? (this._$AH !== u && this._$AR(), this._$AH = u) : e !== this._$AH && e !== Pt && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Ki(e) ? this.k(e) : this._(e);
+    e = Tt(this, e, i), te(e) ? e === h || e == null || e === "" ? (this._$AH !== h && this._$AR(), this._$AH = h) : e !== this._$AH && e !== Pt && this._(e) : e._$litType$ !== void 0 ? this.$(e) : e.nodeType !== void 0 ? this.T(e) : Ki(e) ? this.k(e) : this._(e);
   }
   O(e) {
     return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -380,7 +380,7 @@ class ae {
     this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
   }
   _(e) {
-    this._$AH !== u && te(this._$AH) ? this._$AA.nextSibling.data = e : this.T(bt.createTextNode(e)), this._$AH = e;
+    this._$AH !== h && te(this._$AH) ? this._$AA.nextSibling.data = e : this.T(bt.createTextNode(e)), this._$AH = e;
   }
   $(e) {
     const { values: i, _$litType$: s } = e, r = typeof s == "number" ? this._$AC(e) : (s.el === void 0 && (s.el = ee.createElement(xi(s.h, s.h[0]), this.options)), s);
@@ -419,7 +419,7 @@ class be {
     return this._$AM._$AU;
   }
   constructor(e, i, s, r, a) {
-    this.type = 1, this._$AH = u, this._$AN = void 0, this.element = e, this.name = i, this._$AM = r, this.options = a, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = u;
+    this.type = 1, this._$AH = h, this._$AN = void 0, this.element = e, this.name = i, this._$AM = r, this.options = a, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = h;
   }
   _$AI(e, i = this, s, r) {
     const a = this.strings;
@@ -428,12 +428,12 @@ class be {
     else {
       const n = e;
       let c, p;
-      for (e = a[0], c = 0; c < a.length - 1; c++) p = Tt(this, n[s + c], i, c), p === Pt && (p = this._$AH[c]), o ||= !te(p) || p !== this._$AH[c], p === u ? e = u : e !== u && (e += (p ?? "") + a[c + 1]), this._$AH[c] = p;
+      for (e = a[0], c = 0; c < a.length - 1; c++) p = Tt(this, n[s + c], i, c), p === Pt && (p = this._$AH[c]), o ||= !te(p) || p !== this._$AH[c], p === h ? e = h : e !== h && (e += (p ?? "") + a[c + 1]), this._$AH[c] = p;
     }
     o && !r && this.j(e);
   }
   j(e) {
-    e === u ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+    e === h ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
   }
 }
 class Ji extends be {
@@ -441,7 +441,7 @@ class Ji extends be {
     super(...arguments), this.type = 3;
   }
   j(e) {
-    this.element[this.name] = e === u ? void 0 : e;
+    this.element[this.name] = e === h ? void 0 : e;
   }
 }
 class Qi extends be {
@@ -449,7 +449,7 @@ class Qi extends be {
     super(...arguments), this.type = 4;
   }
   j(e) {
-    this.element.toggleAttribute(this.name, !!e && e !== u);
+    this.element.toggleAttribute(this.name, !!e && e !== h);
   }
 }
 class ts extends be {
@@ -457,8 +457,8 @@ class ts extends be {
     super(e, i, s, r, a), this.type = 5;
   }
   _$AI(e, i = this) {
-    if ((e = Tt(this, e, i, 0) ?? u) === Pt) return;
-    const s = this._$AH, r = e === u && s !== u || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, a = e !== u && (s === u || r);
+    if ((e = Tt(this, e, i, 0) ?? h) === Pt) return;
+    const s = this._$AH, r = e === h && s !== h || e.capture !== s.capture || e.once !== s.once || e.passive !== s.passive, a = e !== h && (s === h || r);
     r && this.element.removeEventListener(this.name, this, s), a && this.element.addEventListener(this.name, this, e), this._$AH = e;
   }
   handleEvent(e) {
@@ -1092,7 +1092,7 @@ let at = class extends A {
         `;
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._modeEntity, e = t?.state ?? "", i = !!(t && this._options.length > 0), s = this._config.placeholder?.trim() || "Chiedi a Home Assistant";
     return l`
       <ha-card
@@ -1195,7 +1195,7 @@ let at = class extends A {
     })}
                 </div>
               </div>
-            ` : u}
+            ` : h}
       </dialog>
     `;
   }
@@ -1562,8 +1562,8 @@ function Ot(t, e, i) {
     })
   ), window.dispatchEvent(new CustomEvent("location-changed", { bubbles: !0, composed: !0 }));
 }
-var ps = Object.defineProperty, us = Object.getOwnPropertyDescriptor, ye = (t, e, i, s) => {
-  for (var r = s > 1 ? void 0 : s ? us(e, i) : e, a = t.length - 1, o; a >= 0; a--)
+var ps = Object.defineProperty, hs = Object.getOwnPropertyDescriptor, ye = (t, e, i, s) => {
+  for (var r = s > 1 ? void 0 : s ? hs(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && ps(e, i, r), r;
 };
@@ -1679,7 +1679,7 @@ let It = class extends A {
     return t.name ? t.name : t.entity ? this.hass?.states[t.entity]?.attributes.friendly_name || t.entity : `Entità #${e + 1}`;
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = this._config.items ?? [];
     return l`
       <div class="editor-root">
@@ -1766,7 +1766,7 @@ let It = class extends A {
                           @value-changed=${(a) => this._onItemChanged(i, a)}
                         ></ha-form>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
             `;
     })}
@@ -1950,10 +1950,10 @@ ye([
 It = ye([
   D("m3e-glance-card-editor")
 ], It);
-var hs = Object.defineProperty, ms = Object.getOwnPropertyDescriptor, xe = (t, e, i, s) => {
+var us = Object.defineProperty, ms = Object.getOwnPropertyDescriptor, xe = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ms(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
-  return s && r && hs(e, i, r), r;
+  return s && r && us(e, i, r), r;
 };
 const fs = /* @__PURE__ */ new Set([
   "on",
@@ -2126,7 +2126,7 @@ let Lt = class extends A {
     }
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._config.items ?? [], e = this._config.transparent !== !1, i = l`
       <div
         class="glance-strip ${e ? "is-transparent" : "is-card"}"
@@ -2427,7 +2427,7 @@ function Ie(t, e) {
       const b = f > 0 ? `${d}h ${f}m` : `${d}h`;
       return r ? `Tra ${b}` : `In ${b}`;
     }
-    const h = Math.floor(d / 24), g = d % 24, m = r ? "g" : "d", w = g > 0 ? `${h}${m} ${g}h` : `${h}${m}`;
+    const u = Math.floor(d / 24), g = d % 24, m = r ? "g" : "d", w = g > 0 ? `${u}${m} ${g}h` : `${u}${m}`;
     return r ? `Tra ${w}` : `In ${w}`;
   }
   if (o < 1) return r ? "Ora" : "Now";
@@ -3001,8 +3001,8 @@ let N = class extends A {
      RENDER
      ========================================================================= */
   render() {
-    if (!this._config) return u;
-    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._config.icon?.trim() || void 0, s = this._isOn, r = this._brightnessPct, a = this._isUnavailable ? "Offline" : this._dragging && this._supportsBrightness ? `${r}%` : s ? this._supportsBrightness ? `On · ${r}%` : "On" : "Off", o = !!this._config.hide_state, n = !o && !this._dragging ? Bt(this.hass, t, this._config.state_content, a) : null, c = o && !this._dragging ? "" : n ?? a, p = this._computeColorVars(), d = this._matchedPresetId, f = this._popupOpen ? this._getAvailableScenes() : [], h = this._popupOpen ? ie(t?.last_changed) : null, g = `style-${this._config.card_style ?? "default"}`;
+    if (!this._config) return h;
+    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._config.icon?.trim() || void 0, s = this._isOn, r = this._brightnessPct, a = this._isUnavailable ? "Offline" : this._dragging && this._supportsBrightness ? `${r}%` : s ? this._supportsBrightness ? `On · ${r}%` : "On" : "Off", o = !!this._config.hide_state, n = !o && !this._dragging ? Bt(this.hass, t, this._config.state_content, a) : null, c = o && !this._dragging ? "" : n ?? a, p = this._computeColorVars(), d = this._matchedPresetId, f = this._popupOpen ? this._getAvailableScenes() : [], u = this._popupOpen ? ie(t?.last_changed) : null, g = `style-${this._config.card_style ?? "default"}`;
     return l`
       <ha-card
         class="tile-card ${g} ${s ? "is-on" : "is-off"} ${this._dragging ? "is-dragging" : ""} ${this._pressed ? "is-pressed" : ""} ${this._isUnavailable ? "is-unavailable" : ""}"
@@ -3030,7 +3030,7 @@ let N = class extends A {
           <span class="bulb-icon">${this._renderBulbIcon(i, s)}</span>
           <div class="meta">
             <span class="title">${e}</span>
-            ${c ? l`<span class="subtitle">${c}</span>` : u}
+            ${c ? l`<span class="subtitle">${c}</span>` : h}
           </div>
           ${this._isUnavailable ? l`
                 <span class="offline-badge" aria-hidden="true">
@@ -3041,7 +3041,7 @@ let N = class extends A {
                     />
                   </svg>
                 </span>
-              ` : u}
+              ` : h}
         </div>
       </ha-card>
 
@@ -3070,7 +3070,7 @@ let N = class extends A {
                   </button>
                   <div class="dialog-title-wrap">
                     <span class="dialog-title">${e}</span>
-                    ${h ? l`<span class="dialog-last-changed">${h}</span>` : u}
+                    ${u ? l`<span class="dialog-last-changed">${u}</span>` : h}
                   </div>
                   <div class="header-actions">
                     <button
@@ -3153,7 +3153,7 @@ let N = class extends A {
                             <div class="sun-layer sun-filled" aria-hidden="true">
                               ${this._renderSunIcon()}
                             </div>
-                          ` : u}
+                          ` : h}
                     </div>
                   </div>
 
@@ -3203,7 +3203,7 @@ let N = class extends A {
                           `
     )}
                       </div>
-                    ` : u}
+                    ` : h}
                 ${this._scenesSheetOpen && f.length > 0 ? l`
                       <div
                         class="scenes-sheet-backdrop"
@@ -3243,16 +3243,16 @@ let N = class extends A {
                                         ></ha-state-icon>` : l`<svg viewBox="0 0 24 24" class="scene-svg"><path fill="currentColor" d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"/></svg>`}
                                     <span>${m.label}</span>
                                   </span>
-                                  ${b ? l`<span>✓</span>` : u}
+                                  ${b ? l`<span>✓</span>` : h}
                                 </button>
                               `;
     })}
                           </div>
                         </div>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
       </dialog>
     `;
   }
@@ -4030,7 +4030,7 @@ let Dt = class extends A {
     });
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._optimisticOn !== null ? this._optimisticOn : this._computeAnyOn(), e = this._config.label_on?.trim() || "All on", i = this._config.label_off?.trim() || "All off", s = !!this._config.use_theme_color, r = this._isDark;
     return l`
       <ha-card
@@ -4276,11 +4276,11 @@ class Ls extends Ts {
 }
 const Ae = /* @__PURE__ */ new WeakMap(), Le = Ps(class extends Ls {
   render(t) {
-    return u;
+    return h;
   }
   update(t, [e]) {
     const i = e !== this.G;
-    return i && this.rt(void 0), (i || this.lt !== this.ct) && (this.G = e, this.ht = t.options?.host, this.rt(this.ct = t.element)), u;
+    return i && this.rt(void 0), (i || this.lt !== this.ct) && (this.G = e, this.ht = t.options?.host, this.rt(this.ct = t.element)), h;
   }
   rt(t) {
     if (this.G !== void 0) if (this.isConnected || (t = void 0), typeof this.G == "function") {
@@ -4532,8 +4532,8 @@ let G = class extends A {
     `;
   }
   render() {
-    if (!this._config) return u;
-    const t = this._groupEntity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._config.icon?.trim() || void 0, s = this._childEntityIds, { onCount: r, totalCount: a, avgPct: o, isOn: n, isUnavailable: c } = this._aggregateStats, p = c ? "Offline" : this._dragging ? `${o}%` : n ? a > 1 ? `${r} on · ${o}%` : `On · ${o}%` : "Off", d = !!this._config.hide_state, f = !d && !this._dragging ? Bt(this.hass, t, this._config.state_content, p) : null, h = d && !this._dragging ? "" : f ?? p, g = `style-${this._config.card_style ?? "default"}`, m = this._computeAccentCss(), w = !!this._config.compact;
+    if (!this._config) return h;
+    const t = this._groupEntity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._config.icon?.trim() || void 0, s = this._childEntityIds, { onCount: r, totalCount: a, avgPct: o, isOn: n, isUnavailable: c } = this._aggregateStats, p = c ? "Offline" : this._dragging ? `${o}%` : n ? a > 1 ? `${r} on · ${o}%` : `On · ${o}%` : "Off", d = !!this._config.hide_state, f = !d && !this._dragging ? Bt(this.hass, t, this._config.state_content, p) : null, u = d && !this._dragging ? "" : f ?? p, g = `style-${this._config.card_style ?? "default"}`, m = this._computeAccentCss(), w = !!this._config.compact;
     return l`
       <div class="group-wrapper ${w ? "is-compact" : ""}">
         <ha-card
@@ -4545,7 +4545,7 @@ let G = class extends A {
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuenow=${o}
-          aria-valuetext=${h}
+          aria-valuetext=${u}
           @pointerdown=${this._onHeaderPointerDown}
           @pointermove=${this._onHeaderPointerMove}
           @pointerup=${this._onHeaderPointerUp}
@@ -4560,7 +4560,7 @@ let G = class extends A {
             <span class="group-icon">${this._renderGroupIcon(i)}</span>
             <div class="meta">
               <span class="title">${e}</span>
-              ${h ? l`<span class="subtitle">${h}</span>` : u}
+              ${u ? l`<span class="subtitle">${u}</span>` : h}
             </div>
 
             ${c ? l`
@@ -4599,7 +4599,7 @@ let G = class extends A {
                             </svg>
                           `}
                     </button>
-                  ` : u}
+                  ` : h}
           </div>
         </ha-card>
 
@@ -4618,7 +4618,7 @@ let G = class extends A {
                   </div>
                 </div>
               </div>
-            ` : u}
+            ` : h}
       </div>
 
       ${w ? l`
@@ -4651,7 +4651,7 @@ let G = class extends A {
 
                         <div class="dialog-title-wrap">
                           <span class="dialog-title">${e}</span>
-                          <span class="dialog-sub">${h}</span>
+                          <span class="dialog-sub">${u}</span>
                         </div>
 
                         <button
@@ -4677,9 +4677,9 @@ let G = class extends A {
     )}
                       </div>
                     </div>
-                  ` : u}
+                  ` : h}
             </dialog>
-          ` : u}
+          ` : h}
     `;
   }
   _attachChildConfig(t) {
@@ -4969,10 +4969,11 @@ G.styles = [
       }
 
       .dialog-surface {
-        background: var(--md-sys-color-surface-container-low, #1b1b1f);
+        background: var(--md-sys-color-surface, #131316);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
         padding: 20px 20px 24px;
-        box-shadow: var(--md-sys-elevation-level3, 0 12px 32px rgba(0, 0, 0, 0.35));
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
         max-height: 86dvh;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -5088,18 +5089,25 @@ G.styles = [
       .popup-child-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
+        --ha-card-background: var(--md-sys-color-surface-container-high, #24252d);
+        --ha-card-box-shadow: none;
+        --ha-card-border-width: 0px;
+        --m3e-card-border-radius: 24px;
       }
 
       @media (max-width: 600px) {
         dialog.group-dialog {
           width: 100vw;
           margin: auto 0 0 0;
+          border-radius: 28px 28px 0 0;
+          overflow: hidden;
         }
 
         .dialog-surface {
           border-radius: 28px 28px 0 0;
-          padding: 18px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+          box-shadow: none;
+          padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
         }
       }
     `
@@ -5243,7 +5251,7 @@ async function Ue(t) {
           if (o[x + 3] < 128) continue;
           const [Z, C, E] = Ns(o[x], o[x + 1], o[x + 2]);
           if (p++, c += C, C < 12 || E < 10 || E > 92) continue;
-          const H = Math.floor(Z % 360 / 15) % 24, ht = 1 - Math.abs(E - 50) / 52, X = C / 100 * (0.4 + 0.6 * ht), Q = Z * Math.PI / 180;
+          const H = Math.floor(Z % 360 / 15) % 24, ut = 1 - Math.abs(E - 50) / 52, X = C / 100 * (0.4 + 0.6 * ut), Q = Z * Math.PI / 180;
           n[H].w += X, n[H].hSin += Math.sin(Q) * X, n[H].hCos += Math.cos(Q) * X, n[H].s += C * X;
         }
         let d = n[0];
@@ -5264,14 +5272,14 @@ async function Ue(t) {
         }
         let f = Math.atan2(d.hSin, d.hCos) * 180 / Math.PI;
         f < 0 && (f += 360);
-        const h = Math.round(f), g = d.s / d.w, m = Math.round(Math.max(18, Math.min(46, g * 0.55))), w = Math.round(Math.max(42, Math.min(82, g * 0.95))), b = Math.round(Math.max(28, Math.min(60, g * 0.65))), y = Math.round(Math.max(22, Math.min(48, g * 0.62))), _ = Math.round(Math.max(24, Math.min(72, g * 0.78))), k = Math.round(Math.max(30, Math.min(74, g * 0.82))), S = Math.round(Math.max(28, Math.min(62, g * 0.68))), z = {
-          scrim: `hsl(${h}, ${m}%, 12%)`,
-          accent: `hsl(${h}, ${w}%, 86%)`,
-          onAccent: `hsl(${h}, ${b}%, 14%)`,
-          containerDark: `hsl(${h}, ${y}%, 22%)`,
-          onContainerDark: `hsl(${h}, ${_}%, 91%)`,
-          containerLight: `hsl(${h}, ${k}%, 88%)`,
-          onContainerLight: `hsl(${h}, ${S}%, 16%)`
+        const u = Math.round(f), g = d.s / d.w, m = Math.round(Math.max(18, Math.min(46, g * 0.55))), w = Math.round(Math.max(42, Math.min(82, g * 0.95))), b = Math.round(Math.max(28, Math.min(60, g * 0.65))), y = Math.round(Math.max(22, Math.min(48, g * 0.62))), _ = Math.round(Math.max(24, Math.min(72, g * 0.78))), k = Math.round(Math.max(30, Math.min(74, g * 0.82))), S = Math.round(Math.max(28, Math.min(62, g * 0.68))), z = {
+          scrim: `hsl(${u}, ${m}%, 12%)`,
+          accent: `hsl(${u}, ${w}%, 86%)`,
+          onAccent: `hsl(${u}, ${b}%, 14%)`,
+          containerDark: `hsl(${u}, ${y}%, 22%)`,
+          onContainerDark: `hsl(${u}, ${_}%, 91%)`,
+          containerLight: `hsl(${u}, ${k}%, 88%)`,
+          onContainerLight: `hsl(${u}, ${S}%, 16%)`
         };
         ft.set(t, z), e(z);
       } catch {
@@ -5466,13 +5474,13 @@ let R = class extends A {
   render() {
     const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "playing", s = !!t?.attributes.is_volume_muted, r = t?.attributes.friendly_name || this.entityId || "Media", a = String(t?.attributes.media_title ?? "").trim() || r, o = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "In riproduzione" : e.charAt(0).toUpperCase() + e.slice(1)), n = String(
       t?.attributes.entity_picture_local || t?.attributes.entity_picture || ""
-    ).trim(), c = this._duration, p = this._progressPct, d = this._scrubPct !== null ? this._scrubPct / 100 * c : this._currentPosition, f = i && !this._scrubbing && c > 0, h = this._volumePct, g = !!t?.attributes.shuffle, m = String(t?.attributes.repeat ?? "off").toLowerCase(), w = Array.from(
+    ).trim(), c = this._duration, p = this._progressPct, d = this._scrubPct !== null ? this._scrubPct / 100 * c : this._currentPosition, f = i && !this._scrubbing && c > 0, u = this._volumePct, g = !!t?.attributes.shuffle, m = String(t?.attributes.repeat ?? "off").toLowerCase(), w = Array.from(
       new Set([this.entityId, ...this.playerIds ?? []].filter(Boolean))
     ), b = Array.isArray(t?.attributes.source_list) ? Array.from(
       new Set(
         t.attributes.source_list.map((C) => String(C ?? "").trim()).filter(Boolean)
       )
-    ) : [], y = String(t?.attributes.source ?? ""), _ = !t || e === "unavailable" || e === "unknown", k = Number(t?.attributes.supported_features ?? 0), S = !_ && (k === 0 || (k & Zs) !== 0 || typeof t?.attributes.volume_level == "number"), z = b.length > 0 || w.length > 1, x = s ? 0 : h, Z = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    ) : [], y = String(t?.attributes.source ?? ""), _ = !t || e === "unavailable" || e === "unknown", k = Number(t?.attributes.supported_features ?? 0), S = !_ && (k === 0 || (k & Zs) !== 0 || typeof t?.attributes.volume_level == "number"), z = b.length > 0 || w.length > 1, x = s ? 0 : u, Z = this._palette ? `--mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <dialog
         class="media-dialog"
@@ -5692,7 +5700,7 @@ let R = class extends A {
                           <svg viewBox="0 0 24 24">
                             <path
                               fill="currentColor"
-                              d=${s || h === 0 ? "M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z" : h < 50 ? "M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"}
+                              d=${s || u === 0 ? "M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63Zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71ZM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3ZM12 4 9.91 6.09 12 8.18V4Z" : u < 50 ? "M5 9v6h4l5 5V4L9 9H5Zm11.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02ZM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77Z"}
                             />
                           </svg>
                         </button>
@@ -5709,7 +5717,7 @@ let R = class extends A {
                           @pointerup=${this._onVolUp}
                           @pointercancel=${this._onVolUp}
                         >
-                          ${this._volDragging ? l`<span class="m3-vol-tooltip" style="left: ${x}%;">${x}%</span>` : u}
+                          ${this._volDragging ? l`<span class="m3-vol-tooltip" style="left: ${x}%;">${x}%</span>` : h}
                           <div
                             class="m3-vol-active"
                             style="width: max(0px, calc(${x}% - 6px));"
@@ -5719,13 +5727,13 @@ let R = class extends A {
                             class="m3-vol-inactive"
                             style="left: calc(${x}% + 6px);"
                           >
-                            ${x < 96 ? l`<span class="m3-vol-stop" aria-hidden="true"></span>` : u}
+                            ${x < 96 ? l`<span class="m3-vol-stop" aria-hidden="true"></span>` : h}
                           </div>
                         </div>
 
-                        <span class="m3-vol-readout">${s ? "Muto" : `${h}%`}</span>
+                        <span class="m3-vol-readout">${s ? "Muto" : `${u}%`}</span>
                       </div>
-                    ` : u}
+                    ` : h}
 
                 <!-- M3 Expressive Compact Pill Source / Output Selector -->
                 <button
@@ -5754,7 +5762,7 @@ let R = class extends A {
                             d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"
                           />
                         </svg>
-                      ` : u}
+                      ` : h}
                 </button>
 
                 <!-- Inline Cast / Source Bottom Sheet (Screen 2) -->
@@ -5805,7 +5813,7 @@ let R = class extends A {
                           <!-- Output Devices (M3 Expressive Pill = Selected, 20px = Unselected) -->
                           <div class="cast-list" role="radiogroup" aria-label="Dispositivi Cast">
                             ${w.map((C) => {
-      const E = this.hass?.states[C], H = C === this.entityId, ht = E?.attributes.friendly_name || C, X = String(E?.attributes.source ?? "").trim(), Q = X || ht, tt = typeof E?.attributes.volume_level == "number" ? Math.round(E.attributes.volume_level * 100) : null, L = E?.attributes.device_class === "tv" || C.toLowerCase().includes("tv") || C.toLowerCase().includes("chromecast") || X.toLowerCase().includes("tv") || X.toLowerCase().includes("chromecast");
+      const E = this.hass?.states[C], H = C === this.entityId, ut = E?.attributes.friendly_name || C, X = String(E?.attributes.source ?? "").trim(), Q = X || ut, tt = typeof E?.attributes.volume_level == "number" ? Math.round(E.attributes.volume_level * 100) : null, L = E?.attributes.device_class === "tv" || C.toLowerCase().includes("tv") || C.toLowerCase().includes("chromecast") || X.toLowerCase().includes("tv") || X.toLowerCase().includes("chromecast");
       return l`
                                 <button
                                   type="button"
@@ -5814,7 +5822,7 @@ let R = class extends A {
                                   aria-checked=${String(H)}
                                   @click=${() => this._selectPlayer(C)}
                                 >
-                                  ${H && tt !== null ? l`<span class="cast-row-fill" style="width: ${tt}%;"></span>` : u}
+                                  ${H && tt !== null ? l`<span class="cast-row-fill" style="width: ${tt}%;"></span>` : h}
                                   <span class="cast-row-inner">
                                     <span class="cast-row-left">
                                       <svg viewBox="0 0 24 24" class="cast-dev-icon" aria-hidden="true">
@@ -5825,7 +5833,7 @@ let R = class extends A {
                                       </svg>
                                       <span class="cast-row-text">
                                         <span class="cast-row-name">${Q}</span>
-                                        ${H && tt !== null ? l`<span class="cast-row-sub">${tt}%</span>` : u}
+                                        ${H && tt !== null ? l`<span class="cast-row-sub">${tt}%</span>` : h}
                                       </span>
                                     </span>
                                     <span class="cast-check ${H ? "checked" : ""}" aria-hidden="true">
@@ -5836,7 +5844,7 @@ let R = class extends A {
                                                 d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"
                                               />
                                             </svg>
-                                          ` : u}
+                                          ` : h}
                                     </span>
                                   </span>
                                 </button>
@@ -5865,13 +5873,13 @@ let R = class extends A {
                                                   d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"
                                                 />
                                               </svg>
-                                            ` : u}
+                                            ` : h}
                                         <span>${C}</span>
                                       </button>
                                     `;
     })}
                                 </div>
-                              ` : u}
+                              ` : h}
 
                           <!-- Bottom Actions: Stop casting + Done -->
                           <div class="cast-sheet-footer">
@@ -5894,9 +5902,9 @@ let R = class extends A {
                           </div>
                         </div>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
       </dialog>
     `;
   }
@@ -7118,15 +7126,15 @@ let W = class extends A {
     t.stopPropagation(), this._popupEl?.open(this._barEl?.getBoundingClientRect(), !0);
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._activeEntity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", r = i || e === "off" || e === "idle" || e === "standby";
     if (this._config.hide_when_inactive && r)
-      return u;
+      return h;
     const a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, o = this._getMetadataText(t), n = r ? "" : String(t?.attributes.entity_picture_local || t?.attributes.entity_picture || "").trim(), c = Array.isArray(t?.attributes.source_list) ? Array.from(
       new Set(
         t.attributes.source_list.map((g) => String(g ?? "").trim()).filter(Boolean)
       )
-    ) : [], d = (Number(t?.attributes.supported_features ?? 0) & js) !== 0 || c.length > 0, f = this._allEntityIds.length > 1, h = this._config.show_cast !== !1 && !i && (d || f);
+    ) : [], d = (Number(t?.attributes.supported_features ?? 0) & js) !== 0 || c.length > 0, f = this._allEntityIds.length > 1, u = this._config.show_cast !== !1 && !i && (d || f);
     return l`
       <ha-card
         class="media-bar is-wide-card ${s ? "is-playing" : ""} ${this._pressed ? "is-pressed" : ""} ${i ? "is-unavailable" : ""}"
@@ -7188,7 +7196,7 @@ let W = class extends A {
                     </svg>
                   </span>
                 ` : l`
-                  ${h ? l`
+                  ${u ? l`
                         <button
                           type="button"
                           class="cast-btn"
@@ -7203,7 +7211,7 @@ let W = class extends A {
                             />
                           </svg>
                         </button>
-                      ` : u}
+                      ` : h}
 
                   <button
                     type="button"
@@ -7943,8 +7951,8 @@ let j = class extends A {
     return Ci(this.hass, t);
   }
   render() {
-    if (!this._config) return u;
-    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", r = i || e === "off" || e === "idle", a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, n = String(t?.attributes.source ?? "").trim() || a, c = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : r ? a : "In riproduzione"), p = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : r ? "Nessuna riproduzione" : a), d = this._artworkUrl, f = this._progressPct, h = this._duration, g = Number(t?.attributes.supported_features ?? 0), m = !i && (g === 0 || (g & Ks) !== 0), w = !i && (g === 0 || (g & Xs) !== 0), b = !i && h > 0 && (g === 0 || (g & Ys) !== 0), y = s && !this._scrubbing && h > 0, _ = this._scrubPct !== null ? this._scrubPct / 100 * h : this._currentPosition, k = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
+    if (!this._config) return h;
+    const t = this._entity, e = String(t?.state ?? "unavailable").toLowerCase(), i = !t || e === "unavailable" || e === "unknown", s = e === "playing", r = i || e === "off" || e === "idle", a = this._config.name?.trim() || t?.attributes.friendly_name || this._config.entity, n = String(t?.attributes.source ?? "").trim() || a, c = String(t?.attributes.media_title ?? "").trim() || (i ? "Offline" : r ? a : "In riproduzione"), p = String(t?.attributes.media_artist ?? "").trim() || String(t?.attributes.media_album_name ?? "").trim() || (i ? "Non disponibile" : r ? "Nessuna riproduzione" : a), d = this._artworkUrl, f = this._progressPct, u = this._duration, g = Number(t?.attributes.supported_features ?? 0), m = !i && (g === 0 || (g & Ks) !== 0), w = !i && (g === 0 || (g & Xs) !== 0), b = !i && u > 0 && (g === 0 || (g & Ys) !== 0), y = s && !this._scrubbing && u > 0, _ = this._scrubPct !== null ? this._scrubPct / 100 * u : this._currentPosition, k = this._palette ? `--mp-scrim: ${this._palette.scrim}; --mp-accent: ${this._palette.accent}; --mp-on-accent: ${this._palette.onAccent};` : "";
     return l`
       <ha-card
         class="media-player-card is-wide-card ${s ? "is-playing" : "is-paused"} ${d ? "has-artwork" : "no-artwork"} ${this._pressed ? "is-pressed" : ""} ${i ? "is-unavailable" : ""}"
@@ -7964,7 +7972,7 @@ let j = class extends A {
     }}
       >
         <!-- Full-bleed Artwork + Tonal Scrim/Vignette -->
-        ${d ? l`<img class="bg-artwork" src=${d} alt="" loading="lazy" />` : u}
+        ${d ? l`<img class="bg-artwork" src=${d} alt="" loading="lazy" />` : h}
         <div class="bg-scrim" aria-hidden="true"></div>
 
         <div class="card-content">
@@ -7985,7 +7993,7 @@ let j = class extends A {
                     </svg>
                     <span>${n}</span>
                   </button>
-                ` : u}
+                ` : h}
           </div>
 
           <!-- Middle Row: Bold Typography + Shape-Morphing Play/Pause -->
@@ -8037,7 +8045,7 @@ let j = class extends A {
               role="slider"
               aria-label="Avanzamento riproduzione"
               aria-valuemin="0"
-              aria-valuemax=${h}
+              aria-valuemax=${u}
               aria-valuenow=${Math.round(_)}
               @click=${(S) => S.stopPropagation()}
               @pointerdown=${this._onSliderPointerDown}
@@ -8045,11 +8053,11 @@ let j = class extends A {
               @pointerup=${this._onSliderPointerUp}
               @pointercancel=${this._onSliderPointerUp}
             >
-              ${this._scrubbing && h > 0 ? l`
+              ${this._scrubbing && u > 0 ? l`
                     <span class="scrub-badge" style="left: ${f}%;">
-                      ${ni(_)} / ${ni(h)}
+                      ${ni(_)} / ${ni(u)}
                     </span>
-                  ` : u}
+                  ` : h}
 
               <!-- Active Wavy / Flat Segment -->
               <div class="wavy-active-wrap" style="width: max(0px, calc(${f}% - 7px));">
@@ -8783,7 +8791,7 @@ let zt = class extends A {
     return t.name ? t.name : t.entity ? this.hass?.states[t.entity]?.attributes.friendly_name || t.entity : `Persona #${e + 1}`;
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = this._config.items ?? [];
     return l`
       <div class="editor-root">
@@ -8871,7 +8879,7 @@ let zt = class extends A {
                           @value-changed=${(a) => this._onItemChanged(i, a)}
                         ></ha-form>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
             `;
     })}
@@ -9171,7 +9179,7 @@ let Ht = class extends A {
         `;
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._config.items ?? [], e = this._config.layout ?? "scroll", i = this._config.size ?? "default", s = this._config.transparent !== !1, r = this._config.show_presence_indicator !== !1, a = l`
       <div
         class="people-container layout-${e} size-${i} ${s ? "is-transparent" : "is-card"}"
@@ -9181,11 +9189,11 @@ let Ht = class extends A {
         @mouseleave=${this._onMouseUpOrLeave}
       >
         ${t.length === 0 ? l`<div class="empty-hint">Aggiungi persone dalla configurazione della card</div>` : t.map((o) => {
-      const n = o.entity ? this.hass?.states[o.entity] : void 0, c = !n || n.state === "unavailable" || n.state === "unknown", p = !c && String(n.state ?? "").toLowerCase() === "home", d = o.name || n?.attributes.friendly_name || o.entity || "Persona", f = this._formatLocation(n), h = (o.tap_action ?? "more-info") !== "none" && !!o.entity, g = !o.icon && !!(o.image?.trim() || n?.attributes.entity_picture?.trim()), m = this.hass?.themes?.darkMode === !1;
+      const n = o.entity ? this.hass?.states[o.entity] : void 0, c = !n || n.state === "unavailable" || n.state === "unknown", p = !c && String(n.state ?? "").toLowerCase() === "home", d = o.name || n?.attributes.friendly_name || o.entity || "Persona", f = this._formatLocation(n), u = (o.tap_action ?? "more-info") !== "none" && !!o.entity, g = !o.icon && !!(o.image?.trim() || n?.attributes.entity_picture?.trim()), m = this.hass?.themes?.darkMode === !1;
       return l`
                 <button
                   type="button"
-                  class="person-item ${c ? "is-dimmed" : ""} ${h ? "is-clickable" : ""}"
+                  class="person-item ${c ? "is-dimmed" : ""} ${u ? "is-clickable" : ""}"
                   @click=${() => this._onItemTap(o)}
                 >
                   <span class="avatar-wrap" aria-hidden="true">
@@ -9194,7 +9202,7 @@ let Ht = class extends A {
                     >
                       ${this._renderAvatar(o, n, p)}
                     </span>
-                    ${r && p ? l`<span class="presence-dot"></span>` : u}
+                    ${r && p ? l`<span class="presence-dot"></span>` : h}
                   </span>
 
                   <span class="text-col">
@@ -9815,7 +9823,7 @@ let Rt = class extends A {
                                             >
                                               ×
                                             </button>
-                                          ` : u}
+                                          ` : h}
                                     </div>
                                     <ha-form
                                       .hass=${this.hass}
@@ -9842,14 +9850,14 @@ let Rt = class extends A {
                                   >
                                     + Aggiungi segmento
                                   </button>
-                                ` : u}
+                                ` : h}
                           </div>
-                        ` : u}
+                        ` : h}
                 </div>
               `;
     })}
       </div>
-    ` : u;
+    ` : h;
   }
 };
 Rt.styles = I`
@@ -10073,7 +10081,7 @@ let se = class extends A {
     );
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = [
       {
         name: "entity",
@@ -10555,7 +10563,7 @@ function rt(t, e, i) {
         return r;
   }
 }
-function ur(t, e, i) {
+function hr(t, e, i) {
   const s = t.entities?.[e]?.device_id;
   if (!s || !t.entities) return;
   const a = {
@@ -10643,9 +10651,9 @@ function Ve(t, e, i, s, r) {
       return;
     }
   }
-  const h = ur(t, e, i);
-  if (h) {
-    t.callService("button", "press", { entity_id: h });
+  const u = hr(t, e, i);
+  if (u) {
+    t.callService("button", "press", { entity_id: u });
     return;
   }
   if (n && (i === "ch_up" || i === "ch_down")) {
@@ -10758,7 +10766,7 @@ function di(t, e, i, s) {
   const n = String(o.state ?? "").toLowerCase();
   return n === "unavailable" || n === "unknown" ? !1 : i.active_state?.trim() ? n === i.active_state.trim().toLowerCase() : i.value?.trim() && (a.startsWith("input_select.") || a.startsWith("select.")) ? n === i.value.trim().toLowerCase() : i.entity_action === "turn_off" ? n === "off" || n === "standby" : ["on", "playing", "home", "open", "active", "true"].includes(n);
 }
-const hr = l`
+const ur = l`
   <svg viewBox="0 0 24 24" aria-hidden="true">
     <path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z" />
   </svg>
@@ -10781,10 +10789,10 @@ function mr(t, e, i) {
         title: o,
         options: d,
         current: f,
-        onSelect: (h) => {
+        onSelect: (u) => {
           t.callService(a === "select" ? "select" : "input_select", "select_option", {
             entity_id: s,
-            option: h
+            option: u
           });
         }
       } : null
@@ -10800,10 +10808,10 @@ function mr(t, e, i) {
         title: o,
         options: d,
         current: f,
-        onSelect: (h) => {
+        onSelect: (u) => {
           t.callService("media_player", "select_sound_mode", {
             entity_id: s,
-            sound_mode: h
+            sound_mode: u
           });
         }
       } : null
@@ -11101,7 +11109,7 @@ const Ei = I`
   }
 `;
 function Mi(t, e, i, s, r, a, o) {
-  if (!t || !i || i.length === 0) return u;
+  if (!t || !i || i.length === 0) return h;
   const n = [];
   for (const c of i)
     if (c.type === "segmented")
@@ -11118,8 +11126,8 @@ function Mi(t, e, i, s, r, a, o) {
     if (c.kind === "buttons")
       return l`
             <div class="custom-btn-grid ${c.items.length === 1 ? "is-single" : ""}">
-              ${c.items.map((h) => {
-        const g = di(t, e, h, h.state_entity), m = h.label?.trim() || h.command || h.player_action || h.value || "Button";
+              ${c.items.map((u) => {
+        const g = di(t, e, u, u.state_entity), m = u.label?.trim() || u.command || u.player_action || u.value || "Button";
         return l`
                   <button
                     type="button"
@@ -11129,13 +11137,13 @@ function Mi(t, e, i, s, r, a, o) {
           navigator.vibrate?.(10), ci(
             t,
             e,
-            h,
+            u,
             s,
             r
           );
         }}
                   >
-                    ${h.icon ? l`<ha-icon .icon=${h.icon}></ha-icon>` : u}
+                    ${u.icon ? l`<ha-icon .icon=${u.icon}></ha-icon>` : h}
                     <span class="custom-remote-btn-label">${m}</span>
                   </button>
                 `;
@@ -11143,30 +11151,30 @@ function Mi(t, e, i, s, r, a, o) {
             </div>
           `;
     if (c.kind === "selector") {
-      const h = mr(t, e, c.item);
+      const u = mr(t, e, c.item);
       return l`
             <button
               type="button"
               class="custom-selector-card"
               @click=${() => {
-        navigator.vibrate?.(10), h.request && a ? a(h.request) : h.entityId && o && o(h.entityId);
+        navigator.vibrate?.(10), u.request && a ? a(u.request) : u.entityId && o && o(u.entityId);
       }}
             >
               <span class="custom-selector-left">
-                ${c.item.icon ? l`<ha-icon .icon=${c.item.icon}></ha-icon>` : u}
+                ${c.item.icon ? l`<ha-icon .icon=${c.item.icon}></ha-icon>` : h}
                 <span class="custom-selector-text">
-                  <span class="custom-selector-title">${h.title}</span>
-                  ${h.current ? l`<span class="custom-selector-val">${h.current}</span>` : u}
+                  <span class="custom-selector-title">${u.title}</span>
+                  ${u.current ? l`<span class="custom-selector-val">${u.current}</span>` : h}
                 </span>
               </span>
-              <span class="custom-selector-chevron">${hr}</span>
+              <span class="custom-selector-chevron">${ur}</span>
             </button>
           `;
     }
     const p = (c.item.segments ?? []).slice(0, 4);
-    if (p.length === 0) return u;
+    if (p.length === 0) return h;
     const d = p.findIndex(
-      (h) => di(t, e, h, c.item.state_entity)
+      (u) => di(t, e, u, c.item.state_entity)
     ), f = d >= 0;
     return l`
           <div
@@ -11174,9 +11182,9 @@ function Mi(t, e, i, s, r, a, o) {
             role="group"
             style="--seg-count: ${p.length}; --seg-idx: ${Math.max(0, d)};"
           >
-            ${f ? l`<span class="custom-seg-indicator" aria-hidden="true"></span>` : u}
-            ${p.map((h, g) => {
-      const m = g === d, w = h.label?.trim() || h.value || h.command || h.player_action || `Option ${g + 1}`;
+            ${f ? l`<span class="custom-seg-indicator" aria-hidden="true"></span>` : h}
+            ${p.map((u, g) => {
+      const m = g === d, w = u.label?.trim() || u.value || u.command || u.player_action || `Option ${g + 1}`;
       return l`
                 <button
                   type="button"
@@ -11186,13 +11194,13 @@ function Mi(t, e, i, s, r, a, o) {
         navigator.vibrate?.(10), ci(
           t,
           e,
-          h,
+          u,
           s,
           r
         );
       }}
                 >
-                  ${h.icon ? l`<ha-icon .icon=${h.icon}></ha-icon>` : u}
+                  ${u.icon ? l`<ha-icon .icon=${u.icon}></ha-icon>` : h}
                   <span class="custom-seg-label">${w}</span>
                 </button>
               `;
@@ -11359,8 +11367,8 @@ let Y = class extends A {
     return At(t, !0);
   }
   render() {
-    if (!this._config) return u;
-    const t = this._entity, e = this._mediaEntity, i = e ?? t, s = this._statusEntity, r = String(s?.state ?? "").toLowerCase(), a = !!r && r !== "off" && r !== "standby" && r !== "unavailable" && r !== "unknown", o = i?.attributes.is_volume_muted === !0, n = String(e?.state ?? "").toLowerCase(), c = n === "playing", p = n === "paused", d = String(i?.attributes.source ?? "").trim(), f = String(e?.attributes.app_name ?? "").trim(), h = Array.isArray(i?.attributes.source_list) ? Array.from(
+    if (!this._config) return h;
+    const t = this._entity, e = this._mediaEntity, i = e ?? t, s = this._statusEntity, r = String(s?.state ?? "").toLowerCase(), a = !!r && r !== "off" && r !== "standby" && r !== "unavailable" && r !== "unknown", o = i?.attributes.is_volume_muted === !0, n = String(e?.state ?? "").toLowerCase(), c = n === "playing", p = n === "paused", d = String(i?.attributes.source ?? "").trim(), f = String(e?.attributes.app_name ?? "").trim(), u = Array.isArray(i?.attributes.source_list) ? Array.from(
       new Set(
         i.attributes.source_list.map((E) => String(E ?? "").trim()).filter(Boolean)
       )
@@ -11391,9 +11399,9 @@ let Y = class extends A {
                     type="button"
                     class="source-chip"
                     @click=${() => {
-      h.length > 0 && e ? this._openSelectorDialog({
+      u.length > 0 && e ? this._openSelectorDialog({
         title: $(this.hass, "sources"),
-        options: h,
+        options: u,
         current: d,
         onSelect: (E) => {
           this.hass?.callService("media_player", "select_source", {
@@ -11407,7 +11415,7 @@ let Y = class extends A {
                     <span class="source-chip-label">${d || $(this.hass, "sources")}</span>
                     <span class="source-chip-chevron">${Wt}</span>
                   </button>
-                ` : u}
+                ` : h}
 
             ${C ? l`
                   <button
@@ -11424,7 +11432,7 @@ let Y = class extends A {
                       />
                     </svg>
                   </button>
-                ` : u}
+                ` : h}
           </div>
         </div>
 
@@ -11490,7 +11498,7 @@ let Y = class extends A {
                             aria-hidden="true"
                           ></span>
                         </div>
-                      ` : u}
+                      ` : h}
 
                 ${k ? l`
                       <div class="volume-rocker" role="group" aria-label="Volume">
@@ -11538,9 +11546,9 @@ let Y = class extends A {
                           </svg>
                         </button>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
 
         <!-- 3 Essential Navigation Buttons: Back | Home | Assist -->
         ${S ? l`
@@ -11587,7 +11595,7 @@ let Y = class extends A {
                   </svg>
                 </button>
               </div>
-            ` : u}
+            ` : h}
 
         <!-- M3 Expressive Transport Row -->
         ${z ? l`
@@ -11642,7 +11650,7 @@ let Y = class extends A {
                   </svg>
                 </button>
               </div>
-            ` : u}
+            ` : h}
 
         <!-- Optional Channel Rocker -->
         ${x ? l`
@@ -11665,7 +11673,7 @@ let Y = class extends A {
                   ${pi}
                 </button>
               </div>
-            ` : u}
+            ` : h}
 
         <!-- Native Sound Mode Selector (when supported by media_player) -->
         ${m.length > 0 && e ? l`
@@ -11689,12 +11697,12 @@ let Y = class extends A {
                 <span class="custom-selector-left">
                   <span class="custom-selector-text">
                     <span class="custom-selector-title">Sound mode</span>
-                    ${g ? l`<span class="custom-selector-val">${g}</span>` : u}
+                    ${g ? l`<span class="custom-selector-val">${g}</span>` : h}
                   </span>
                 </span>
                 <span class="custom-selector-chevron">${Wt}</span>
               </button>
-            ` : u}
+            ` : h}
 
         <!-- Custom Native Buttons, Segmented Pills & Selectors -->
         ${Mi(
@@ -11743,7 +11751,7 @@ let Y = class extends A {
       }}
                 >
                   <span>${E}</span>
-                  ${H ? l`<span class="check-mark">✓</span>` : u}
+                  ${H ? l`<span class="check-mark">✓</span>` : h}
                 </button>
               `;
     })}
@@ -12624,7 +12632,7 @@ let yt = class extends A {
         `;
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._config.icon?.trim() || void 0, s = this._config.accent ?? "primary", r = `style-${this._config.card_style ?? "default"}`, a = this._config.subtitle?.trim() || "", o = this._isUnavailable ? $(this.hass, "offline") : this._activated ? $(this.hass, "started") : a, n = !!this._config.hide_state, c = !n && !this._activated ? Bt(this.hass, t, this._config.state_content, o) : null, p = n ? "" : c ?? o;
     return l`
       <ha-card
@@ -12649,7 +12657,7 @@ let yt = class extends A {
           <span class="scene-icon">${this._renderIcon(i, this._activated)}</span>
           <div class="tile-meta">
             <span class="tile-title">${e}</span>
-            ${p ? l`<span class="tile-subtitle">${p}</span>` : u}
+            ${p ? l`<span class="tile-subtitle">${p}</span>` : h}
           </div>
           ${this._isUnavailable ? l`
                 <span class="offline-badge" aria-hidden="true">
@@ -12967,7 +12975,7 @@ let Nt = class extends A {
     return t.name ? t.name : t.entity ? this.hass?.states[t.entity]?.attributes.friendly_name || t.entity : `Sensore #${e + 1}`;
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = this._config.items ?? [];
     return l`
       <div class="editor-root">
@@ -13053,7 +13061,7 @@ let Nt = class extends A {
                           @value-changed=${(a) => this._onItemChanged(i, a)}
                         ></ha-form>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
             `;
     })}
@@ -13323,7 +13331,7 @@ let re = class extends A {
     `;
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._config.title?.trim() || "Indoor temperatures", e = this._config.items ?? [];
     return l`
       <ha-card class="stack-card">
@@ -13455,7 +13463,7 @@ re = Fe([
   D("m3e-stack-card")
 ], re);
 const Pi = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/, Cr = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/, Ti = /* @__PURE__ */ new Set(["s", "sec", "secs", "second", "seconds", "min", "mins", "minute", "minutes", "m", "h", "hr", "hrs", "hour", "hours", "d", "day", "days"]);
-function ui(t) {
+function hi(t) {
   return Number.isFinite(t) ? Math.max(0, Math.min(100, t)) : 0;
 }
 function Et(t) {
@@ -13523,7 +13531,7 @@ function gt(t, e) {
   }
   return null;
 }
-function hi(t) {
+function ui(t) {
   const e = Math.max(0, Math.round(t / 1e3)), i = Math.floor(e / 3600), s = Math.floor(e % 3600 / 60), r = e % 60;
   return i > 0 ? s > 0 ? `${i}h ${s}m` : `${i}h` : s > 0 ? r > 0 && s < 10 ? `${s}m ${r}s` : `${s}m` : `${r}s`;
 }
@@ -13555,9 +13563,9 @@ function fi(t, e, i = Date.now()) {
     return { percent: null, isTimeBased: !1 };
   const s = t.states[e.entity], r = e.progress_start_entity ? t.states[e.progress_start_entity] : void 0, a = e.progress_end_entity ? t.states[e.progress_end_entity] : void 0, o = (y, _, k) => {
     if (y === null) return { percent: null, isTimeBased: _, liveRemainingText: k };
-    const S = ui(y);
+    const S = hi(y);
     return {
-      percent: e.progress_invert ? ui(100 - S) : S,
+      percent: e.progress_invert ? hi(100 - S) : S,
       isTimeBased: _,
       liveRemainingText: k
     };
@@ -13570,31 +13578,31 @@ function fi(t, e, i = Date.now()) {
       const _ = Date.parse(n.attributes.finishes_at);
       if (Number.isFinite(_)) {
         const k = Math.max(0, _ - i), S = (y - k) / y * 100;
-        return o(S, !0, hi(k));
+        return o(S, !0, ui(k));
       }
     }
     if (n.state === "paused") {
       const _ = Et(n.attributes.remaining);
       if (_ !== null) {
         const k = (y - _) / y * 100;
-        return o(k, !1, hi(_));
+        return o(k, !1, ui(_));
       }
     }
     return o(0, !1);
   }
   const c = Gt(s?.state, s), p = !!e.progress_start_now || String(e.progress_start_value ?? "").trim().toLowerCase() === "now", d = r ? Gt(r.state, r) : p ? null : Gt(e.progress_start_value), f = a ? Gt(a.state, a) : Gt(e.progress_end_value);
-  let h = f ?? c;
-  if (h !== null) {
-    p && h < i - 6e4 && !Pi.test(String(a?.state ?? s?.state ?? "")) && (h += 864e5);
+  let u = f ?? c;
+  if (u !== null) {
+    p && u < i - 6e4 && !Pi.test(String(a?.state ?? s?.state ?? "")) && (u += 864e5);
     let y = d;
     if (y === null) {
       const z = !p && e.progress_start_value !== void 0 && e.progress_start_value !== "" ? Number(e.progress_start_value) : NaN;
-      Number.isFinite(z) && z > 0 ? y = h - z * 6e4 : y = mi(e.entity, `ts:${h}`, i).startMs;
+      Number.isFinite(z) && z > 0 ? y = u - z * 6e4 : y = mi(e.entity, `ts:${u}`, i).startMs;
     }
-    h <= y && (i < h ? y -= 864e5 : h += 864e5);
-    const _ = h - y;
+    u <= y && (i < u ? y -= 864e5 : u += 864e5);
+    const _ = u - y;
     if (_ <= 0) return o(100, !0);
-    const S = ((d !== null && f !== null && c !== null && c !== h ? c : i) - y) / _ * 100;
+    const S = ((d !== null && f !== null && c !== null && c !== u ? c : i) - y) / _ * 100;
     return o(S, !0);
   }
   const g = String(s?.state ?? "").trim(), m = String(s?.attributes.unit_of_measurement ?? "").trim(), w = gt(s?.state, s), b = Et(g) ?? (w !== null ? Oe(w, m) : null);
@@ -13893,12 +13901,12 @@ let xt = class extends A {
     return At(t, e);
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._entity, e = this._config.badge_style ?? "glance", i = this._isUnavailable, s = this._isActive, r = s && (!!this._config.alert_color || e === "alert"), a = Ct(this.hass, t, this._config.name, this._config.entity), o = fi(this.hass, this._config), n = o.percent !== null, c = o.percent ?? 0, p = o.liveRemainingText || this._formatPrimaryState(), d = !!this._config.hide_state, f = d ? null : Bt(this.hass, t, this._config.state_content, p);
-    let h = d ? "" : f ?? p;
+    let u = d ? "" : f ?? p;
     if (!d && this._config.progress_show_percent && n) {
       const _ = `${Math.round(c)}%`;
-      h = h && !h.includes("%") ? `${h} · ${_}` : _;
+      u = u && !u.includes("%") ? `${u} · ${_}` : _;
     }
     const g = i ? "is-unavailable" : r ? "is-alert" : s ? "is-active" : "is-inactive", m = (this._config.tap_action ?? "more-info") !== "none", w = 100.53, b = w * (1 - c / 100);
     return l`
@@ -13906,8 +13914,8 @@ let xt = class extends A {
         type="button"
         class="m3e-badge style-${e} ${g} ${n ? "has-progress" : ""} ${this._pressed ? "is-pressed" : ""} ${m ? "is-clickable" : ""}"
         style=${n ? `--badge-pct: ${c.toFixed(1)}%;` : ""}
-        title="${a}${h ? ` · ${h}` : ""}"
-        aria-label="${a}${h ? `, ${h}` : ""}"
+        title="${a}${u ? ` · ${u}` : ""}"
+        aria-label="${a}${u ? `, ${u}` : ""}"
         @pointerdown=${(_) => {
       !m || _.pointerType === "mouse" && _.button !== 0 || (this._pressed = !0);
     }}
@@ -13916,7 +13924,7 @@ let xt = class extends A {
         @pointercancel=${() => this._pressed = !1}
         @click=${() => this._onTap()}
       >
-        ${n && (e === "alert" || e === "dot") ? l`<span class="badge-progress-fill" aria-hidden="true"></span>` : u}
+        ${n && (e === "alert" || e === "dot") ? l`<span class="badge-progress-fill" aria-hidden="true"></span>` : h}
 
         ${e === "glance" || e === "glance_icon" ? l`
               <span class="g-circle" aria-hidden="true">
@@ -13932,20 +13940,20 @@ let xt = class extends A {
                           stroke-dashoffset=${b}
                         />
                       </svg>
-                    ` : u}
+                    ` : h}
                 ${this._renderIcon(t, s)}
               </span>
               ${e === "glance" ? l`
                     <span class="g-text">
-                      ${h ? l`<span class="g-val">${h}</span>` : u}
+                      ${u ? l`<span class="g-val">${u}</span>` : h}
                       <span class="g-lbl">${a}</span>
                     </span>
-                  ` : u}
+                  ` : h}
             ` : e === "split" ? l`
                 <span class="s-left" aria-hidden="true">${this._renderIcon(t, s)}</span>
                 <span class="s-right">
-                  ${n ? l`<span class="s-progress-fill" aria-hidden="true"></span>` : u}
-                  ${h ? l`<span class="s-val">${h}</span>` : u}
+                  ${n ? l`<span class="s-progress-fill" aria-hidden="true"></span>` : h}
+                  ${u ? l`<span class="s-val">${u}</span>` : h}
                   <span class="s-lbl">${a}</span>
                 </span>
               ` : e === "dot" ? l`
@@ -13953,11 +13961,11 @@ let xt = class extends A {
                     ${this._renderIcon(t, s)}
                     <span class="d-dot"></span>
                   </span>
-                  <span class="d-txt">${h || a}</span>
+                  <span class="d-txt">${u || a}</span>
                 ` : l`
                   <span class="m-ic" aria-hidden="true">${this._renderIcon(t, s)}</span>
                   <span class="m-col">
-                    ${h ? l`<span class="m-val">${h}</span>` : u}
+                    ${u ? l`<span class="m-val">${u}</span>` : h}
                     <span class="m-lbl">${a}</span>
                   </span>
                 `}
@@ -14514,7 +14522,7 @@ let ct = class extends A {
     );
   }
   render() {
-    if (!this.hass || !this.config) return u;
+    if (!this.hass || !this.config) return h;
     if (typeof customElements < "u" && !!customElements.get("hui-sub-element-editor"))
       return l`
         <hui-sub-element-editor
@@ -15024,7 +15032,7 @@ let dt = class extends A {
     );
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = this._config.entity, e = t ? this.hass.states[t] : void 0, i = { entity_id: t };
     if (this._subElementEditorConfig)
       return l`
@@ -15095,7 +15103,7 @@ let dt = class extends A {
                   ></m3e-remote-custom-controls-editor>
                 </div>
               </ha-expansion-panel>
-            ` : u}
+            ` : h}
 
         <ha-expansion-panel outlined>
           <ha-icon slot="leading-icon" icon="mdi:list-box"></ha-icon>
@@ -15123,7 +15131,7 @@ let dt = class extends A {
                             @value-changed=${this._onFeaturesPositionChanged}
                           ></ha-form>
                         </div>
-                      ` : u}
+                      ` : h}
                 ` : l`<div class="loading-hint">Caricamento editor Features…</div>`}
           </div>
         </ha-expansion-panel>
@@ -15217,8 +15225,8 @@ function Yt(t, e) {
   const o = s.getTime() - Date.now(), n = o >= 0, c = Math.round(Math.abs(o) / 6e4);
   if (c < 1) return "Ora";
   const p = Math.floor(c / 1440), d = Math.floor(c % 1440 / 60), f = c % 60;
-  let h;
-  return p > 0 ? h = d > 0 ? `${p}g ${d}h` : `${p}g` : d > 0 ? h = f > 0 ? `${d}h ${f}m` : `${d}h` : h = `${f}m`, n ? `Tra ${h}` : `${h} fa`;
+  let u;
+  return p > 0 ? u = d > 0 ? `${p}g ${d}h` : `${p}g` : d > 0 ? u = f > 0 ? `${d}h ${f}m` : `${d}h` : u = `${f}m`, n ? `Tra ${u}` : `${u} fa`;
 }
 const zr = /* @__PURE__ */ new Set(["temperature", "humidity"]), Hr = /* @__PURE__ */ new Set([
   "on",
@@ -15236,7 +15244,7 @@ const zr = /* @__PURE__ */ new Set(["temperature", "humidity"]), Hr = /* @__PURE
   "heating",
   "cooling",
   "true"
-]), nt = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`, Rr = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`, ue = 135, vt = 270;
+]), nt = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`, Rr = l`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`, he = 135, vt = 270;
 function Nr(t) {
   return t * Math.PI / 180;
 }
@@ -15577,8 +15585,8 @@ let P = class extends A {
           }
         }
         if (p != null && String(p).trim() !== "") {
-          const d = Yt(String(p), i), f = this._config?.subtitle_prefix ?? "", h = this._config?.subtitle_suffix ?? "";
-          return `${f}${d}${h}`;
+          const d = Yt(String(p), i), f = this._config?.subtitle_prefix ?? "", u = this._config?.subtitle_suffix ?? "";
+          return `${f}${d}${u}`;
         }
       }
     }
@@ -15712,13 +15720,13 @@ let P = class extends A {
       0,
       Math.min(1, (t - this._climateMin) / (this._climateMax - this._climateMin))
     );
-    return ue + e * vt;
+    return he + e * vt;
   }
   _pointerToTemp(t, e) {
     const i = e.getBoundingClientRect(), s = i.left + i.width / 2, r = i.top + i.height / 2;
     let a = Math.atan2(t.clientY - r, t.clientX - s) * 180 / Math.PI;
     a < 0 && (a += 360);
-    let o = (a - ue + 360) % 360;
+    let o = (a - he + 360) % 360;
     o > vt && (o = o > vt + (360 - vt) / 2 ? 0 : vt);
     const n = o / vt, c = this._climateMin + n * (this._climateMax - this._climateMin);
     return Math.round(c * 2) / 2;
@@ -15853,7 +15861,7 @@ let P = class extends A {
   }
   _renderHistoryChart() {
     const t = this._historyEntityId ? this.hass?.states[this._historyEntityId] : this._resolveHistoryEntity();
-    if (!t) return u;
+    if (!t) return h;
     const e = String(t.attributes.unit_of_measurement ?? ""), i = this._historyEntityId === this._entity?.entity_id ? "Last 24 hours" : `${this._cleanSiblingLabel(t)} • 24h`;
     if (this._historyLoading)
       return l`
@@ -15866,9 +15874,9 @@ let P = class extends A {
         </div>
       `;
     const s = this._historyPoints;
-    if (s.length < 2) return u;
-    const r = Math.min(...s.map((x) => x.v)), a = Math.max(...s.map((x) => x.v)), o = a - r || 1, n = s[0].t, c = s[s.length - 1].t, p = c - n || 1, d = 320, f = 104, h = 6, g = 12, m = s.map((x) => ({
-      x: h + (x.t - n) / p * (d - h * 2),
+    if (s.length < 2) return h;
+    const r = Math.min(...s.map((x) => x.v)), a = Math.max(...s.map((x) => x.v)), o = a - r || 1, n = s[0].t, c = s[s.length - 1].t, p = c - n || 1, d = 320, f = 104, u = 6, g = 12, m = s.map((x) => ({
+      x: u + (x.t - n) / p * (d - u * 2),
       y: f - g - (x.v - r) / o * (f - g * 2),
       ...x
     }));
@@ -15909,12 +15917,12 @@ let P = class extends A {
                 <stop offset="100%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.0" />
               </linearGradient>
             </defs>
-            <line x1=${h} y1=${g} x2=${d - h} y2=${g} class="history-grid-line" />
-            <line x1=${h} y1=${f / 2} x2=${d - h} y2=${f / 2} class="history-grid-line" />
-            <line x1=${h} y1=${f - g} x2=${d - h} y2=${f - g} class="history-grid-line" />
+            <line x1=${u} y1=${g} x2=${d - u} y2=${g} class="history-grid-line" />
+            <line x1=${u} y1=${f / 2} x2=${d - u} y2=${f / 2} class="history-grid-line" />
+            <line x1=${u} y1=${f - g} x2=${d - u} y2=${f - g} class="history-grid-line" />
             <path d=${b} fill="url(#${z})" />
             <path d=${w} class="history-line" />
-            ${y !== null ? Me`<line x1=${_.x} y1=${g} x2=${_.x} y2=${f - g} class="history-cursor-line" />` : u}
+            ${y !== null ? Me`<line x1=${_.x} y1=${g} x2=${_.x} y2=${f - g} class="history-cursor-line" />` : h}
             <circle cx=${_.x} cy=${_.y} r="4.5" class="history-dot" />
           `}
         </svg>
@@ -15973,7 +15981,7 @@ let P = class extends A {
   _renderSensorPopup(t) {
     const e = this._getSiblingSensors(), i = !!this._toggleablePowerEntity;
     return l`
-      ${i ? u : l`
+      ${i ? h : l`
             <div class="sensor-hero">
               <div class="sensor-ring ${this._isActive ? "is-active" : ""}">
                 <span class="sensor-ring-icon">${this._renderEntityIcon(t)}</span>
@@ -16015,13 +16023,13 @@ let P = class extends A {
                 `;
     })}
             </div>
-          ` : u}
+          ` : h}
 
       ${this._renderHistoryChart()}
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), p = r !== null ? this._tempToDeg(r) : null, d = 140, f = 140, h = 114, g = Br(d, f, h, ue, ue + vt), m = Jt(d, f, h, c), w = p !== null ? Jt(d, f, h, p) : null, b = p !== null ? Jt(d, f, h - 22, p) : null, y = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], _ = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], k = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], S = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], z = String(t?.attributes.preset_mode ?? "none"), x = String(t?.attributes.fan_mode ?? "auto"), Z = String(t?.attributes.swing_mode ?? "off"), C = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((L) => L.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((L) => L.attributes.device_class === "humidity").state}%` : null, E = _.length > 0, H = k.length > 0, ht = S.length > 0, X = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", Q = (L) => L.replace(/_/g, " ").replace(/^./, (le) => le.toUpperCase()), tt = this._activeSheet === "mode" ? { title: "Select a mode", options: y, current: e, onSelect: (L) => this._setClimateMode(L) } : this._activeSheet === "preset" ? { title: "Select preset", options: _, current: z, onSelect: (L) => this._setClimatePreset(L) } : this._activeSheet === "fan" ? { title: "Fan speed", options: k, current: x, onSelect: (L) => this._setClimateFan(L) } : this._activeSheet === "swing" ? { title: "Swing mode", options: S, current: Z, onSelect: (L) => this._setClimateSwing(L) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), p = r !== null ? this._tempToDeg(r) : null, d = 140, f = 140, u = 114, g = Br(d, f, u, he, he + vt), m = Jt(d, f, u, c), w = p !== null ? Jt(d, f, u, p) : null, b = p !== null ? Jt(d, f, u - 22, p) : null, y = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], _ = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], k = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], S = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], z = String(t?.attributes.preset_mode ?? "none"), x = String(t?.attributes.fan_mode ?? "auto"), Z = String(t?.attributes.swing_mode ?? "off"), C = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((L) => L.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((L) => L.attributes.device_class === "humidity").state}%` : null, E = _.length > 0, H = k.length > 0, ut = S.length > 0, X = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", Q = (L) => L.replace(/_/g, " ").replace(/^./, (le) => le.toUpperCase()), tt = this._activeSheet === "mode" ? { title: "Select a mode", options: y, current: e, onSelect: (L) => this._setClimateMode(L) } : this._activeSheet === "preset" ? { title: "Select preset", options: _, current: z, onSelect: (L) => this._setClimatePreset(L) } : this._activeSheet === "fan" ? { title: "Fan speed", options: k, current: x, onSelect: (L) => this._setClimateFan(L) } : this._activeSheet === "swing" ? { title: "Swing mode", options: S, current: Z, onSelect: (L) => this._setClimateSwing(L) } : null;
     return l`
       <div class="climate-hero ${X} ${this._dialDragging ? "is-dragging" : ""}">
         <div
@@ -16045,7 +16053,7 @@ let P = class extends A {
                   >
                     ${Math.round(r)}
                   </text>
-                ` : u}
+                ` : h}
 
             <!-- Interactive Target Thumb: morphs from dot -> elongated radial pill on drag -->
             <g transform="translate(${m.x.toFixed(2)}, ${m.y.toFixed(2)}) rotate(${c.toFixed(1)})">
@@ -16063,7 +16071,7 @@ let P = class extends A {
           <div class="dial-center">
             ${i && !this._dialDragging ? l`<span class="dial-readout-off">Off</span>` : l`
                   <span class="dial-readout-num">
-                    ${o}${n ? l`<sup>5</sup>` : u}
+                    ${o}${n ? l`<sup>5</sup>` : h}
                   </span>
                 `}
 
@@ -16118,12 +16126,12 @@ let P = class extends A {
                   </span>
                   <span class="trait-chevron">${nt}</span>
                 </button>
-              ` : u}
+              ` : h}
         </div>
 
         <!-- Adaptive Row 2: Fan speed & Swing (only rendered if entity exposes them) -->
-        ${H || ht ? l`
-              <div class="${H && ht ? "climate-grid-2" : ""}">
+        ${H || ut ? l`
+              <div class="${H && ut ? "climate-grid-2" : ""}">
                 ${H ? l`
                       <button
                         type="button"
@@ -16144,9 +16152,9 @@ let P = class extends A {
                         </span>
                         <span class="trait-chevron">${nt}</span>
                       </button>
-                    ` : u}
+                    ` : h}
 
-                ${ht ? l`
+                ${ut ? l`
                       <button
                         type="button"
                         class="trait-card"
@@ -16158,9 +16166,9 @@ let P = class extends A {
                         </span>
                         <span class="trait-chevron">${nt}</span>
                       </button>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
 
         ${r !== null || a || C ? l`
               <div class="telemetry-card">
@@ -16169,21 +16177,21 @@ let P = class extends A {
                         <span>Indoor temperature</span>
                         <strong>${r}°</strong>
                       </div>
-                    ` : u}
+                    ` : h}
                 ${C ? l`
                       <div class="telemetry-row">
                         <span>Humidity</span>
                         <strong>${C}</strong>
                       </div>
-                    ` : u}
+                    ` : h}
                 ${a ? l`
                       <div class="telemetry-row">
                         <span>${$(this.hass, "outdoor_temperature")}</span>
                         <strong>${a.state}${a.attributes.unit_of_measurement ?? "°"}</strong>
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
       </div>
 
       <!-- Unified Inline Bottom Sheet for Mode / Preset / Fan / Swing -->
@@ -16211,14 +16219,14 @@ let P = class extends A {
                         @click=${() => tt.onSelect(L)}
                       >
                         <span>${Q(L)}</span>
-                        ${le ? l`<span class="check-mark">✓</span>` : u}
+                        ${le ? l`<span class="check-mark">✓</span>` : h}
                       </button>
                     `;
     })}
                 </div>
               </div>
             </div>
-          ` : u}
+          ` : h}
     `;
   }
   _clearPadTimers() {
@@ -16241,11 +16249,11 @@ let P = class extends A {
     );
   }
   _renderRemotePopup() {
-    const t = this._mediaEntity, e = t ?? this._entity, i = this._statusEntity ?? e, s = String(i?.state ?? "").toLowerCase(), r = !!s && s !== "unavailable" && s !== "unknown", a = r && s !== "off" && s !== "standby", o = e?.attributes.is_volume_muted, n = typeof o == "boolean", c = o === !0, p = String(t?.state ?? "").toLowerCase(), d = p === "playing", f = p === "paused", h = String(e?.attributes.source ?? "").trim(), g = Array.isArray(e?.attributes.source_list) ? Array.from(
+    const t = this._mediaEntity, e = t ?? this._entity, i = this._statusEntity ?? e, s = String(i?.state ?? "").toLowerCase(), r = !!s && s !== "unavailable" && s !== "unknown", a = r && s !== "off" && s !== "standby", o = e?.attributes.is_volume_muted, n = typeof o == "boolean", c = o === !0, p = String(t?.state ?? "").toLowerCase(), d = p === "playing", f = p === "paused", u = String(e?.attributes.source ?? "").trim(), g = Array.isArray(e?.attributes.source_list) ? Array.from(
       new Set(
         e.attributes.source_list.map((y) => String(y ?? "").trim()).filter(Boolean)
       )
-    ) : [], m = h || $(this.hass, "sources"), w = String(e?.attributes.sound_mode ?? "").trim(), b = Array.isArray(e?.attributes.sound_mode_list) ? Array.from(
+    ) : [], m = u || $(this.hass, "sources"), w = String(e?.attributes.sound_mode ?? "").trim(), b = Array.isArray(e?.attributes.sound_mode_list) ? Array.from(
       new Set(
         e.attributes.sound_mode_list.map((y) => String(y ?? "").trim()).filter(Boolean)
       )
@@ -16335,7 +16343,7 @@ let P = class extends A {
       <div class="modular-stack">
         <!-- Segmented M3 Pill: Unmute | Mute (highlights active state when reported) -->
         <div class="split-pill ${n ? "has-state" : ""}" role="group" aria-label="Audio">
-          ${n ? l`<span class="split-indicator ${c ? "is-right" : "is-left"}" aria-hidden="true"></span>` : u}
+          ${n ? l`<span class="split-indicator ${c ? "is-right" : "is-left"}" aria-hidden="true"></span>` : h}
           <button
             type="button"
             class="split-half ${n && !c ? "is-selected" : ""}"
@@ -16344,7 +16352,7 @@ let P = class extends A {
           >
             ${$(this.hass, "unmute")}
           </button>
-          ${n ? u : l`<span class="split-vdivider"></span>`}
+          ${n ? h : l`<span class="split-vdivider"></span>`}
           <button
             type="button"
             class="split-half ${n && c ? "is-selected" : ""}"
@@ -16357,7 +16365,7 @@ let P = class extends A {
 
         <!-- Segmented M3 Pill: On | Off (highlights active entity state like Light Control) -->
         <div class="split-pill ${r ? "has-state" : ""}" role="group" aria-label="Power">
-          ${r ? l`<span class="split-indicator ${a ? "is-left" : "is-right"}" aria-hidden="true"></span>` : u}
+          ${r ? l`<span class="split-indicator ${a ? "is-left" : "is-right"}" aria-hidden="true"></span>` : h}
           <button
             type="button"
             class="split-half ${r && a ? "is-selected" : ""}"
@@ -16366,7 +16374,7 @@ let P = class extends A {
           >
             ${$(this.hass, "on")}
           </button>
-          ${r ? u : l`<span class="split-vdivider"></span>`}
+          ${r ? h : l`<span class="split-vdivider"></span>`}
           <button
             type="button"
             class="split-half ${r && !a ? "is-selected" : ""}"
@@ -16454,7 +16462,7 @@ let P = class extends A {
       g.length > 0 && t ? this._remoteSelectorSheet = {
         title: $(this.hass, "sources"),
         options: g,
-        current: h,
+        current: u,
         onSelect: (y) => {
           this.hass?.callService("media_player", "select_source", {
             entity_id: t.entity_id,
@@ -16489,7 +16497,7 @@ let P = class extends A {
                 <span>${w || "Sound mode"}</span>
                 <span class="trait-chevron">${nt}</span>
               </button>
-            ` : u}
+            ` : h}
 
         ${Mi(
       this.hass,
@@ -16530,14 +16538,14 @@ let P = class extends A {
       }}
                       >
                         <span>${y}</span>
-                        ${_ ? l`<span class="check-mark">✓</span>` : u}
+                        ${_ ? l`<span class="check-mark">✓</span>` : h}
                       </button>
                     `;
     })}
                 </div>
               </div>
             </div>
-          ` : u}
+          ` : h}
     `;
   }
   _openMediaControls(t) {
@@ -16565,7 +16573,7 @@ let P = class extends A {
     }}
               @click=${() => this._openMediaControls(t.entity_id)}
             ></m3e-media-player-card>
-          ` : u}
+          ` : h}
 
       <div class="modular-stack">
         <!-- Shape Coding: Full Pill (9999px) for Active Primary Volume Slider -->
@@ -16604,7 +16612,7 @@ let P = class extends A {
                 >
                   ${$(this.hass, "turn_on")}
                 </button>
-              ` : u : l`
+              ` : h : l`
               <button
                 type="button"
                 class="primary-action-pill"
@@ -16624,7 +16632,7 @@ let P = class extends A {
                 <span>${$(this.hass, "media_controls")}</span>
                 <span>↗</span>
               </button>
-            ` : u}
+            ` : h}
       </div>
     `;
   }
@@ -16756,7 +16764,7 @@ let P = class extends A {
                 `;
     })}
             </div>
-          ` : u}
+          ` : h}
     `;
   }
   _renderSelectorPopup() {
@@ -16810,10 +16818,10 @@ let P = class extends A {
      MAIN RENDER
      ========================================================================= */
   render() {
-    if (!this._config) return u;
-    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._isActive, s = i ? this._config.icon_active?.trim() || void 0 : this._config.icon_inactive?.trim() || this._config.icon_active?.trim() || void 0, r = this._resolvedPopupType, a = this._config.tap_action === "navigate" || this._config.tap_action === "more-info" || this._config.tap_action !== "toggle" && this._config.tap_action !== "none" && r !== "none", o = `style-${this._config.card_style ?? "default"}`, n = this._popupOpen ? ie(this._statusEntity?.last_changed) : null, c = this._config.features ?? [], p = c.length > 0, d = this._config.features_position ?? "bottom", f = !!this._config.hide_state, h = f ? null : Bt(this.hass, t, this._config.state_content, this._stateLabel), g = f ? "" : h ?? this._stateLabel, m = this._entityPictureUrl, w = !!m, b = this.hass?.themes?.darkMode !== !1, y = w && this._artPalette ? `--art-bg: ${b ? this._artPalette.containerDark : this._artPalette.containerLight}; --art-fg: ${b ? this._artPalette.onContainerDark : this._artPalette.onContainerLight};` : "";
+    if (!this._config) return h;
+    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._isActive, s = i ? this._config.icon_active?.trim() || void 0 : this._config.icon_inactive?.trim() || this._config.icon_active?.trim() || void 0, r = this._resolvedPopupType, a = this._config.tap_action === "navigate" || this._config.tap_action === "more-info" || this._config.tap_action !== "toggle" && this._config.tap_action !== "none" && r !== "none", o = `style-${this._config.card_style ?? "default"}`, n = this._popupOpen ? ie(this._statusEntity?.last_changed) : null, c = this._config.features ?? [], p = c.length > 0, d = this._config.features_position ?? "bottom", f = !!this._config.hide_state, u = f ? null : Bt(this.hass, t, this._config.state_content, this._stateLabel), g = f ? "" : u ?? this._stateLabel, m = this._entityPictureUrl, w = !!m, b = this.hass?.themes?.darkMode !== !1, y = w && this._artPalette ? `--art-bg: ${b ? this._artPalette.containerDark : this._artPalette.containerLight}; --art-fg: ${b ? this._artPalette.onContainerDark : this._artPalette.onContainerLight};` : "";
     return l`
-      ${this.popupOnly ? u : l`
+      ${this.popupOnly ? h : l`
             <ha-card
               class="status-tile ${o} ${i ? "is-active" : "is-inactive"} ${this._pressed ? "is-pressed" : ""} ${this._isUnavailable ? "is-unavailable" : ""} ${p ? `has-features features-${d}` : ""} ${w ? "has-entity-picture" : ""}"
               style=${y}
@@ -16836,13 +16844,13 @@ let P = class extends A {
                     <div class="entity-picture-backdrop" aria-hidden="true">
                       <img class="entity-picture-img" src=${m} alt="" loading="lazy" />
                     </div>
-                  ` : u}
+                  ` : h}
               <div class="state-layer" aria-hidden="true"></div>
               <div class="tile-inner">
-                ${w ? u : l`<span class="tile-icon">${this._renderEntityIcon(s)}</span>`}
+                ${w ? h : l`<span class="tile-icon">${this._renderEntityIcon(s)}</span>`}
                 <div class="tile-meta">
                   <span class="tile-title">${e}</span>
-                  ${g ? l`<span class="tile-subtitle">${g}</span>` : u}
+                  ${g ? l`<span class="tile-subtitle">${g}</span>` : h}
                 </div>
                 ${this._isUnavailable ? l`
                       <span class="offline-badge" aria-hidden="true">
@@ -16862,7 +16870,7 @@ let P = class extends A {
                             />
                           </svg>
                         </span>
-                      ` : u}
+                      ` : h}
               </div>
               ${p ? l`
                     <div
@@ -16880,7 +16888,7 @@ let P = class extends A {
                         .position=${d}
                       ></hui-card-features>
                     </div>
-                  ` : u}
+                  ` : h}
             </ha-card>
           `}
 
@@ -16916,7 +16924,7 @@ let P = class extends A {
                     ${Z}
                     <div class="dialog-title-wrap">
                       <span class="dialog-title">${e}</span>
-                      ${n ? l`<span class="dialog-last-changed">${n}</span>` : u}
+                      ${n ? l`<span class="dialog-last-changed">${n}</span>` : h}
                     </div>
                     ${z ? l`
                           <button
@@ -16947,13 +16955,13 @@ let P = class extends A {
                                 />
                               </svg>
                             </button>
-                          ` : u}
+                          ` : h}
                   </header>
 
                   ${r === "power_strip" ? this._renderPowerStripPopup() : r === "selector" ? this._renderSelectorPopup() : r === "sensor" || r === "custom" ? this._renderSensorPopup(s) : r === "climate" ? this._renderClimatePopup() : r === "remote" ? this._renderRemotePopup() : this._renderMediaPopup()}
                 </div>
               `;
-    })() : u}
+    })() : h}
       </dialog>
 
       ${r === "media" && this._mediaEntity ? l`
@@ -16961,7 +16969,7 @@ let P = class extends A {
               .hass=${this.hass}
               .entityId=${this._mediaEntity.entity_id}
             ></m3e-media-popup>
-          ` : u}
+          ` : h}
     `;
   }
 };
@@ -18915,7 +18923,7 @@ let pt = class extends A {
     return Number.isInteger(t) ? String(t) : t.toFixed(1);
   }
   render() {
-    if (!this._config) return u;
+    if (!this._config) return h;
     const t = this._entity, e = this._config.name || t?.attributes.friendly_name || this._config.entity, i = this._isUnavailable, s = this._climateTone, r = !!this.hass?.themes?.darkMode, a = this._targetTemp, o = this._currentTemp, n = String(t?.state ?? "off").toLowerCase(), c = $(this.hass, "indoor"), p = o !== null ? n === "off" ? `${$(this.hass, "off")} · ${c} ${this._formatTempNumber(o)}` : `${c} ${this._formatTempNumber(o)}` : n === "off" ? $(this.hass, "off") : n.charAt(0).toUpperCase() + n.slice(1);
     return l`
       <ha-card
@@ -19237,7 +19245,7 @@ var Vr = Object.defineProperty, Fr = Object.getOwnPropertyDescriptor, Ft = (t, e
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
   return s && r && Vr(e, i, r), r;
 };
-let ut = class extends A {
+let ht = class extends A {
   constructor() {
     super(...arguments), this._featuresEditorReady = !1, this._computeLabel = (t) => ({
       entity: "Entità (switch, presa, input_boolean…)",
@@ -19419,7 +19427,7 @@ let ut = class extends A {
     );
   }
   render() {
-    if (!this.hass || !this._config) return u;
+    if (!this.hass || !this._config) return h;
     const t = this._config.entity, e = t ? this.hass.states[t] : void 0, i = { entity_id: t };
     if (this._subElementEditorConfig)
       return l`
@@ -19497,7 +19505,7 @@ let ut = class extends A {
                             @value-changed=${this._onFeaturesPositionChanged}
                           ></ha-form>
                         </div>
-                      ` : u}
+                      ` : h}
                 ` : l`<div class="loading-hint">Caricamento editor Features…</div>`}
           </div>
         </ha-expansion-panel>
@@ -19505,7 +19513,7 @@ let ut = class extends A {
     `;
   }
 };
-ut.styles = I`
+ht.styles = I`
     :host {
       display: block;
     }
@@ -19543,22 +19551,22 @@ ut.styles = I`
   `;
 Ft([
   M({ attribute: !1 })
-], ut.prototype, "hass", 2);
+], ht.prototype, "hass", 2);
 Ft([
   M({ attribute: !1 })
-], ut.prototype, "lovelace", 2);
+], ht.prototype, "lovelace", 2);
 Ft([
   v()
-], ut.prototype, "_config", 2);
+], ht.prototype, "_config", 2);
 Ft([
   v()
-], ut.prototype, "_featuresEditorReady", 2);
+], ht.prototype, "_featuresEditorReady", 2);
 Ft([
   v()
-], ut.prototype, "_subElementEditorConfig", 2);
-ut = Ft([
+], ht.prototype, "_subElementEditorConfig", 2);
+ht = Ft([
   D("m3e-toggle-card-editor")
-], ut);
+], ht);
 var jr = Object.defineProperty, Wr = Object.getOwnPropertyDescriptor, ot = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Wr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
@@ -19773,11 +19781,11 @@ let q = class extends A {
     return e || String(t.attributes.device_class ?? "Sensor");
   }
   render() {
-    if (!this._config) return u;
-    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._isOn, s = i ? this._config.icon_on?.trim() || void 0 : this._config.icon_off?.trim() || this._config.icon_on?.trim() || void 0, r = this._isUnavailable ? "Offline" : i ? this._config.label_on || "On" : this._config.label_off || "Off", a = !!this._config.hide_state, o = a ? null : Bt(this.hass, t, this._config.state_content, r), n = a ? "" : o ?? r, c = `style-${this._config.card_style ?? "default"}`, p = this._popupOpen ? ie(t?.last_changed) : null, d = this._popupOpen ? this._getPowerSiblings() : [], f = this._config.features ?? [], h = f.length > 0, g = this._config.features_position ?? "bottom";
+    if (!this._config) return h;
+    const t = this._entity, e = Ct(this.hass, t, this._config.name, this._config.entity), i = this._isOn, s = i ? this._config.icon_on?.trim() || void 0 : this._config.icon_off?.trim() || this._config.icon_on?.trim() || void 0, r = this._isUnavailable ? "Offline" : i ? this._config.label_on || "On" : this._config.label_off || "Off", a = !!this._config.hide_state, o = a ? null : Bt(this.hass, t, this._config.state_content, r), n = a ? "" : o ?? r, c = `style-${this._config.card_style ?? "default"}`, p = this._popupOpen ? ie(t?.last_changed) : null, d = this._popupOpen ? this._getPowerSiblings() : [], f = this._config.features ?? [], u = f.length > 0, g = this._config.features_position ?? "bottom";
     return l`
       <ha-card
-        class="toggle-tile ${c} ${i ? "is-on" : "is-off"} ${this._pressed ? "is-pressed" : ""} ${this._isUnavailable ? "is-unavailable" : ""} ${h ? `has-features features-${g}` : ""}"
+        class="toggle-tile ${c} ${i ? "is-on" : "is-off"} ${this._pressed ? "is-pressed" : ""} ${this._isUnavailable ? "is-unavailable" : ""} ${u ? `has-features features-${g}` : ""}"
         role="switch"
         tabindex="0"
         aria-checked=${String(i)}
@@ -19800,7 +19808,7 @@ let q = class extends A {
           <span class="tile-icon">${this._renderIcon(s)}</span>
           <div class="tile-meta">
             <span class="tile-title">${e}</span>
-            ${n ? l`<span class="tile-subtitle">${n}</span>` : u}
+            ${n ? l`<span class="tile-subtitle">${n}</span>` : h}
           </div>
           ${this._isUnavailable ? l`
                 <span class="offline-badge" aria-hidden="true">
@@ -19811,9 +19819,9 @@ let q = class extends A {
                     />
                   </svg>
                 </span>
-              ` : u}
+              ` : h}
         </div>
-        ${h ? l`
+        ${u ? l`
               <div
                 class="features-wrap"
                 @click=${st}
@@ -19830,7 +19838,7 @@ let q = class extends A {
                   .position=${g}
                 ></hui-card-features>
               </div>
-            ` : u}
+            ` : h}
       </ha-card>
 
       <dialog
@@ -19861,7 +19869,7 @@ let q = class extends A {
                   </button>
                   <div class="dialog-title-wrap">
                     <span class="dialog-title">${e}</span>
-                    ${p ? l`<span class="dialog-last-changed">${p}</span>` : u}
+                    ${p ? l`<span class="dialog-last-changed">${p}</span>` : h}
                   </div>
                   <button
                     type="button"
@@ -19925,7 +19933,7 @@ let q = class extends A {
                                       class="mini-ha-icon"
                                       .hass=${this.hass}
                                       .stateObj=${m}
-                                    ></ha-state-icon>` : u}
+                                    ></ha-state-icon>` : h}
                                 <span>${this._cleanSiblingLabel(m)}</span>
                               </span>
                               <span class="info-pill-val">
@@ -19935,9 +19943,9 @@ let q = class extends A {
                           `
     )}
                       </div>
-                    ` : u}
+                    ` : h}
               </div>
-            ` : u}
+            ` : h}
       </dialog>
     `;
   }

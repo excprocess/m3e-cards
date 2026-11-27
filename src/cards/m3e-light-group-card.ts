@@ -862,10 +862,11 @@ export class M3ELightGroupCard extends LitElement {
       }
 
       .dialog-surface {
-        background: var(--md-sys-color-surface-container-low, #1b1b1f);
+        background: var(--md-sys-color-surface, #131316);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
         border-radius: 32px;
         padding: 20px 20px 24px;
-        box-shadow: var(--md-sys-elevation-level3, 0 12px 32px rgba(0, 0, 0, 0.35));
+        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
         max-height: 86dvh;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -981,18 +982,25 @@ export class M3ELightGroupCard extends LitElement {
       .popup-child-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
+        --ha-card-background: var(--md-sys-color-surface-container-high, #24252d);
+        --ha-card-box-shadow: none;
+        --ha-card-border-width: 0px;
+        --m3e-card-border-radius: 24px;
       }
 
       @media (max-width: 600px) {
         dialog.group-dialog {
           width: 100vw;
           margin: auto 0 0 0;
+          border-radius: 28px 28px 0 0;
+          overflow: hidden;
         }
 
         .dialog-surface {
           border-radius: 28px 28px 0 0;
-          padding: 18px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+          box-shadow: none;
+          padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
         }
       }
     `,
