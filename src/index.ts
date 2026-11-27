@@ -14,6 +14,9 @@ import './cards/m3e-status-badge';
 import './cards/m3e-status-card';
 import './cards/m3e-thermostat-card';
 import './cards/m3e-toggle-card';
+import { initM3ENavigationPickerBridge } from './utils/navigation-picker-bridge';
+
+initM3ENavigationPickerBridge();
 
 export { M3EAssistCard } from './cards/m3e-assist-card';
 export { M3EGlanceCard } from './cards/m3e-glance-card';

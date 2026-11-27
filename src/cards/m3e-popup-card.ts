@@ -17,6 +17,10 @@ import {
   registerPopupTarget,
   unregisterPopupTarget,
 } from '../utils/navigation';
+import {
+  registerM3EPopupForPicker,
+  unregisterM3EPopupForPicker,
+} from '../utils/navigation-picker-bridge';
 
 interface HACardElement extends HTMLElement {
   hass?: HomeAssistant;
@@ -130,6 +134,7 @@ export class M3EPopupCard extends LitElement {
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     unregisterPopupTarget(this._registeredTarget);
+    unregisterM3EPopupForPicker(this);
     this._registeredTarget = '';
     this._restoreAdoptedSiblings();
     this._restoreContainerStyles();
@@ -145,6 +150,11 @@ export class M3EPopupCard extends LitElement {
       unregisterPopupTarget(this._registeredTarget);
       this._registeredTarget = registerPopupTarget(next);
     }
+    const resolvedName = resolveEntityName(this.hass, this._entity, this._config?.name);
+    registerM3EPopupForPicker(this, this._config?.hash, {
+      name: resolvedName || undefined,
+      icon: this._config?.icon,
+    });
   }
 
   private _checkEditMode(): void {
@@ -430,6 +440,9 @@ export class M3EPopupCard extends LitElement {
   }
 
   protected updated(changedProps: PropertyValues): void {
+    if (changedProps.has('_config') || changedProps.has('hass')) {
+      this._syncRegistration();
+    }
     if (
       this._isOpen &&
       (changedProps.has('hass') || changedProps.has('_config') || changedProps.has('_isOpen'))
