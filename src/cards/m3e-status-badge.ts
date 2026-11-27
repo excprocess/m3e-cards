@@ -671,10 +671,12 @@ export class M3EStatusBadge extends LitElement {
                 <span class="d-txt">${valueText || name}</span>
               `
             : html`
-                <span class="s-left" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
-                <span class="s-right">
-                  <span class="s-lbl">${name}</span>
-                  ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
+                <span class="s-content">
+                  <span class="s-left" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
+                  <span class="s-right">
+                    <span class="s-lbl">${name}</span>
+                    ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
+                  </span>
                 </span>
               `}
       </button>
@@ -713,15 +715,16 @@ export class M3EStatusBadge extends LitElement {
 
       .badge-progress-fill {
         position: absolute;
-        inset-block: 0;
-        inset-inline-start: 0;
+        inset: 0 auto 0 0;
+        height: 100%;
+        border-radius: 0;
         width: var(--badge-pct, 0%);
         background: color-mix(
           in srgb,
-          var(--md-sys-color-primary-container, #2e4379) 76%,
+          var(--md-sys-color-primary-container, #2e4379) 82%,
           transparent
         );
-        transition: width var(--m3e-spring-spatial-default);
+        transition: width 0.4s cubic-bezier(0.2, 0, 0, 1);
         pointer-events: none;
         z-index: 0;
       }
@@ -729,8 +732,8 @@ export class M3EStatusBadge extends LitElement {
       .m3e-badge.is-alert .badge-progress-fill {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-error, #ffb4ab) 24%,
-          transparent
+          var(--md-sys-color-error, #ffb4ab) 32%,
+          var(--md-sys-color-error-container, #93000a)
         );
       }
 
@@ -745,8 +748,8 @@ export class M3EStatusBadge extends LitElement {
       .m3e-badge.is-active:not(.is-alert) .badge-progress-fill {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-primary, #b1c5ff) 24%,
-          transparent
+          var(--md-sys-color-primary, #b1c5ff) 35%,
+          var(--md-sys-color-primary-container, #2e4379)
         );
       }
 
@@ -935,24 +938,32 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         2. SPLIT TONAL PILL (Fitbit Squircle M3 Telemetry — 44px height)
+         2. SPLIT TONAL PILL (4-Layer Fitbit Stadium-Well Pill — 44px height)
          ===================================================================== */
       .m3e-badge.style-split {
+        position: relative;
         height: 44px;
-        padding: 4px 14px 4px 4px;
-        gap: 9px;
+        padding: 5px 14px 5px 5px;
         border-radius: 14px;
         overflow: hidden;
-        background: var(--md-sys-color-surface-container-high, #292a32);
+        background: var(--md-sys-color-surface-container-low, #1f2027);
       }
 
       .m3e-badge.style-split.is-active {
-        background: var(--md-sys-color-primary-container, #2e4379);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-primary-container, #2e4379)
+        );
         color: var(--md-sys-color-on-primary-container, #dae2ff);
       }
 
       .m3e-badge.style-split.is-alert {
-        background: var(--md-sys-color-error-container, #93000a);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-error-container, #93000a)
+        );
         color: var(--md-sys-color-on-error-container, #ffdad6);
       }
 
@@ -961,16 +972,29 @@ export class M3EStatusBadge extends LitElement {
         color: var(--m3e-badge-on-container);
       }
 
-      .s-left {
+      .s-content {
         position: relative;
         z-index: 1;
-        width: 30px;
-        height: 36px;
-        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        height: 100%;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .s-left {
+        width: 24px;
+        height: 34px;
+        border-radius: 9999px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
-        background: var(--md-sys-color-surface-container-highest, #34353e);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-surface-container-low, #1f2027)
+        );
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         transition:
           background-color var(--m3e-spring-effects-default),
@@ -980,7 +1004,7 @@ export class M3EStatusBadge extends LitElement {
       .style-split.is-active .s-left {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-scrim, #000000) 24%,
+          var(--md-sys-color-scrim, #000000) 44%,
           var(--md-sys-color-primary-container, #2e4379)
         );
         color: var(--md-sys-color-on-primary-container, #dae2ff);
@@ -989,7 +1013,7 @@ export class M3EStatusBadge extends LitElement {
       .style-split.is-alert .s-left {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-scrim, #000000) 26%,
+          var(--md-sys-color-scrim, #000000) 44%,
           var(--md-sys-color-error-container, #93000a)
         );
         color: var(--md-sys-color-on-error-container, #ffdad6);
@@ -1002,25 +1026,23 @@ export class M3EStatusBadge extends LitElement {
 
       .s-left svg,
       .s-left ha-icon {
-        width: 18px;
-        height: 18px;
-        --mdc-icon-size: 18px;
+        width: 15px;
+        height: 15px;
+        --mdc-icon-size: 15px;
       }
 
       .s-right {
-        position: relative;
-        z-index: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 0;
+        gap: 1px;
         min-width: 0;
       }
 
       .s-lbl {
         font-size: 10.5px;
-        font-weight: 600;
-        line-height: 1.15;
+        font-weight: 500;
+        line-height: 1.1;
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         white-space: nowrap;
         overflow: hidden;
@@ -1031,13 +1053,13 @@ export class M3EStatusBadge extends LitElement {
       .style-split.is-alert .s-lbl,
       .style-split.has-custom-color .s-lbl {
         color: inherit;
-        opacity: 0.88;
+        opacity: 0.9;
       }
 
       .s-val {
-        font-size: 13.5px;
+        font-size: 14px;
         font-weight: 700;
-        line-height: 1.15;
+        line-height: 1.1;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         overflow: hidden;

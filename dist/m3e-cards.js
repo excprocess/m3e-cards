@@ -15186,18 +15186,18 @@ function es(t, e) {
       return null;
     if (h === "primary")
       return {
-        container: "var(--md-sys-color-primary-container, #2e4379)",
-        well: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-primary-container, #2e4379))",
-        progressFill: "color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 26%, var(--md-sys-color-primary-container, #2e4379))",
+        container: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 28%, var(--md-sys-color-primary-container, #2e4379))",
+        well: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 44%, var(--md-sys-color-primary-container, #2e4379))",
+        progressFill: "color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 35%, var(--md-sys-color-primary-container, #2e4379))",
         onContainer: "var(--md-sys-color-on-primary-container, #dae2ff)",
         accent: "var(--md-sys-color-primary, #b1c5ff)",
         onAccent: "var(--md-sys-color-on-primary, #142c60)"
       };
     if (h === "accent")
       return {
-        container: "var(--md-sys-color-tertiary-container, #5a3d5a)",
-        well: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-tertiary-container, #5a3d5a))",
-        progressFill: "color-mix(in srgb, var(--md-sys-color-tertiary, #ebb5ea) 26%, var(--md-sys-color-tertiary-container, #5a3d5a))",
+        container: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 28%, var(--md-sys-color-tertiary-container, #5a3d5a))",
+        well: "color-mix(in srgb, var(--md-sys-color-scrim, #000000) 44%, var(--md-sys-color-tertiary-container, #5a3d5a))",
+        progressFill: "color-mix(in srgb, var(--md-sys-color-tertiary, #ebb5ea) 35%, var(--md-sys-color-tertiary-container, #5a3d5a))",
         onContainer: "var(--md-sys-color-on-tertiary-container, #ffd7fc)",
         accent: "var(--md-sys-color-tertiary, #ebb5ea)",
         onAccent: "var(--md-sys-color-on-tertiary, #482948)"
@@ -15208,34 +15208,34 @@ function es(t, e) {
   const [s, r] = ja(i[0], i[1], i[2]);
   if (r < 10)
     return e ? {
-      container: "hsl(220, 6%, 24%)",
-      well: "hsl(220, 7%, 16%)",
-      progressFill: "hsl(220, 6%, 34%)",
-      onContainer: "hsl(220, 10%, 89%)",
+      container: "hsl(220, 6%, 20%)",
+      well: "hsl(220, 7%, 13%)",
+      progressFill: "hsl(220, 6%, 42%)",
+      onContainer: "hsl(220, 10%, 90%)",
       accent: "hsl(220, 10%, 74%)",
       onAccent: "hsl(220, 10%, 14%)"
     } : {
-      container: "hsl(220, 10%, 90%)",
-      well: "hsl(220, 10%, 83%)",
-      progressFill: "hsl(220, 10%, 79%)",
-      onContainer: "hsl(220, 12%, 20%)",
-      accent: "hsl(220, 12%, 43%)",
+      container: "hsl(220, 10%, 91%)",
+      well: "hsl(220, 10%, 82%)",
+      progressFill: "hsl(220, 10%, 75%)",
+      onContainer: "hsl(220, 12%, 18%)",
+      accent: "hsl(220, 12%, 42%)",
       onAccent: "#ffffff"
     };
-  const o = it(r * 0.54, 18, 44), n = it(r * 0.58, 20, 48), l = it(r * 0.62, 24, 52), p = it(r * 0.65, 22, 62), d = it(r * 0.7, 30, 66);
+  const o = it(r * 0.56, 18, 46), n = it(r * 0.62, 20, 52), l = it(r * 0.68, 32, 58), p = it(r * 0.72, 24, 68), d = it(r * 0.7, 30, 66);
   return e ? {
-    container: `hsl(${s}, ${o.toFixed(0)}%, 24%)`,
-    well: `hsl(${s}, ${n.toFixed(0)}%, 16%)`,
-    progressFill: `hsl(${s}, ${l.toFixed(0)}%, 35%)`,
-    onContainer: `hsl(${s}, ${p.toFixed(0)}%, 89%)`,
+    container: `hsl(${s}, ${o.toFixed(0)}%, 20%)`,
+    well: `hsl(${s}, ${n.toFixed(0)}%, 13%)`,
+    progressFill: `hsl(${s}, ${l.toFixed(0)}%, 52%)`,
+    onContainer: `hsl(${s}, ${p.toFixed(0)}%, 90%)`,
     accent: `hsl(${s}, ${d.toFixed(0)}%, 74%)`,
     onAccent: `hsl(${s}, ${n.toFixed(0)}%, 14%)`
   } : {
-    container: `hsl(${s}, ${o.toFixed(0)}%, 90%)`,
-    well: `hsl(${s}, ${n.toFixed(0)}%, 83%)`,
-    progressFill: `hsl(${s}, ${l.toFixed(0)}%, 79%)`,
-    onContainer: `hsl(${s}, ${p.toFixed(0)}%, 20%)`,
-    accent: `hsl(${s}, ${d.toFixed(0)}%, 43%)`,
+    container: `hsl(${s}, ${o.toFixed(0)}%, 91%)`,
+    well: `hsl(${s}, ${n.toFixed(0)}%, 82%)`,
+    progressFill: `hsl(${s}, ${l.toFixed(0)}%, 75%)`,
+    onContainer: `hsl(${s}, ${p.toFixed(0)}%, 18%)`,
+    accent: `hsl(${s}, ${d.toFixed(0)}%, 42%)`,
     onAccent: "#ffffff"
   };
 }
@@ -15661,10 +15661,12 @@ let _t = class extends A {
                 </span>
                 <span class="d-txt">${S || o}</span>
               ` : c`
-                <span class="s-left" aria-hidden="true">${this._renderIcon(t, r)}</span>
-                <span class="s-right">
-                  <span class="s-lbl">${o}</span>
-                  ${S ? c`<span class="s-val">${S}</span>` : f}
+                <span class="s-content">
+                  <span class="s-left" aria-hidden="true">${this._renderIcon(t, r)}</span>
+                  <span class="s-right">
+                    <span class="s-lbl">${o}</span>
+                    ${S ? c`<span class="s-val">${S}</span>` : f}
+                  </span>
                 </span>
               `}
       </button>
@@ -15701,15 +15703,16 @@ _t.styles = [
 
       .badge-progress-fill {
         position: absolute;
-        inset-block: 0;
-        inset-inline-start: 0;
+        inset: 0 auto 0 0;
+        height: 100%;
+        border-radius: 0;
         width: var(--badge-pct, 0%);
         background: color-mix(
           in srgb,
-          var(--md-sys-color-primary-container, #2e4379) 76%,
+          var(--md-sys-color-primary-container, #2e4379) 82%,
           transparent
         );
-        transition: width var(--m3e-spring-spatial-default);
+        transition: width 0.4s cubic-bezier(0.2, 0, 0, 1);
         pointer-events: none;
         z-index: 0;
       }
@@ -15717,8 +15720,8 @@ _t.styles = [
       .m3e-badge.is-alert .badge-progress-fill {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-error, #ffb4ab) 24%,
-          transparent
+          var(--md-sys-color-error, #ffb4ab) 32%,
+          var(--md-sys-color-error-container, #93000a)
         );
       }
 
@@ -15733,8 +15736,8 @@ _t.styles = [
       .m3e-badge.is-active:not(.is-alert) .badge-progress-fill {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-primary, #b1c5ff) 24%,
-          transparent
+          var(--md-sys-color-primary, #b1c5ff) 35%,
+          var(--md-sys-color-primary-container, #2e4379)
         );
       }
 
@@ -15923,24 +15926,32 @@ _t.styles = [
       }
 
       /* =====================================================================
-         2. SPLIT TONAL PILL (Fitbit Squircle M3 Telemetry — 44px height)
+         2. SPLIT TONAL PILL (4-Layer Fitbit Stadium-Well Pill — 44px height)
          ===================================================================== */
       .m3e-badge.style-split {
+        position: relative;
         height: 44px;
-        padding: 4px 14px 4px 4px;
-        gap: 9px;
+        padding: 5px 14px 5px 5px;
         border-radius: 14px;
         overflow: hidden;
-        background: var(--md-sys-color-surface-container-high, #292a32);
+        background: var(--md-sys-color-surface-container-low, #1f2027);
       }
 
       .m3e-badge.style-split.is-active {
-        background: var(--md-sys-color-primary-container, #2e4379);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-primary-container, #2e4379)
+        );
         color: var(--md-sys-color-on-primary-container, #dae2ff);
       }
 
       .m3e-badge.style-split.is-alert {
-        background: var(--md-sys-color-error-container, #93000a);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-error-container, #93000a)
+        );
         color: var(--md-sys-color-on-error-container, #ffdad6);
       }
 
@@ -15949,16 +15960,29 @@ _t.styles = [
         color: var(--m3e-badge-on-container);
       }
 
-      .s-left {
+      .s-content {
         position: relative;
         z-index: 1;
-        width: 30px;
-        height: 36px;
-        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        height: 100%;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .s-left {
+        width: 24px;
+        height: 34px;
+        border-radius: 9999px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
-        background: var(--md-sys-color-surface-container-highest, #34353e);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 28%,
+          var(--md-sys-color-surface-container-low, #1f2027)
+        );
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         transition:
           background-color var(--m3e-spring-effects-default),
@@ -15968,7 +15992,7 @@ _t.styles = [
       .style-split.is-active .s-left {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-scrim, #000000) 24%,
+          var(--md-sys-color-scrim, #000000) 44%,
           var(--md-sys-color-primary-container, #2e4379)
         );
         color: var(--md-sys-color-on-primary-container, #dae2ff);
@@ -15977,7 +16001,7 @@ _t.styles = [
       .style-split.is-alert .s-left {
         background: color-mix(
           in srgb,
-          var(--md-sys-color-scrim, #000000) 26%,
+          var(--md-sys-color-scrim, #000000) 44%,
           var(--md-sys-color-error-container, #93000a)
         );
         color: var(--md-sys-color-on-error-container, #ffdad6);
@@ -15990,25 +16014,23 @@ _t.styles = [
 
       .s-left svg,
       .s-left ha-icon {
-        width: 18px;
-        height: 18px;
-        --mdc-icon-size: 18px;
+        width: 15px;
+        height: 15px;
+        --mdc-icon-size: 15px;
       }
 
       .s-right {
-        position: relative;
-        z-index: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 0;
+        gap: 1px;
         min-width: 0;
       }
 
       .s-lbl {
         font-size: 10.5px;
-        font-weight: 600;
-        line-height: 1.15;
+        font-weight: 500;
+        line-height: 1.1;
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         white-space: nowrap;
         overflow: hidden;
@@ -16019,13 +16041,13 @@ _t.styles = [
       .style-split.is-alert .s-lbl,
       .style-split.has-custom-color .s-lbl {
         color: inherit;
-        opacity: 0.88;
+        opacity: 0.9;
       }
 
       .s-val {
-        font-size: 13.5px;
+        font-size: 14px;
         font-weight: 700;
-        line-height: 1.15;
+        line-height: 1.1;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
         overflow: hidden;

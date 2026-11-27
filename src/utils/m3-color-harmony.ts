@@ -133,10 +133,11 @@ export function buildM3BadgeTonalPalette(
     }
     if (key === 'primary') {
       return {
-        container: 'var(--md-sys-color-primary-container, #2e4379)',
-        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-primary-container, #2e4379))',
+        container:
+          'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 28%, var(--md-sys-color-primary-container, #2e4379))',
+        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 44%, var(--md-sys-color-primary-container, #2e4379))',
         progressFill:
-          'color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 26%, var(--md-sys-color-primary-container, #2e4379))',
+          'color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 35%, var(--md-sys-color-primary-container, #2e4379))',
         onContainer: 'var(--md-sys-color-on-primary-container, #dae2ff)',
         accent: 'var(--md-sys-color-primary, #b1c5ff)',
         onAccent: 'var(--md-sys-color-on-primary, #142c60)',
@@ -144,10 +145,11 @@ export function buildM3BadgeTonalPalette(
     }
     if (key === 'accent') {
       return {
-        container: 'var(--md-sys-color-tertiary-container, #5a3d5a)',
-        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-tertiary-container, #5a3d5a))',
+        container:
+          'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 28%, var(--md-sys-color-tertiary-container, #5a3d5a))',
+        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 44%, var(--md-sys-color-tertiary-container, #5a3d5a))',
         progressFill:
-          'color-mix(in srgb, var(--md-sys-color-tertiary, #ebb5ea) 26%, var(--md-sys-color-tertiary-container, #5a3d5a))',
+          'color-mix(in srgb, var(--md-sys-color-tertiary, #ebb5ea) 35%, var(--md-sys-color-tertiary-container, #5a3d5a))',
         onContainer: 'var(--md-sys-color-on-tertiary-container, #ffd7fc)',
         accent: 'var(--md-sys-color-tertiary, #ebb5ea)',
         onAccent: 'var(--md-sys-color-on-tertiary, #482948)',
@@ -164,48 +166,48 @@ export function buildM3BadgeTonalPalette(
   if (isNeutral) {
     if (isDark) {
       return {
-        container: 'hsl(220, 6%, 24%)',
-        well: 'hsl(220, 7%, 16%)',
-        progressFill: 'hsl(220, 6%, 34%)',
-        onContainer: 'hsl(220, 10%, 89%)',
+        container: 'hsl(220, 6%, 20%)',
+        well: 'hsl(220, 7%, 13%)',
+        progressFill: 'hsl(220, 6%, 42%)',
+        onContainer: 'hsl(220, 10%, 90%)',
         accent: 'hsl(220, 10%, 74%)',
         onAccent: 'hsl(220, 10%, 14%)',
       };
     }
     return {
-      container: 'hsl(220, 10%, 90%)',
-      well: 'hsl(220, 10%, 83%)',
-      progressFill: 'hsl(220, 10%, 79%)',
-      onContainer: 'hsl(220, 12%, 20%)',
-      accent: 'hsl(220, 12%, 43%)',
+      container: 'hsl(220, 10%, 91%)',
+      well: 'hsl(220, 10%, 82%)',
+      progressFill: 'hsl(220, 10%, 75%)',
+      onContainer: 'hsl(220, 12%, 18%)',
+      accent: 'hsl(220, 12%, 42%)',
       onAccent: '#ffffff',
     };
   }
 
-  // Soft matte Material 3 chroma clamping
-  const satContainer = clamp(rawS * 0.54, 18, 44);
-  const satWell = clamp(rawS * 0.58, 20, 48);
-  const satProgress = clamp(rawS * 0.62, 24, 52);
-  const satOn = clamp(rawS * 0.65, 22, 62);
+  // Adaptive 3-level Material You luminance hierarchy
+  const satContainer = clamp(rawS * 0.56, 18, 46);
+  const satWell = clamp(rawS * 0.62, 20, 52);
+  const satProgress = clamp(rawS * 0.68, 32, 58);
+  const satOn = clamp(rawS * 0.72, 24, 68);
   const satAccent = clamp(rawS * 0.70, 30, 66);
 
   if (isDark) {
     return {
-      container: `hsl(${h}, ${satContainer.toFixed(0)}%, 24%)`,
-      well: `hsl(${h}, ${satWell.toFixed(0)}%, 16%)`,
-      progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 35%)`,
-      onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 89%)`,
+      container: `hsl(${h}, ${satContainer.toFixed(0)}%, 20%)`,
+      well: `hsl(${h}, ${satWell.toFixed(0)}%, 13%)`,
+      progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 52%)`,
+      onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 90%)`,
       accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 74%)`,
       onAccent: `hsl(${h}, ${satWell.toFixed(0)}%, 14%)`,
     };
   }
 
   return {
-    container: `hsl(${h}, ${satContainer.toFixed(0)}%, 90%)`,
-    well: `hsl(${h}, ${satWell.toFixed(0)}%, 83%)`,
-    progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 79%)`,
-    onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 20%)`,
-    accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 43%)`,
+    container: `hsl(${h}, ${satContainer.toFixed(0)}%, 91%)`,
+    well: `hsl(${h}, ${satWell.toFixed(0)}%, 82%)`,
+    progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 75%)`,
+    onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 18%)`,
+    accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 42%)`,
     onAccent: '#ffffff',
   };
 }
