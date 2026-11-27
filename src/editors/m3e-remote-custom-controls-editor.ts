@@ -9,6 +9,7 @@ import type {
 const ACTION_TYPE_OPTIONS = [
   { value: 'player', label: 'Azione Player / Remote' },
   { value: 'entity', label: 'Entità / Script / Switch' },
+  { value: 'ir_command', label: 'IR Command (Trasmettitore Remote)' },
   { value: 'remote_command', label: 'Comando Remote custom' },
   { value: 'source', label: 'Sorgente / App (Source)' },
 ];
@@ -85,15 +86,21 @@ function buildActionFieldsSchema(item: {
         ],
       },
     );
-  } else if (mode === 'remote_command') {
-    fields.push({
-      type: 'grid',
-      name: '',
-      schema: [
-        { name: 'command', selector: { text: {} } },
-        { name: 'device', selector: { text: {} } },
-      ],
-    });
+  } else if (mode === 'remote_command' || mode === 'ir_command') {
+    fields.push(
+      {
+        name: 'remote_entity',
+        selector: { entity: { domain: 'remote' } },
+      },
+      {
+        type: 'grid',
+        name: '',
+        schema: [
+          { name: 'command', selector: { text: {} } },
+          { name: 'device', selector: { text: {} } },
+        ],
+      },
+    );
   } else if (mode === 'source') {
     fields.push({ name: 'value', selector: { text: {} } });
   }
@@ -219,9 +226,10 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
       action_type: 'Tipo azione',
       player_action: 'Azione Player / Remote',
       entity: 'Entità / Script',
+      remote_entity: 'Entità Remote / Trasmettitore (opzionale)',
       entity_action: 'Servizio entità',
       value: 'Valore (Sorgente / Opzione)',
-      command: 'Comando Remote (es. NETFLIX, KEY_HDMI)',
+      command: 'Comando IR / Remote (es. NETFLIX, KEY_HDMI, VolUp)',
       device: 'Device ID (opzionale)',
       state_entity: 'Entità stato attivo (opzionale)',
       active_state: 'Stato attivo (es. on, off, Cinema)',

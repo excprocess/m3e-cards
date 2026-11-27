@@ -543,6 +543,7 @@ export interface CustomRemoteActionSpec {
   action_type?: M3ERemoteCustomActionType;
   player_action?: RemoteActionKey;
   entity?: string;
+  remote_entity?: string;
   entity_action?: 'auto' | 'toggle' | 'turn_on' | 'turn_off' | 'select_option';
   value?: string;
   command?: string;
@@ -598,28 +599,33 @@ export function executeCustomRemoteAction(
     return;
   }
 
-  if (mode === 'remote_command' && spec.command?.trim()) {
+  if ((mode === 'remote_command' || mode === 'ir_command') && spec.command?.trim()) {
+    const itemRemote = spec.remote_entity?.trim() || undefined;
     const explicitRemote = defaultRemoteEntity?.trim() || undefined;
     const remoteId =
+      itemRemote ||
       (spec.entity?.trim().startsWith('remote.') ? spec.entity.trim() : undefined) ||
       (explicitRemote?.startsWith('remote.') ? explicitRemote : undefined) ||
       findSiblingEntityId(hass, primaryEntityId, 'remote');
     const mediaId =
       (explicitRemote?.startsWith('media_player.') ? explicitRemote : undefined) ||
       findSiblingEntityId(hass, primaryEntityId, 'media_player');
-    const platform = (
-      (remoteId ? hass.entities?.[remoteId]?.platform : undefined) ||
-      (mediaId ? hass.entities?.[mediaId]?.platform : undefined) ||
-      hass.entities?.[primaryEntityId]?.platform ||
-      ''
-    ).toLowerCase();
 
-    if (platform === 'webostv' && mediaId) {
-      hass.callService('webostv', 'button', {
-        entity_id: mediaId,
-        button: spec.command.trim(),
-      });
-      return;
+    if (mode === 'remote_command' && !itemRemote) {
+      const platform = (
+        (remoteId ? hass.entities?.[remoteId]?.platform : undefined) ||
+        (mediaId ? hass.entities?.[mediaId]?.platform : undefined) ||
+        hass.entities?.[primaryEntityId]?.platform ||
+        ''
+      ).toLowerCase();
+
+      if (platform === 'webostv' && mediaId) {
+        hass.callService('webostv', 'button', {
+          entity_id: mediaId,
+          button: spec.command.trim(),
+        });
+        return;
+      }
     }
 
     if (remoteId) {

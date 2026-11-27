@@ -345,7 +345,12 @@ export interface M3ERemoteButtonsConfig {
   ch_down?: string;
 }
 
-export type M3ERemoteCustomActionType = 'player' | 'entity' | 'remote_command' | 'source';
+export type M3ERemoteCustomActionType =
+  | 'player'
+  | 'entity'
+  | 'remote_command'
+  | 'ir_command'
+  | 'source';
 
 export interface M3ERemoteCustomSegment {
   label: string;
@@ -353,6 +358,7 @@ export interface M3ERemoteCustomSegment {
   action_type?: M3ERemoteCustomActionType;
   player_action?: keyof M3ERemoteButtonsConfig;
   entity?: string;
+  remote_entity?: string;
   entity_action?: 'auto' | 'toggle' | 'turn_on' | 'turn_off' | 'select_option';
   value?: string;
   command?: string;
@@ -367,6 +373,7 @@ export interface M3ERemoteCustomControl {
   action_type?: M3ERemoteCustomActionType;
   player_action?: keyof M3ERemoteButtonsConfig;
   entity?: string;
+  remote_entity?: string;
   entity_action?: 'auto' | 'toggle' | 'turn_on' | 'turn_off' | 'select_option';
   value?: string;
   command?: string;

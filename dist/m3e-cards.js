@@ -11368,18 +11368,18 @@ function Oi(t, e, i, s, r, a) {
     });
     return;
   }
-  if (o === "remote_command" && i.command?.trim()) {
-    const n = a?.trim() || void 0, l = (i.entity?.trim().startsWith("remote.") ? i.entity.trim() : void 0) || (n?.startsWith("remote.") ? n : void 0) || K(t, e, "remote"), p = (n?.startsWith("media_player.") ? n : void 0) || K(t, e, "media_player");
-    if (((l ? t.entities?.[l]?.platform : void 0) || (p ? t.entities?.[p]?.platform : void 0) || t.entities?.[e]?.platform || "").toLowerCase() === "webostv" && p) {
+  if ((o === "remote_command" || o === "ir_command") && i.command?.trim()) {
+    const n = i.remote_entity?.trim() || void 0, l = a?.trim() || void 0, p = n || (i.entity?.trim().startsWith("remote.") ? i.entity.trim() : void 0) || (l?.startsWith("remote.") ? l : void 0) || K(t, e, "remote"), d = (l?.startsWith("media_player.") ? l : void 0) || K(t, e, "media_player");
+    if (o === "remote_command" && !n && ((p ? t.entities?.[p]?.platform : void 0) || (d ? t.entities?.[d]?.platform : void 0) || t.entities?.[e]?.platform || "").toLowerCase() === "webostv" && d) {
       t.callService("webostv", "button", {
-        entity_id: p,
+        entity_id: d,
         button: i.command.trim()
       });
       return;
     }
-    if (l) {
+    if (p) {
       const h = {
-        entity_id: l,
+        entity_id: p,
         command: i.command.trim()
       }, g = (i.device || r)?.trim();
       g && (h.device = g), t.callService("remote", "send_command", h);
@@ -11444,6 +11444,7 @@ var ia = Object.defineProperty, sa = Object.getOwnPropertyDescriptor, ze = (t, e
 const ra = [
   { value: "player", label: "Azione Player / Remote" },
   { value: "entity", label: "Entità / Script / Switch" },
+  { value: "ir_command", label: "IR Command (Trasmettitore Remote)" },
   { value: "remote_command", label: "Comando Remote custom" },
   { value: "source", label: "Sorgente / App (Source)" }
 ], aa = [
@@ -11507,14 +11508,20 @@ function Li(t) {
         { name: "value", selector: { text: {} } }
       ]
     }
-  ) : e === "remote_command" ? i.push({
-    type: "grid",
-    name: "",
-    schema: [
-      { name: "command", selector: { text: {} } },
-      { name: "device", selector: { text: {} } }
-    ]
-  }) : e === "source" && i.push({ name: "value", selector: { text: {} } }), i;
+  ) : e === "remote_command" || e === "ir_command" ? i.push(
+    {
+      name: "remote_entity",
+      selector: { entity: { domain: "remote" } }
+    },
+    {
+      type: "grid",
+      name: "",
+      schema: [
+        { name: "command", selector: { text: {} } },
+        { name: "device", selector: { text: {} } }
+      ]
+    }
+  ) : e === "source" && i.push({ name: "value", selector: { text: {} } }), i;
 }
 let jt = class extends A {
   constructor() {
@@ -11524,9 +11531,10 @@ let jt = class extends A {
       action_type: "Tipo azione",
       player_action: "Azione Player / Remote",
       entity: "Entità / Script",
+      remote_entity: "Entità Remote / Trasmettitore (opzionale)",
       entity_action: "Servizio entità",
       value: "Valore (Sorgente / Opzione)",
-      command: "Comando Remote (es. NETFLIX, KEY_HDMI)",
+      command: "Comando IR / Remote (es. NETFLIX, KEY_HDMI, VolUp)",
       device: "Device ID (opzionale)",
       state_entity: "Entità stato attivo (opzionale)",
       active_state: "Stato attivo (es. on, off, Cinema)",
