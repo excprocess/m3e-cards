@@ -12,6 +12,7 @@ import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
 import './cards/m3e-status-badge';
 import './cards/m3e-status-card';
+import './cards/m3e-tabs-card';
 import './cards/m3e-thermostat-card';
 import './cards/m3e-toggle-card';
 import { initM3ENavigationPickerBridge } from './utils/navigation-picker-bridge';
@@ -32,6 +33,7 @@ export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
 export { M3EStatusBadge } from './cards/m3e-status-badge';
 export { M3EStatusCard } from './cards/m3e-status-card';
+export { M3ETabsCard } from './cards/m3e-tabs-card';
 export { M3EThermostatCard } from './cards/m3e-thermostat-card';
 export { M3EToggleCard } from './cards/m3e-toggle-card';
 export type {
@@ -56,6 +58,8 @@ export type {
   M3EStackItemConfig,
   M3EStatusCardConfig,
   M3EStatusPopupType,
+  M3ETabItemConfig,
+  M3ETabsCardConfig,
   M3EThermostatCardConfig,
   M3EToggleCardConfig,
 } from './types/home-assistant';
@@ -384,6 +388,14 @@ registerCard({
   name: 'Pop-up Card',
   description:
     'Customizable Material 3 Expressive pop-up container with entity header button, native HA Add card picker / vertical-stack support, and hash/path navigation trigger.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-tabs-card',
+  name: 'Tabs Card',
+  description:
+    'Flat Material 3 Expressive animated tab pills (up to 4 tabs) with morphing active indicator, 12-column card grid per tab, and native HA drag-and-drop / Add card editor.',
   preview: true,
 });
 

@@ -404,6 +404,23 @@ export interface M3EPopupCardConfig extends LovelaceCardConfig {
   cards?: LovelaceCardConfig[];
 }
 
+export interface M3ETabItemConfig {
+  title: string;
+  icon?: string;
+  cards?: LovelaceCardConfig[];
+}
+
+export interface M3ETabsCardConfig extends LovelaceCardConfig {
+  /** Up to 4 customizable tabs, each hosting its own 12-column grid of Lovelace cards */
+  tabs: M3ETabItemConfig[];
+  /** Horizontal alignment of the flat tab pills: center (default), start, or end */
+  tabs_alignment?: 'center' | 'start' | 'end';
+  /** Default active tab index (0..3) */
+  default_tab?: number;
+  /** Remember last selected tab in localStorage */
+  remember_tab?: boolean;
+}
+
 export interface M3ERemoteCardConfig extends LovelaceCardConfig {
   entity: string;
   status_entity?: string;

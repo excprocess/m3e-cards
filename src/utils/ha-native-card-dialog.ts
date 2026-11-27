@@ -59,9 +59,9 @@ function getActiveEditCardDialog(): HaDialogElement | null {
   );
 }
 
-function captureOriginalBaseline(
+function captureOriginalBaseline<T>(
   dialog: HaDialogElement | null,
-  fallbackConfig: M3EPopupCardConfig,
+  fallbackConfig: T,
 ): unknown {
   try {
     const sliceInit = dialog?._dirtySlices?.get('__default__')?.initial;
@@ -107,9 +107,9 @@ function extractCardsFromProxyConfig(cfg: Record<string, unknown>): LovelaceCard
   return Array.isArray(views?.[0]?.cards) ? views![0].cards! : [];
 }
 
-function reopenParentPopupDialog(
+function reopenParentContainerDialog<T extends LovelaceCardConfig>(
   parentParams: Record<string, unknown>,
-  updatedPopupConfig: M3EPopupCardConfig,
+  updatedParentConfig: T,
   originalBaseline: unknown,
 ): void {
   const homeAssistant = getHomeAssistantHost();
@@ -117,7 +117,7 @@ function reopenParentPopupDialog(
 
   const nextParams: Record<string, unknown> = {
     ...parentParams,
-    cardConfig: updatedPopupConfig,
+    cardConfig: updatedParentConfig,
   };
 
   setTimeout(() => {
@@ -143,11 +143,11 @@ function reopenParentPopupDialog(
   }, 30);
 }
 
-function openChildInOfficialEditDialog(
+function openChildInOfficialEditDialog<T extends LovelaceCardConfig>(
   childDialogParams: Record<string, unknown>,
   parentParams: Record<string, unknown>,
   originalBaseline: unknown,
-  getUpdatedPopupConfig: () => M3EPopupCardConfig,
+  getUpdatedParentConfig: () => T,
   cleanupProxy: () => void,
 ): boolean {
   const activeDialog = getActiveEditCardDialog();
@@ -181,7 +181,7 @@ function openChildInOfficialEditDialog(
     activeDialog.removeEventListener('dialog-closed', onDialogClosed);
     window.removeEventListener('dialog-closed', onDialogClosed, true);
     cleanupProxy();
-    reopenParentPopupDialog(parentParams, getUpdatedPopupConfig(), originalBaseline);
+    reopenParentContainerDialog(parentParams, getUpdatedParentConfig(), originalBaseline);
   };
 
   function wrappedClose(this: HaDialogElement, ...args: unknown[]): boolean {
@@ -338,13 +338,15 @@ async function dispatchOfficialCardEvent(
 }
 
 /**
- * Opens Home Assistant's official "Add to dashboard" dialog (`hui-dialog-create-card`)
- * or official "Edit card" dialog (`hui-dialog-edit-card` with Config/Visibility/Layout tabs)
- * for a child card inside `m3e-popup-card`, then returns cleanly to the Pop-up editor.
+ * Generic bridge that opens Home Assistant's official "Add to dashboard" (`hui-dialog-create-card`)
+ * or "Edit card" (`hui-dialog-edit-card`) dialog for a child card inside any container card
+ * (`m3e-popup-card`, `m3e-tabs-card`, etc.), then returns cleanly to the parent card editor.
  */
-export async function openOfficialHACardDialog(options: {
+export async function openOfficialHAContainerCardDialog<T extends LovelaceCardConfig>(options: {
   hass: HomeAssistant;
-  popupConfig: M3EPopupCardConfig;
+  parentConfig: T;
+  cards: LovelaceCardConfig[];
+  applyCards: (parent: T, cards: LovelaceCardConfig[]) => T;
   mode: 'add' | 'edit';
   index?: number;
   onCardsUpdated: (cards: LovelaceCardConfig[]) => void;
@@ -354,18 +356,15 @@ export async function openOfficialHACardDialog(options: {
   const parentParams = activeDialog?._params ? { ...activeDialog._params } : null;
   if (!homeAssistant || !parentParams) return false;
 
-  const originalBaseline = captureOriginalBaseline(activeDialog, options.popupConfig);
+  const originalBaseline = captureOriginalBaseline(activeDialog, options.parentConfig);
 
   let cardsMutatedDirectly = false;
-  let nextPopupConfig: M3EPopupCardConfig = {
-    ...options.popupConfig,
-    cards: [...(options.popupConfig.cards ?? [])],
-  };
+  let nextParentConfig: T = options.applyCards(options.parentConfig, [...options.cards]);
 
   const handleSaveConfig = async (lovelaceCfg: Record<string, unknown>) => {
     const updatedCards = extractCardsFromProxyConfig(lovelaceCfg);
     cardsMutatedDirectly = true;
-    nextPopupConfig = { ...nextPopupConfig, cards: updatedCards };
+    nextParentConfig = options.applyCards(nextParentConfig, updatedCards);
     options.onCardsUpdated(updatedCards);
   };
 
@@ -397,14 +396,14 @@ export async function openOfficialHACardDialog(options: {
             params,
             parentParams,
             originalBaseline,
-            () => nextPopupConfig,
+            () => nextParentConfig,
             () => cleanupProxy?.(),
           );
         }, 0);
       } else {
         cleanupProxy?.();
         if (cardsMutatedDirectly) {
-          reopenParentPopupDialog(parentParams, nextPopupConfig, originalBaseline);
+          reopenParentContainerDialog(parentParams, nextParentConfig, originalBaseline);
         }
       }
     };
@@ -414,7 +413,7 @@ export async function openOfficialHACardDialog(options: {
 
     cleanupProxy = await dispatchOfficialCardEvent(
       options.hass,
-      nextPopupConfig.cards ?? [],
+      options.cards,
       'll-create-card',
       undefined,
       handleSaveConfig,
@@ -445,7 +444,7 @@ export async function openOfficialHACardDialog(options: {
         detail.dialogParams,
         parentParams,
         originalBaseline,
-        () => nextPopupConfig,
+        () => nextParentConfig,
         () => cleanupProxy?.(),
       );
     } else {
@@ -457,7 +456,7 @@ export async function openOfficialHACardDialog(options: {
 
   cleanupProxy = await dispatchOfficialCardEvent(
     options.hass,
-    nextPopupConfig.cards ?? [],
+    options.cards,
     'll-edit-card',
     options.index,
     handleSaveConfig,
@@ -468,6 +467,27 @@ export async function openOfficialHACardDialog(options: {
     return false;
   }
   return true;
+}
+
+/**
+ * Convenience wrapper for `m3e-popup-card` child cards.
+ */
+export async function openOfficialHACardDialog(options: {
+  hass: HomeAssistant;
+  popupConfig: M3EPopupCardConfig;
+  mode: 'add' | 'edit';
+  index?: number;
+  onCardsUpdated: (cards: LovelaceCardConfig[]) => void;
+}): Promise<boolean> {
+  return openOfficialHAContainerCardDialog({
+    hass: options.hass,
+    parentConfig: options.popupConfig,
+    cards: options.popupConfig.cards ?? [],
+    applyCards: (parent, cards) => ({ ...parent, cards }),
+    mode: options.mode,
+    index: options.index,
+    onCardsUpdated: options.onCardsUpdated,
+  });
 }
 
 /**

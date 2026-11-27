@@ -1,4 +1,8 @@
-import type { LovelaceCardConfig, M3EPopupCardConfig } from '../types/home-assistant';
+import type {
+  LovelaceCardConfig,
+  M3EPopupCardConfig,
+  M3ETabsCardConfig,
+} from '../types/home-assistant';
 import { normalizePopupTarget } from './navigation';
 
 export interface M3EPopupEditorHandle {
@@ -8,7 +12,30 @@ export interface M3EPopupEditorHandle {
   openEditCard(index: number): void;
 }
 
+export interface M3ETabsEditorHandle {
+  getConfig(): M3ETabsCardConfig | undefined;
+  getActiveTab(): number;
+  setActiveTab(tabIndex: number): void;
+  updateTabCards(tabIndex: number, cards: LovelaceCardConfig[]): void;
+  openAddCard(tabIndex: number): void;
+  openEditCard(tabIndex: number, cardIndex: number): void;
+}
+
 const activeEditors = new Set<M3EPopupEditorHandle>();
+const activeTabsEditors = new Set<M3ETabsEditorHandle>();
+
+export function registerTabsEditor(handle: M3ETabsEditorHandle): void {
+  activeTabsEditors.add(handle);
+}
+
+export function unregisterTabsEditor(handle: M3ETabsEditorHandle): void {
+  activeTabsEditors.delete(handle);
+}
+
+export function findMatchingTabsEditor(): M3ETabsEditorHandle | null {
+  if (activeTabsEditors.size === 0) return null;
+  return Array.from(activeTabsEditors)[activeTabsEditors.size - 1] ?? null;
+}
 
 export function registerPopupEditor(handle: M3EPopupEditorHandle): void {
   activeEditors.add(handle);
