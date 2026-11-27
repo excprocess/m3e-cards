@@ -12,6 +12,7 @@ import {
   type M3EFeaturesPosition,
   type SubElementEditorConfig,
 } from '../utils/ha-card-features';
+import { findSiblingEntityId } from '../utils/remote-commands';
 import '../utils/m3e-feature-sub-editor';
 import './m3e-remote-custom-controls-editor';
 
@@ -305,7 +306,12 @@ export class M3EStatusCardEditor extends LitElement {
       });
     } else if (type === 'remote') {
       schema.push(
+        {
+          name: 'remote_entity',
+          selector: { entity: { domain: ['remote', 'media_player'] } },
+        },
         { name: 'remote_device', selector: { text: {} } },
+        { name: 'remote_show_nav', selector: { boolean: {} } },
         {
           type: 'expandable',
           title: 'Pulsanti Telecomando (Entità button/script o comandi remote)',
@@ -397,7 +403,9 @@ export class M3EStatusCardEditor extends LitElement {
       outdoor_entity: 'Temperatura esterna',
       media_controls_action: 'Azione pulsante "Media & Controls"',
       features_position: 'Posizione Features',
+      remote_entity: 'Entità Remote / Trasmettitore (opzionale)',
       remote_device: 'Device ID trasmettitore (multi-dispositivo)',
+      remote_show_nav: 'Mostra Touchpad e tasti navigazione (Indietro · Home · Assist)',
       dpad_up: 'Pad Su (es. DPAD_UP)',
       dpad_down: 'Pad Giù (es. DPAD_DOWN)',
       dpad_left: 'Pad Sinistra (es. DPAD_LEFT)',
@@ -539,6 +547,17 @@ export class M3EStatusCardEditor extends LitElement {
 
     const features = this._config.features ?? [];
 
+    const hasMediaPlayer = Boolean(
+      entityId && findSiblingEntityId(this.hass, entityId, 'media_player'),
+    );
+    const interactionsData =
+      this._resolvedType() === 'remote'
+        ? {
+            ...this._config,
+            remote_show_nav: this._config.remote_show_nav ?? hasMediaPlayer,
+          }
+        : this._config;
+
     return html`
       <div class="editor-root">
         <ha-form
@@ -569,7 +588,7 @@ export class M3EStatusCardEditor extends LitElement {
           <div class="panel-body">
             <ha-form
               .hass=${this.hass}
-              .data=${this._config}
+              .data=${interactionsData}
               .schema=${this._buildInteractionsSchema()}
               .computeLabel=${this._computeLabel}
               @value-changed=${this._onValueChanged}

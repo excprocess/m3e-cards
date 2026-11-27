@@ -1839,6 +1839,7 @@ export class M3EStatusCard extends LitElement {
       key,
       this._config.remote_buttons,
       this._config.remote_device,
+      this._config.remote_entity,
     );
   }
 
@@ -1882,65 +1883,71 @@ export class M3EStatusCard extends LitElement {
         )
       : [];
 
+    const showNav = this._config?.remote_show_nav ?? Boolean(media);
+
     return html`
-      <!-- Compact Google Home Gesture Touchpad -->
-      <div
-        class="remote-touchpad ${this._padActive ? 'is-dragging' : ''}"
-        role="application"
-        aria-label="Navigation touchpad"
-        @pointerdown=${this._onPadPointerDown}
-        @pointermove=${this._onPadPointerMove}
-        @pointerup=${this._onPadPointerUp}
-        @pointercancel=${this._onPadPointerUp}
-      >
-        <span
-          class="touchpad-dot ${this._padActive ? 'is-dragging' : ''} ${this._padTapPulse ? 'is-pulsing' : ''}"
-          style="transform: translate3d(${this._padOffsetX}px, ${this._padOffsetY}px, 0)"
-          aria-hidden="true"
-        ></span>
-      </div>
+      ${showNav
+        ? html`
+            <!-- Compact Google Home Gesture Touchpad -->
+            <div
+              class="remote-touchpad ${this._padActive ? 'is-dragging' : ''}"
+              role="application"
+              aria-label="Navigation touchpad"
+              @pointerdown=${this._onPadPointerDown}
+              @pointermove=${this._onPadPointerMove}
+              @pointerup=${this._onPadPointerUp}
+              @pointercancel=${this._onPadPointerUp}
+            >
+              <span
+                class="touchpad-dot ${this._padActive ? 'is-dragging' : ''} ${this._padTapPulse ? 'is-pulsing' : ''}"
+                style="transform: translate3d(${this._padOffsetX}px, ${this._padOffsetY}px, 0)"
+                aria-hidden="true"
+              ></span>
+            </div>
 
-      <!-- 3 Essential Navigation Buttons: Back | Home | Assist -->
-      <div class="remote-essential-row">
-        <button
-          type="button"
-          class="essential-btn"
-          aria-label="Back"
-          @click=${() => this._triggerRemoteKey('back')}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z" />
-          </svg>
-        </button>
+            <!-- 3 Essential Navigation Buttons: Back | Home | Assist -->
+            <div class="remote-essential-row">
+              <button
+                type="button"
+                class="essential-btn"
+                aria-label="Back"
+                @click=${() => this._triggerRemoteKey('back')}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2Z" />
+                </svg>
+              </button>
 
-        <button
-          type="button"
-          class="essential-btn is-home"
-          aria-label="Home"
-          @click=${() => this._triggerRemoteKey('home')}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M12 5.69 17 10.19V18h-2v-6H9v6H7v-7.81l5-4.5M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3Z"
-            />
-          </svg>
-        </button>
+              <button
+                type="button"
+                class="essential-btn is-home"
+                aria-label="Home"
+                @click=${() => this._triggerRemoteKey('home')}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    fill="currentColor"
+                    d="M12 5.69 17 10.19V18h-2v-6H9v6H7v-7.81l5-4.5M12 3 2 12h3v8h6v-6h2v6h6v-8h3L12 3Z"
+                  />
+                </svg>
+              </button>
 
-        <button
-          type="button"
-          class="essential-btn is-assist"
-          aria-label="Assistant"
-          @click=${() => this._triggerRemoteKey('assist')}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="9.2" cy="10.2" r="3.4" fill="currentColor" />
-            <circle cx="16.4" cy="8.4" r="1.7" fill="currentColor" />
-            <circle cx="15.4" cy="13.4" r="2.1" fill="currentColor" />
-            <circle cx="19.5" cy="11.2" r="1" fill="currentColor" />
-          </svg>
-        </button>
-      </div>
+              <button
+                type="button"
+                class="essential-btn is-assist"
+                aria-label="Assistant"
+                @click=${() => this._triggerRemoteKey('assist')}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="9.2" cy="10.2" r="3.4" fill="currentColor" />
+                  <circle cx="16.4" cy="8.4" r="1.7" fill="currentColor" />
+                  <circle cx="15.4" cy="13.4" r="2.1" fill="currentColor" />
+                  <circle cx="19.5" cy="11.2" r="1" fill="currentColor" />
+                </svg>
+              </button>
+            </div>
+          `
+        : nothing}
 
       <div class="remote-hero">
         <div class="rocker-pill">
@@ -2143,6 +2150,7 @@ export class M3EStatusCard extends LitElement {
             this._remoteSelectorSheet = req;
           },
           (eid) => this._openMoreInfo(eid),
+          this._config?.remote_entity,
         )}
       </div>
 

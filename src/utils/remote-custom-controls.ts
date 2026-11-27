@@ -403,6 +403,7 @@ export function renderRemoteCustomControls(
   defaultRemoteDevice?: string,
   onOpenSelector?: (req: RemoteSelectorRequest) => void,
   onFallbackMoreInfo?: (entityId: string) => void,
+  defaultRemoteEntity?: string,
 ): TemplateResult | typeof nothing {
   if (!hass || !controls || controls.length === 0) return nothing;
 
@@ -449,6 +450,7 @@ export function renderRemoteCustomControls(
                         btn,
                         manualButtons,
                         defaultRemoteDevice,
+                        defaultRemoteEntity,
                       );
                     }}
                   >
@@ -520,6 +522,7 @@ export function renderRemoteCustomControls(
                       seg,
                       manualButtons,
                       defaultRemoteDevice,
+                      defaultRemoteEntity,
                     );
                   }}
                 >

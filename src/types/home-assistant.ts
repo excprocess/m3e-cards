@@ -412,6 +412,8 @@ export interface M3ERemoteCardConfig extends LovelaceCardConfig {
   show_channels?: boolean;
   show_source?: boolean;
   show_power?: boolean;
+  /** Optional separate remote / media_player entity to transmit commands (e.g. IR blaster) */
+  remote_entity?: string;
   remote_device?: string;
   remote_buttons?: M3ERemoteButtonsConfig;
   /** Custom native M3 buttons & segmented pills rendered at the bottom */
@@ -505,8 +507,12 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   hold_action?: M3EHoldAction;
   /** Dashboard path (/lovelace/...), Bubble Card hash (#popup), or script.* / browser_mod.* service */
   navigation_path?: string;
+  /** Optional separate remote / media_player entity to transmit commands (e.g. IR blaster) */
+  remote_entity?: string;
   /** Optional target device ID for multi-device remote transmitters (remote.send_command device parameter) */
   remote_device?: string;
+  /** Show touchpad & Back/Home/Assist navigation buttons in Remote popup (auto-hidden when primary entity has no media_player) */
+  remote_show_nav?: boolean;
   /** Optional manual button entity IDs (button/script) or remote command names for Remote popup */
   remote_buttons?: M3ERemoteButtonsConfig;
   /** Optional custom native M3 buttons & segmented pills at the bottom of Remote popup */

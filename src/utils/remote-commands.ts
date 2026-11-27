@@ -422,9 +422,15 @@ export function executeRemoteCommand(
   key: RemoteActionKey,
   manualButtons?: M3ERemoteButtonsConfig,
   remoteDevice?: string,
+  remoteEntityOverride?: string,
 ): void {
-  const remoteId = findSiblingEntityId(hass, primaryEntityId, 'remote');
-  const mediaId = findSiblingEntityId(hass, primaryEntityId, 'media_player');
+  const explicitRemote = remoteEntityOverride?.trim() || undefined;
+  const remoteId =
+    (explicitRemote?.startsWith('remote.') ? explicitRemote : undefined) ||
+    findSiblingEntityId(hass, primaryEntityId, 'remote');
+  const mediaId =
+    (explicitRemote?.startsWith('media_player.') ? explicitRemote : undefined) ||
+    findSiblingEntityId(hass, primaryEntityId, 'media_player');
   const mediaEntity: HassEntity | undefined = mediaId ? hass.states[mediaId] : undefined;
 
   // 1. Explicit manual override
@@ -518,7 +524,7 @@ export function executeRemoteCommand(
   }
 
   if (remoteId) {
-    if (key === 'power_on' || key === 'power_off') {
+    if ((key === 'power_on' || key === 'power_off') && !remoteDevice?.trim()) {
       hass.callService('remote', key === 'power_on' ? 'turn_on' : 'turn_off', {
         entity_id: remoteId,
       });
@@ -557,6 +563,7 @@ export function executeCustomRemoteAction(
   spec: CustomRemoteActionSpec,
   manualButtons?: M3ERemoteButtonsConfig,
   defaultRemoteDevice?: string,
+  defaultRemoteEntity?: string,
 ): void {
   const mode: M3ERemoteCustomActionType =
     spec.action_type ||
@@ -575,6 +582,7 @@ export function executeCustomRemoteAction(
       spec.player_action,
       manualButtons,
       spec.device || defaultRemoteDevice,
+      defaultRemoteEntity,
     );
     return;
   }
@@ -591,10 +599,14 @@ export function executeCustomRemoteAction(
   }
 
   if (mode === 'remote_command' && spec.command?.trim()) {
+    const explicitRemote = defaultRemoteEntity?.trim() || undefined;
     const remoteId =
       (spec.entity?.trim().startsWith('remote.') ? spec.entity.trim() : undefined) ||
+      (explicitRemote?.startsWith('remote.') ? explicitRemote : undefined) ||
       findSiblingEntityId(hass, primaryEntityId, 'remote');
-    const mediaId = findSiblingEntityId(hass, primaryEntityId, 'media_player');
+    const mediaId =
+      (explicitRemote?.startsWith('media_player.') ? explicitRemote : undefined) ||
+      findSiblingEntityId(hass, primaryEntityId, 'media_player');
     const platform = (
       (remoteId ? hass.entities?.[remoteId]?.platform : undefined) ||
       (mediaId ? hass.entities?.[mediaId]?.platform : undefined) ||

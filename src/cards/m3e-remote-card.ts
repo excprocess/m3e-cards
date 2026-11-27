@@ -102,9 +102,7 @@ export class M3ERemoteCard extends LitElement {
     }
     this._config = {
       pad_mode: 'touchpad',
-      show_touchpad: true,
       show_volume: true,
-      show_essentials: true,
       show_transport: true,
       show_channels: false,
       show_source: true,
@@ -146,6 +144,7 @@ export class M3ERemoteCard extends LitElement {
     if (changedProps.has('hass') && this.hass && this._config) {
       const watched = new Set<string>([this._config.entity]);
       if (this._config.status_entity) watched.add(this._config.status_entity);
+      if (this._config.remote_entity) watched.add(this._config.remote_entity);
       const mediaId = findSiblingEntityId(this.hass, this._config.entity, 'media_player');
       if (mediaId) watched.add(mediaId);
       for (const ctrl of this._config.remote_custom_controls ?? []) {
@@ -201,6 +200,7 @@ export class M3ERemoteCard extends LitElement {
       key,
       this._config.remote_buttons,
       this._config.remote_device,
+      this._config.remote_entity,
     );
   }
 
@@ -410,9 +410,10 @@ export class M3ERemoteCard extends LitElement {
         ? `${stateLabel} · ${appName || currentSource}`
         : stateLabel;
 
-    const showTouchpad = this._config.show_touchpad !== false;
+    const hasMediaPlayer = Boolean(media);
+    const showTouchpad = this._config.show_touchpad ?? hasMediaPlayer;
     const showVolume = this._config.show_volume !== false;
-    const showEssentials = this._config.show_essentials !== false;
+    const showEssentials = this._config.show_essentials ?? hasMediaPlayer;
     const showTransport = this._config.show_transport !== false;
     const showChannels = this._config.show_channels === true;
     const showSource = this._config.show_source !== false;
@@ -799,6 +800,7 @@ export class M3ERemoteCard extends LitElement {
           this._config.remote_device,
           (req) => this._openSelectorDialog(req),
           (eid) => this._openMoreInfo(eid),
+          this._config.remote_entity,
         )}
       </ha-card>
 

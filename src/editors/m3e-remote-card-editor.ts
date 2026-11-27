@@ -5,6 +5,7 @@ import type {
   M3ERemoteCardConfig,
   M3ERemoteCustomControl,
 } from '../types/home-assistant';
+import { findSiblingEntityId } from '../utils/remote-commands';
 import './m3e-remote-custom-controls-editor';
 
 @customElement('m3e-remote-card-editor')
@@ -15,9 +16,7 @@ export class M3ERemoteCardEditor extends LitElement {
   public setConfig(config: M3ERemoteCardConfig): void {
     this._config = {
       pad_mode: 'touchpad',
-      show_touchpad: true,
       show_volume: true,
-      show_essentials: true,
       show_transport: true,
       show_channels: false,
       show_source: true,
@@ -69,6 +68,7 @@ export class M3ERemoteCardEditor extends LitElement {
       show_channels: 'Mostra selettore Canali (CH −/+)',
       show_source: 'Mostra pulsante Sorgenti (Source)',
       show_power: 'Mostra pulsante Accensione (Power)',
+      remote_entity: 'Entità Remote / Trasmettitore (opzionale)',
       remote_device: 'Device ID trasmettitore (multi-dispositivo)',
       dpad_up: 'Pad Su',
       dpad_down: 'Pad Giù',
@@ -160,6 +160,10 @@ export class M3ERemoteCardEditor extends LitElement {
         flatten: true,
         title: 'Override Comandi Remote (opzionale)',
         schema: [
+          {
+            name: 'remote_entity',
+            selector: { entity: { domain: ['remote', 'media_player'] } },
+          },
           { name: 'remote_device', selector: { text: {} } },
           {
             type: 'expandable',
@@ -192,11 +196,20 @@ export class M3ERemoteCardEditor extends LitElement {
       },
     ];
 
+    const hasMediaPlayer = Boolean(
+      this._config.entity && findSiblingEntityId(this.hass, this._config.entity, 'media_player'),
+    );
+    const formData: M3ERemoteCardConfig = {
+      ...this._config,
+      show_touchpad: this._config.show_touchpad ?? hasMediaPlayer,
+      show_essentials: this._config.show_essentials ?? hasMediaPlayer,
+    };
+
     return html`
       <div class="editor-stack">
         <ha-form
           .hass=${this.hass}
-          .data=${this._config}
+          .data=${formData}
           .schema=${topSchema}
           .computeLabel=${this._computeLabel}
           @value-changed=${this._onValueChanged}
