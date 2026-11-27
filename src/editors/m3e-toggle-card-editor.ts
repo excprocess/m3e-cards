@@ -122,7 +122,7 @@ export class M3EToggleCardEditor extends LitElement {
             options: [
               { value: 'popup', label: 'Apri popup Material 3 Expressive' },
               { value: 'more-info', label: 'Schermata nativa Home Assistant' },
-              { value: 'navigate', label: 'Apri percorso / Bubble Card (#hash) / Browser Mod' },
+              { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
               { value: 'none', label: 'Nessuna azione' },
             ],
           },
@@ -175,7 +175,7 @@ export class M3EToggleCardEditor extends LitElement {
       label_on: 'Testo acceso (default: On)',
       label_off: 'Testo spento (default: Off)',
       hold_action: 'Azione pressione prolungata (Hold)',
-      navigation_path: 'Percorso / #popup Bubble Card / script o browser_mod',
+      navigation_path: 'Percorso dashboard o #hash Pop-up',
       features_position: 'Posizione Features',
     };
     return labels[schema.name] ?? schema.name;

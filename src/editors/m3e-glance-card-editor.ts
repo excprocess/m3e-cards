@@ -136,7 +136,7 @@ export class M3EGlanceCardEditor extends LitElement {
                 options: [
                   { value: 'more-info', label: 'Dettagli entità (More-info)' },
                   { value: 'toggle', label: 'Toggle stato' },
-                  { value: 'navigate', label: 'Percorso / Bubble / Script' },
+                  { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
                   { value: 'none', label: 'Nessuna azione' },
                 ],
               },

@@ -108,11 +108,11 @@ export class M3EPopupCardEditor extends LitElement {
   private _computeLabel = (schema: { name: string }): string => {
     const labels: Record<string, string> = {
       hash: 'Percorso / #hash del Pop-up',
-      entity: 'Entità header (pulsante a sinistra e titolo automatico)',
+      entity: 'Entità header (pulsante a destra e titolo automatico)',
       name: 'Titolo personalizzato (vuoto = nome entità)',
       icon: 'Icona personalizzata pulsante header',
       use_entity_icon: 'Usa icona nativa entità',
-      show_header_button: 'Mostra pulsante azione a sinistra',
+      show_header_button: 'Mostra pulsante azione a destra',
       show_state: 'Mostra stato sotto il titolo',
     };
     return labels[schema.name] ?? schema.name;
@@ -285,8 +285,9 @@ export class M3EPopupCardEditor extends LitElement {
               `
             : html`
                 <div class="cards-hint">
-                  Aggiungi card qui sotto oppure inserisci questa card come prima card di un
-                  <strong>Vertical Stack</strong> (stile Bubble Card).
+                  Consigliato: inserisci questa card come prima card di una <strong>Sezione</strong>
+                  di Home Assistant (o di un Vertical Stack) per aggiungere, spostare e ridimensionare
+                  le card nativamente dalla dashboard, oppure aggiungile direttamente qui sotto.
                 </div>
               `}
 

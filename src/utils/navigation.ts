@@ -27,8 +27,8 @@ export function unregisterPopupTarget(norm?: string): void {
 }
 
 /**
- * Executes a dashboard navigation, M3E Pop-Up / Bubble Card hash (#popup),
- * or Browser Mod / script action cleanly from a single target string.
+ * Executes a Home Assistant dashboard navigation, M3E Pop-Up hash (#popup),
+ * or script/service action cleanly from a single target string.
  */
 export function executeNavigationTarget(
   host: HTMLElement,
@@ -50,7 +50,7 @@ export function executeNavigationTarget(
     return;
   }
 
-  // 1. Hash popup (e.g. "#cucina" for M3E Pop-Up or Bubble Card)
+  // 1. Hash popup (e.g. "#cucina" for M3E Pop-Up)
   if (target.startsWith('#')) {
     const oldURL = window.location.href;
     window.history.pushState(null, '', target);

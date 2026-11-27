@@ -261,7 +261,7 @@ export class M3EStatusCardEditor extends LitElement {
                 options: [
                   { value: 'popup', label: 'Apri popup M3E' },
                   { value: 'toggle', label: 'Toggle stato' },
-                  { value: 'navigate', label: 'Percorso / Bubble / Browser Mod' },
+                  { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
                   { value: 'more-info', label: 'Schermata nativa HA' },
                   { value: 'none', label: 'Nessuna' },
                 ],
@@ -276,7 +276,7 @@ export class M3EStatusCardEditor extends LitElement {
                 options: [
                   { value: 'popup', label: 'Apri popup M3E' },
                   { value: 'more-info', label: 'Schermata nativa HA' },
-                  { value: 'navigate', label: 'Percorso / Bubble / Browser Mod' },
+                  { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
                   { value: 'none', label: 'Nessuna' },
                 ],
               },
@@ -388,7 +388,7 @@ export class M3EStatusCardEditor extends LitElement {
       popup_type: 'Tipo card / Schermata popup',
       tap_action: 'Azione al tocco (Tap)',
       hold_action: 'Azione pressione prolungata (Hold)',
-      navigation_path: 'Percorso dashboard (/lovelace/...) · #hash Bubble Card · script/browser_mod',
+      navigation_path: 'Percorso dashboard o #hash Pop-up',
       secondary_entity: 'Entità secondaria (auto-rilevata dal device se vuota)',
       extra_entities:
         this._resolvedType() === 'power_strip'

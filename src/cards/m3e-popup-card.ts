@@ -27,6 +27,13 @@ interface HACardHelpers {
   createCardElement: (config: LovelaceCardConfig) => Promise<HACardElement> | HACardElement;
 }
 
+interface EnclosingContainer {
+  kind: 'section' | 'stack';
+  container: HTMLElement;
+  cardWrapper: HTMLElement;
+  outerSection?: HTMLElement;
+}
+
 const ACTIVE_STATES = new Set([
   'on',
   'open',
@@ -48,6 +55,7 @@ export class M3EPopupCard extends LitElement {
   @state() private _config?: M3EPopupCardConfig;
   @state() private _isOpen = false;
   @state() private _isEditMode = false;
+  @state() private _isSectionGrid = false;
 
   @query('dialog.m3e-popup-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.dialog-surface') private _surfaceEl?: HTMLElement;
@@ -57,8 +65,14 @@ export class M3EPopupCard extends LitElement {
   private _registeredTarget = '';
   private _cardElements: HACardElement[] = [];
   private _lastCardsJson = '';
-  private _adoptedSiblings: Array<{ el: HTMLElement; parent: Node; nextSibling: Node | null }> = [];
-  private _hiddenStackSiblings: HTMLElement[] = [];
+  private _adoptedSiblings: Array<{
+    el: HTMLElement;
+    parent: Node;
+    nextSibling: Node | null;
+    prevGridColumn: string;
+  }> = [];
+  private _hiddenSiblings: HTMLElement[] = [];
+  private _collapsedSection?: HTMLElement;
 
   public static getStubConfig(): M3EPopupCardConfig {
     return {
@@ -67,7 +81,6 @@ export class M3EPopupCard extends LitElement {
       name: 'Pop-up',
       show_header_button: true,
       show_state: true,
-      cards: [],
     };
   }
 
@@ -89,7 +102,7 @@ export class M3EPopupCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return this._isEditMode ? 2 : 0;
+    return this._isEditMode ? 1 : 0;
   }
 
   public getGridOptions() {
@@ -109,7 +122,7 @@ export class M3EPopupCard extends LitElement {
     window.addEventListener('m3e-popup-open', this._onPopupOpenEvent as EventListener);
     requestAnimationFrame(() => {
       this._checkEditMode();
-      this._syncStackVisibility();
+      this._syncContainerLayout();
       this._checkTriggerMatch();
     });
   }
@@ -119,7 +132,7 @@ export class M3EPopupCard extends LitElement {
     unregisterPopupTarget(this._registeredTarget);
     this._registeredTarget = '';
     this._restoreAdoptedSiblings();
-    this._unhideStackSiblings();
+    this._restoreContainerStyles();
     window.removeEventListener('hashchange', this._onLocationChange);
     window.removeEventListener('popstate', this._onLocationChange);
     window.removeEventListener('location-changed', this._onLocationChange);
@@ -157,65 +170,127 @@ export class M3EPopupCard extends LitElement {
     if (nextEdit !== this._isEditMode) {
       this._isEditMode = nextEdit;
       if (nextEdit) {
+        if (this._isOpen) this.closePopup(false);
         this._restoreAdoptedSiblings();
-        this._unhideStackSiblings();
+        this._restoreContainerStyles();
       } else {
-        this._syncStackVisibility();
+        this._syncContainerLayout();
       }
     }
   }
 
-  private _findVerticalStackRoot(): HTMLElement | null {
-    // Bubble Card pattern: find enclosing hui-vertical-stack-card #root if we are its first card
-    const hostCard = this.parentElement;
-    if (!hostCard) return null;
-    const stackRoot = hostCard.parentElement;
-    if (!stackRoot) return null;
-    const rootNode = stackRoot.getRootNode();
-    if (
-      rootNode instanceof ShadowRoot &&
-      rootNode.host?.tagName.toLowerCase() === 'hui-vertical-stack-card'
-    ) {
-      if (stackRoot.firstElementChild === hostCard) {
-        return stackRoot;
+  /**
+   * Detects whether this card is the first card of either:
+   * - a native Home Assistant Section (`hui-grid-section` / `hui-section`)
+   * - a native Home Assistant `vertical-stack` (`hui-vertical-stack-card`)
+   */
+  private _findEnclosingContainer(): EnclosingContainer | null {
+    // Walk up past hui-card / hui-card-edit-mode wrappers to find the direct card wrapper
+    let cardWrapper: HTMLElement | null = this.parentElement;
+    while (cardWrapper && cardWrapper.parentElement) {
+      const container = cardWrapper.parentElement;
+      const rootNode = container.getRootNode();
+      if (rootNode instanceof ShadowRoot && rootNode.host) {
+        const hostTag = rootNode.host.tagName.toLowerCase();
+        if (hostTag === 'hui-grid-section') {
+          if (container.firstElementChild === cardWrapper) {
+            // Find outer <hui-section> element to collapse it out of Sections grid in view mode
+            let outerSection: HTMLElement | undefined;
+            const gridHost = rootNode.host as HTMLElement;
+            const gridRoot = gridHost.getRootNode();
+            if (gridRoot instanceof ShadowRoot && gridRoot.host?.tagName.toLowerCase() === 'hui-section') {
+              outerSection = gridRoot.host as HTMLElement;
+            } else {
+              outerSection = gridHost;
+            }
+            return { kind: 'section', container, cardWrapper, outerSection };
+          }
+          return null;
+        }
+        if (hostTag === 'hui-vertical-stack-card') {
+          if (container.firstElementChild === cardWrapper) {
+            return { kind: 'stack', container, cardWrapper };
+          }
+          return null;
+        }
       }
+      cardWrapper = container;
     }
     return null;
   }
 
-  private _syncStackVisibility(): void {
-    if (this._isEditMode || this._isOpen) {
-      this._unhideStackSiblings();
+  private _syncContainerLayout(): void {
+    const enc = this._findEnclosingContainer();
+    this._isSectionGrid = enc?.kind === 'section';
+
+    if (this._isEditMode || this._isOpen || !enc) {
+      this._restoreContainerStyles();
       return;
     }
-    const stackRoot = this._findVerticalStackRoot();
-    if (!stackRoot) return;
-    const children = Array.from(stackRoot.children).slice(1) as HTMLElement[];
-    this._hiddenStackSiblings = children;
-    for (const el of children) {
+
+    // In View Mode while closed: collapse the section out of grid flow while keeping <dialog> usable
+    const siblings = Array.from(enc.container.children).filter(
+      (el) => el !== enc.cardWrapper,
+    ) as HTMLElement[];
+    this._hiddenSiblings = siblings;
+    for (const el of siblings) {
       el.style.display = 'none';
     }
+
+    if (enc.outerSection) {
+      this._collapsedSection = enc.outerSection;
+      enc.outerSection.style.position = 'fixed';
+      enc.outerSection.style.width = '0';
+      enc.outerSection.style.height = '0';
+      enc.outerSection.style.overflow = 'visible';
+      enc.outerSection.style.margin = '0';
+      enc.outerSection.style.padding = '0';
+      enc.outerSection.style.pointerEvents = 'none';
+    }
   }
 
-  private _unhideStackSiblings(): void {
-    for (const el of this._hiddenStackSiblings) {
+  private _restoreContainerStyles(): void {
+    for (const el of this._hiddenSiblings) {
       el.style.display = '';
     }
-    this._hiddenStackSiblings = [];
+    this._hiddenSiblings = [];
+    if (this._collapsedSection) {
+      this._collapsedSection.style.position = '';
+      this._collapsedSection.style.width = '';
+      this._collapsedSection.style.height = '';
+      this._collapsedSection.style.overflow = '';
+      this._collapsedSection.style.margin = '';
+      this._collapsedSection.style.padding = '';
+      this._collapsedSection.style.pointerEvents = '';
+      this._collapsedSection = undefined;
+    }
   }
 
-  private _adoptStackSiblings(): void {
+  private _adoptContainerSiblings(): void {
     if (this._adoptedSiblings.length > 0 || !this._stackPortalEl) return;
-    const stackRoot = this._findVerticalStackRoot();
-    if (!stackRoot) return;
-    const siblings = Array.from(stackRoot.children).slice(1) as HTMLElement[];
+    const enc = this._findEnclosingContainer();
+    if (!enc) return;
+    this._isSectionGrid = enc.kind === 'section';
+
+    const siblings = Array.from(enc.container.children).filter(
+      (el) => el !== enc.cardWrapper,
+    ) as HTMLElement[];
+
     for (const el of siblings) {
+      const prevGridColumn = el.style.gridColumn;
       this._adoptedSiblings.push({
         el,
-        parent: stackRoot,
+        parent: enc.container,
         nextSibling: el.nextSibling,
+        prevGridColumn,
       });
       el.style.display = '';
+      if (enc.kind === 'section') {
+        const colSpan = getComputedStyle(el).getPropertyValue('--column-size').trim();
+        if (colSpan && !el.style.gridColumn) {
+          el.style.gridColumn = `span ${colSpan}`;
+        }
+      }
       this._stackPortalEl.appendChild(el);
     }
   }
@@ -223,6 +298,7 @@ export class M3EPopupCard extends LitElement {
   private _restoreAdoptedSiblings(): void {
     if (this._adoptedSiblings.length === 0) return;
     for (const rec of this._adoptedSiblings) {
+      rec.el.style.gridColumn = rec.prevGridColumn;
       if (rec.nextSibling && rec.nextSibling.parentNode === rec.parent) {
         rec.parent.insertBefore(rec.el, rec.nextSibling);
       } else {
@@ -270,7 +346,7 @@ export class M3EPopupCard extends LitElement {
     this._isOpen = true;
     await this.updateComplete;
     await this._syncEmbeddedCards();
-    this._adoptStackSiblings();
+    this._adoptContainerSiblings();
 
     const dlg = this._dialogEl;
     if (dlg && !dlg.open) {
@@ -287,7 +363,7 @@ export class M3EPopupCard extends LitElement {
       if (this._dialogEl?.open) this._dialogEl.close();
       this._restoreAdoptedSiblings();
       this._isOpen = false;
-      this._syncStackVisibility();
+      this._syncContainerLayout();
       if (clearUrlHash) {
         const mine = normalizePopupTarget(this._config?.hash);
         if (mine.startsWith('#') && window.location.hash.trim().toLowerCase() === mine) {
@@ -305,6 +381,8 @@ export class M3EPopupCard extends LitElement {
 
   private async _syncEmbeddedCards(): Promise<void> {
     const cardsCfg = this._config?.cards ?? [];
+    if (cardsCfg.length === 0) return;
+
     const json = JSON.stringify(cardsCfg);
     if (json !== this._lastCardsJson) {
       this._lastCardsJson = json;
@@ -328,7 +406,7 @@ export class M3EPopupCard extends LitElement {
             nextEls.push(el);
           }
         } catch {
-          // ignore malformed child card config
+          // ignore malformed child card
         }
       }
       this._cardElements = nextEls;
@@ -352,7 +430,10 @@ export class M3EPopupCard extends LitElement {
   }
 
   protected updated(changedProps: PropertyValues): void {
-    if (this._isOpen && (changedProps.has('hass') || changedProps.has('_config') || changedProps.has('_isOpen'))) {
+    if (
+      this._isOpen &&
+      (changedProps.has('hass') || changedProps.has('_config') || changedProps.has('_isOpen'))
+    ) {
       void this._syncEmbeddedCards();
     }
   }
@@ -429,63 +510,77 @@ export class M3EPopupCard extends LitElement {
     return renderM3EntityIcon(ent, this._isEntityActive);
   }
 
-  protected render() {
-    if (!this._config) return nothing;
-
+  private _renderHeaderBar(isPreview: boolean) {
     const ent = this._entity;
     const isActive = this._isEntityActive;
     const title =
-      resolveEntityName(this.hass, ent, this._config.name) ||
-      this._config.hash ||
+      resolveEntityName(this.hass, ent, this._config?.name) ||
+      this._config?.hash ||
       'Pop-up';
-    const showHeaderBtn = Boolean(this._config.entity) && this._config.show_header_button !== false;
-    const showState = Boolean(ent) && this._config.show_state !== false;
+    const showHeaderBtn =
+      Boolean(this._config?.entity) && this._config?.show_header_button !== false;
+    const showState = Boolean(ent) && this._config?.show_state !== false;
     const stateLabel =
       showState && ent
         ? this.hass && typeof this.hass.formatEntityState === 'function'
           ? this.hass.formatEntityState(ent)
           : String(ent.state ?? '')
         : '';
-    const cardCount = this._config.cards?.length ?? 0;
+
+    return html`
+      <header class="dialog-header ${isPreview ? 'is-preview' : ''}">
+        <!-- Close (X) ALWAYS on the left per M3E guidelines -->
+        <button
+          type="button"
+          class="close-btn"
+          aria-label="Chiudi"
+          @click=${() => (isPreview ? void this.openPopup() : this.closePopup(true))}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+            />
+          </svg>
+        </button>
+
+        <div class="dialog-title-wrap">
+          <span class="dialog-title">${title}</span>
+          ${stateLabel || isPreview
+            ? html`
+                <span class="dialog-sub">
+                  ${stateLabel}${stateLabel && isPreview ? ' · ' : ''}${isPreview
+                    ? this._config?.hash || '#popup'
+                    : ''}
+                </span>
+              `
+            : nothing}
+        </div>
+
+        <!-- Optional Entity Action Button ALWAYS on the right -->
+        ${showHeaderBtn
+          ? html`
+              <button
+                type="button"
+                class="header-action-btn ${isActive ? 'is-active' : ''}"
+                aria-label=${title}
+                aria-pressed=${String(isActive)}
+                @click=${() => this._onHeaderActionClick()}
+              >
+                ${this._renderHeaderIcon()}
+              </button>
+            `
+          : nothing}
+      </header>
+    `;
+  }
+
+  protected render() {
+    if (!this._config) return nothing;
 
     return html`
       ${this._isEditMode
-        ? html`
-            <ha-card class="edit-banner">
-              <div class="edit-left">
-                ${showHeaderBtn
-                  ? html`
-                      <span class="header-action-btn ${isActive ? 'is-active' : ''}">
-                        ${this._renderHeaderIcon()}
-                      </span>
-                    `
-                  : html`
-                      <span class="header-action-btn">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            fill="currentColor"
-                            d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 16H5V7h14v12Z"
-                          />
-                        </svg>
-                      </span>
-                    `}
-                <div class="edit-meta">
-                  <span class="edit-title">${title}</span>
-                  <span class="edit-sub">
-                    M3E Pop-up · <code>${this._config.hash || '#popup'}</code>
-                    ${cardCount > 0 ? ` · ${cardCount} card` : ''}
-                  </span>
-                </div>
-              </div>
-              <button
-                type="button"
-                class="preview-btn"
-                @click=${() => void this.openPopup()}
-              >
-                Anteprima
-              </button>
-            </ha-card>
-          `
+        ? html`<div class="edit-header-host">${this._renderHeaderBar(true)}</div>`
         : nothing}
 
       <dialog
@@ -500,44 +595,11 @@ export class M3EPopupCard extends LitElement {
         @touchmove=${guardDialogTouchMove}
       >
         <div class="dialog-surface">
-          <header class="dialog-header">
-            ${showHeaderBtn
-              ? html`
-                  <button
-                    type="button"
-                    class="header-action-btn is-clickable ${isActive ? 'is-active' : ''}"
-                    aria-label=${title}
-                    aria-pressed=${String(isActive)}
-                    @click=${() => this._onHeaderActionClick()}
-                  >
-                    ${this._renderHeaderIcon()}
-                  </button>
-                `
-              : nothing}
-
-            <div class="dialog-title-wrap">
-              <span class="dialog-title">${title}</span>
-              ${stateLabel ? html`<span class="dialog-sub">${stateLabel}</span>` : nothing}
-            </div>
-
-            <button
-              type="button"
-              class="close-btn"
-              aria-label="Chiudi"
-              @click=${() => this.closePopup(true)}
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
-                />
-              </svg>
-            </button>
-          </header>
+          ${this._renderHeaderBar(false)}
 
           <div class="popup-body">
             <div class="cards-host"></div>
-            <div class="stack-portal"></div>
+            <div class="stack-portal ${this._isSectionGrid ? 'is-section-grid' : ''}"></div>
           </div>
         </div>
       </dialog>
@@ -552,69 +614,18 @@ export class M3EPopupCard extends LitElement {
         height: auto;
       }
 
-      /* Edit mode placeholder banner */
-      ha-card.edit-banner {
+      /* Clean native header preview in Dashboard Edit Mode (fits 1 HA Section row = 56px cleanly) */
+      .edit-header-host {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 14px;
-        border-radius: 24px;
-        background: var(--md-sys-color-surface-container-low, #1c1d22);
-        border: 1px dashed var(--md-sys-color-outline-variant, #44464f);
-        box-shadow: none;
+        min-height: 56px;
+        height: 100%;
+        padding: 4px 6px;
+        box-sizing: border-box;
       }
 
-      .edit-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-      }
-
-      .edit-meta {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-
-      .edit-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--md-sys-color-on-surface, #e3e2e6);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .edit-sub {
-        font-size: 12px;
-        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .edit-sub code {
-        font-family: ui-monospace, monospace;
-        padding: 1px 6px;
-        border-radius: 6px;
-        background: var(--md-sys-color-surface-container-high, #282930);
-      }
-
-      .preview-btn {
-        flex: 0 0 auto;
-        height: 36px;
-        padding: 0 14px;
-        border: 0;
-        border-radius: var(--m3e-corner-full);
-        background: var(--md-sys-color-primary-container, #364067);
-        color: var(--md-sys-color-on-primary-container, #dce2ff);
-        font: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
+      .edit-header-host .dialog-header {
+        width: 100%;
       }
 
       /* Unified M3E Popup Dialog Shell (matches Status Card & Light Group compact popup) */
@@ -628,6 +639,7 @@ export class M3EPopupCard extends LitElement {
         max-width: min(460px, calc(100vw - 24px));
         max-height: calc(100dvh - 24px);
         overscroll-behavior: contain;
+        pointer-events: auto;
         color: var(--md-sys-color-on-surface, #e3e2e6);
       }
 
@@ -681,44 +693,34 @@ export class M3EPopupCard extends LitElement {
         gap: 12px;
       }
 
-      .header-action-btn {
-        flex: 0 0 44px;
-        width: 44px;
-        height: 44px;
+      .close-btn {
+        flex: 0 0 40px;
+        width: 40px;
+        height: 40px;
         border: 0;
         padding: 0;
         border-radius: 50%;
-        background: var(--md-sys-color-surface-container-high, #282930);
-        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        background: transparent;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
         display: grid;
         place-items: center;
-        transition:
-          transform var(--m3e-spring-spatial-fast),
-          border-radius var(--m3e-spring-bouncy),
-          background-color var(--m3e-spring-effects-default),
-          color var(--m3e-spring-effects-default);
-      }
-
-      .header-action-btn.is-clickable {
         cursor: pointer;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
       }
 
-      .header-action-btn.is-active {
-        border-radius: 14px;
-        background: var(--md-sys-color-primary-container, #364067);
-        color: var(--md-sys-color-on-primary-container, #dce2ff);
+      .close-btn:hover {
+        background: color-mix(in srgb, currentColor 8%, transparent);
       }
 
-      .header-action-btn.is-clickable:active {
+      .close-btn:active {
         transform: scale(0.92);
       }
 
-      .header-action-btn svg,
-      .header-action-btn ha-icon,
-      .header-action-btn ha-state-icon {
+      .close-btn svg {
         width: 22px;
         height: 22px;
-        --mdc-icon-size: 22px;
       }
 
       .dialog-title-wrap {
@@ -747,34 +749,41 @@ export class M3EPopupCard extends LitElement {
         text-overflow: ellipsis;
       }
 
-      .close-btn {
-        flex: 0 0 44px;
-        width: 44px;
-        height: 44px;
+      .header-action-btn {
+        flex: 0 0 42px;
+        width: 42px;
+        height: 42px;
         border: 0;
         padding: 0;
         border-radius: 50%;
-        background: transparent;
-        color: var(--md-sys-color-on-surface, #e3e2e6);
+        background: var(--md-sys-color-surface-container-high, #282930);
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
         display: grid;
         place-items: center;
         cursor: pointer;
         transition:
-          background-color var(--m3e-spring-effects-fast),
-          transform var(--m3e-spring-spatial-fast);
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default);
       }
 
-      .close-btn:hover {
-        background: color-mix(in srgb, currentColor 8%, transparent);
+      .header-action-btn.is-active {
+        border-radius: 14px;
+        background: var(--md-sys-color-primary-container, #364067);
+        color: var(--md-sys-color-on-primary-container, #dce2ff);
       }
 
-      .close-btn:active {
+      .header-action-btn:active {
         transform: scale(0.92);
       }
 
-      .close-btn svg {
-        width: 22px;
-        height: 22px;
+      .header-action-btn svg,
+      .header-action-btn ha-icon,
+      .header-action-btn ha-state-icon {
+        width: 21px;
+        height: 21px;
+        --mdc-icon-size: 21px;
       }
 
       /* Popup Body: unified elevated surface tokens for all child cards */
@@ -788,11 +797,28 @@ export class M3EPopupCard extends LitElement {
         --m3e-card-border-radius: 24px;
       }
 
-      .cards-host,
+      .cards-host {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
       .stack-portal {
         display: flex;
         flex-direction: column;
         gap: 12px;
+      }
+
+      /* Preserve native Home Assistant 12-column Sections grid & card resize spans */
+      .stack-portal.is-section-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .stack-portal.is-section-grid > * {
+        grid-column: span var(--column-size, 12);
       }
 
       .cards-host:empty,

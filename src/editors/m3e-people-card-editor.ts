@@ -153,7 +153,7 @@ export class M3EPeopleCardEditor extends LitElement {
             mode: 'dropdown',
             options: [
               { value: 'more-info', label: 'Dettagli persona (More-info)' },
-              { value: 'navigate', label: 'Percorso / Bubble / Script' },
+              { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
               { value: 'none', label: 'Nessuna azione' },
             ],
           },

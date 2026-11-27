@@ -221,7 +221,7 @@ export class M3EStatusBadge extends LitElement {
                   options: [
                     { value: 'more-info', label: 'Dettagli Home Assistant (More-info)' },
                     { value: 'toggle', label: 'Toggle stato' },
-                    { value: 'navigate', label: 'Naviga / #hash Bubble / Browser Mod' },
+                    { value: 'navigate', label: 'Naviga / Apri Pop-up (#hash)' },
                     { value: 'none', label: 'Nessuna azione' },
                   ],
                 },
@@ -243,7 +243,7 @@ export class M3EStatusBadge extends LitElement {
           state_content: 'Contenuto stato (stato / attributi)',
           active_state: 'Stati attivi personalizzati (es. on,open,problem)',
           tap_action: 'Azione al tocco',
-          navigation_path: 'Percorso / #popup Bubble Card / script',
+          navigation_path: 'Percorso dashboard o #hash Pop-up',
           progress_enabled: 'Abilita Entity Progress Badge',
           progress_start_now: 'Partenza da ora (sveglie / remaining time)',
           progress_entity: 'Entità progresso (vuoto = entità principale, es. history_stats)',
