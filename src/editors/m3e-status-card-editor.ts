@@ -287,7 +287,7 @@ export class M3EStatusCardEditor extends LitElement {
     ];
 
     if (needsNav) {
-      schema.push({ name: 'navigation_path', selector: { text: {} } });
+      schema.push({ name: 'navigation_path', selector: { navigation: {} } });
     }
 
     if (type === 'media') {

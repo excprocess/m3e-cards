@@ -225,7 +225,7 @@ export class M3EStatusBadge extends LitElement {
                 },
               },
             },
-            { name: 'navigation_path', selector: { text: {} } },
+            { name: 'navigation_path', selector: { navigation: {} } },
           ],
         },
       ],

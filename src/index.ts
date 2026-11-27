@@ -6,6 +6,7 @@ import './cards/m3e-light-group-card';
 import './cards/m3e-media-bar-card';
 import './cards/m3e-media-player-card';
 import './cards/m3e-people-card';
+import './cards/m3e-popup-card';
 import './cards/m3e-remote-card';
 import './cards/m3e-scene-card';
 import './cards/m3e-stack-card';
@@ -22,6 +23,7 @@ export { M3ELightGroupCard } from './cards/m3e-light-group-card';
 export { M3EMediaBarCard } from './cards/m3e-media-bar-card';
 export { M3EMediaPlayerCard } from './cards/m3e-media-player-card';
 export { M3EPeopleCard } from './cards/m3e-people-card';
+export { M3EPopupCard } from './cards/m3e-popup-card';
 export { M3ERemoteCard } from './cards/m3e-remote-card';
 export { M3ESceneCard } from './cards/m3e-scene-card';
 export { M3EStackCard } from './cards/m3e-stack-card';
@@ -42,6 +44,7 @@ export type {
   M3EMediaPlayerCardConfig,
   M3EPeopleCardConfig,
   M3EPeopleItemConfig,
+  M3EPopupCardConfig,
   M3ERemoteCardConfig,
   M3ERemoteCustomControl,
   M3ERemoteCustomSegment,
@@ -185,6 +188,14 @@ registerCard({
   name: 'Media Player',
   description:
     'Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.',
+  preview: true,
+});
+
+registerCard({
+  type: 'm3e-popup-card',
+  name: 'Pop-up Card',
+  description:
+    'Customizable Material 3 Expressive pop-up container with entity header button, native HA Add card picker / vertical-stack support, and hash/path navigation trigger.',
   preview: true,
 });
 

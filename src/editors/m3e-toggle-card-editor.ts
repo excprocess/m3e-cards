@@ -131,7 +131,7 @@ export class M3EToggleCardEditor extends LitElement {
     ];
 
     if (this._config?.hold_action === 'navigate') {
-      schema.push({ name: 'navigation_path', selector: { text: {} } });
+      schema.push({ name: 'navigation_path', selector: { navigation: {} } });
     }
 
     return schema;

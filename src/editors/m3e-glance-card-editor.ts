@@ -147,7 +147,7 @@ export class M3EGlanceCardEditor extends LitElement {
     );
 
     if (item.tap_action === 'navigate') {
-      schema.push({ name: 'navigation_path', selector: { text: {} } });
+      schema.push({ name: 'navigation_path', selector: { navigation: {} } });
     }
 
     return schema;

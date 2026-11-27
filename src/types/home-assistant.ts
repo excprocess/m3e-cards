@@ -378,6 +378,25 @@ export interface M3ERemoteCustomControl {
   segments?: M3ERemoteCustomSegment[];
 }
 
+export interface M3EPopupCardConfig extends LovelaceCardConfig {
+  /** Trigger hash or HA navigation path (e.g. "#soggiorno" or "/lovelace/soggiorno") */
+  hash: string;
+  /** Optional custom title (if omitted, automatically uses entity's friendly_name) */
+  name?: EntityNameConfig;
+  /** Optional entity linked to the left header action button and/or title */
+  entity?: string;
+  /** Optional custom MDI icon for the left header button */
+  icon?: string;
+  /** Use HA's native entity icon on the left header button */
+  use_entity_icon?: boolean;
+  /** Show the left header action button when an entity is configured (default: true) */
+  show_header_button?: boolean;
+  /** Show the entity state subtitle under the title (default: true when entity is set) */
+  show_state?: boolean;
+  /** Cards rendered inside the popup body (standalone mode; also works as first card of a vertical-stack) */
+  cards?: LovelaceCardConfig[];
+}
+
 export interface M3ERemoteCardConfig extends LovelaceCardConfig {
   entity: string;
   status_entity?: string;
