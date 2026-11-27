@@ -10,6 +10,10 @@ import {
   unregisterPopupEditor,
   type M3EPopupEditorHandle,
 } from '../utils/popup-editor-bridge';
+import {
+  expandEditDialogPreviewPane,
+  openOfficialHACardDialog,
+} from '../utils/ha-native-card-dialog';
 
 async function ensureStackEditorElementsLoaded(): Promise<void> {
   if (
@@ -57,12 +61,43 @@ export class M3EPopupCardEditor extends LitElement {
       this._emitConfig({ ...this._config, cards });
     },
     openAddCard: () => {
-      void this._openModal('pick');
+      void this._handleAddCard();
     },
     openEditCard: (index) => {
-      void this._openModal('edit', index);
+      void this._handleEditCard(index);
     },
   };
+
+  private async _handleAddCard(): Promise<void> {
+    if (this.hass && this._config) {
+      const opened = await openOfficialHACardDialog({
+        hass: this.hass,
+        popupConfig: this._config,
+        mode: 'add',
+        onCardsUpdated: (cards) => {
+          if (this._config) this._emitConfig({ ...this._config, cards });
+        },
+      });
+      if (opened) return;
+    }
+    await this._openModal('pick');
+  }
+
+  private async _handleEditCard(index: number): Promise<void> {
+    if (this.hass && this._config) {
+      const opened = await openOfficialHACardDialog({
+        hass: this.hass,
+        popupConfig: this._config,
+        mode: 'edit',
+        index,
+        onCardsUpdated: (cards) => {
+          if (this._config) this._emitConfig({ ...this._config, cards });
+        },
+      });
+      if (opened) return;
+    }
+    await this._openModal('edit', index);
+  }
 
   private async _openModal(mode: 'pick' | 'edit', index?: number): Promise<void> {
     await ensureStackEditorElementsLoaded();
@@ -95,6 +130,7 @@ export class M3EPopupCardEditor extends LitElement {
     super.connectedCallback();
     registerPopupEditor(this._bridgeHandle);
     void ensureStackEditorElementsLoaded();
+    requestAnimationFrame(() => expandEditDialogPreviewPane());
   }
 
   public disconnectedCallback(): void {
