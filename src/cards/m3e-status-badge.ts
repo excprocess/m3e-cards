@@ -204,6 +204,7 @@ export class M3EStatusBadge extends LitElement {
                 { name: 'progress_show_percent', selector: { boolean: {} } },
               ],
             },
+            { name: 'progress_show_entity_state', selector: { boolean: {} } },
           ],
         },
         {
@@ -253,6 +254,7 @@ export class M3EStatusBadge extends LitElement {
           progress_end_value: 'Valore finale fisso (es. 100, 22:00, minuti max)',
           progress_invert: 'Inverti barra (100% → 0%)',
           progress_show_percent: 'Mostra percentuale (%)',
+          progress_show_entity_state: 'Mostra stato entità progresso nella barra',
         };
         return labels[schema.name] ?? schema.name;
       },
@@ -317,9 +319,10 @@ export class M3EStatusBadge extends LitElement {
     return DEFAULT_ACTIVE_STATES.has(raw);
   }
 
-  private _formatPrimaryState(): string {
-    const entity = this._entity;
-    if (!entity || this._isUnavailable) return t(this.hass, 'offline');
+  private _formatEntityValue(entity?: HassEntity): string {
+    if (!entity || !entity.state || entity.state === 'unavailable' || entity.state === 'unknown') {
+      return t(this.hass, 'offline');
+    }
 
     const raw = String(entity.state ?? '').trim();
     const relTs = formatRelativeTimestamp(raw, this.hass);
@@ -335,7 +338,7 @@ export class M3EStatusBadge extends LitElement {
     if (/^-?\d+\.\d+$/.test(raw)) {
       const num = parseFloat(raw);
       const clean = Number.isInteger(num) ? String(num) : num.toFixed(1).replace(/\.0$/, '');
-      return unit ? `${clean}${unit}` : clean;
+      return unit ? `${clean} ${unit}` : clean;
     }
     if (typeof this.hass?.formatEntityState === 'function') {
       try {
@@ -344,7 +347,7 @@ export class M3EStatusBadge extends LitElement {
         // fallback below
       }
     }
-    return unit ? `${raw}${unit}` : raw;
+    return unit ? `${raw} ${unit}` : raw;
   }
 
   private _onTap(): void {
@@ -402,11 +405,19 @@ export class M3EStatusBadge extends LitElement {
     const hasProgress = progress.percent !== null;
     const progressPct = progress.percent ?? 0;
 
-    const baseVal = progress.liveRemainingText || this._formatPrimaryState();
+    const progressEnt =
+      this._config.progress_enabled &&
+      this._config.progress_show_entity_state &&
+      this._config.progress_entity
+        ? this.hass?.states[this._config.progress_entity]
+        : undefined;
+    const valueSourceEnt = progressEnt ?? entity;
+    const baseVal = progress.liveRemainingText || this._formatEntityValue(valueSourceEnt);
     const hideState = Boolean(this._config.hide_state);
-    const stateContentVal = !hideState
-      ? resolveStateContent(this.hass, entity, this._config.state_content, baseVal)
-      : null;
+    const stateContentVal =
+      !hideState && !progressEnt
+        ? resolveStateContent(this.hass, entity, this._config.state_content, baseVal)
+        : null;
     let valueText = hideState ? '' : (stateContentVal ?? baseVal);
     if (!hideState && this._config.progress_show_percent && hasProgress) {
       const pctLabel = `${Math.round(progressPct)}%`;

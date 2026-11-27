@@ -450,6 +450,8 @@ export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   progress_invert?: boolean;
   /** Append/show percentage in the badge value */
   progress_show_percent?: boolean;
+  /** Display the state of `progress_entity` in the badge value instead of the primary entity's state */
+  progress_show_entity_state?: boolean;
 }
 
 export interface M3EStatusCardConfig extends LovelaceCardConfig {
