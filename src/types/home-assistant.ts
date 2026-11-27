@@ -361,7 +361,7 @@ export interface M3ERemoteCustomSegment {
 }
 
 export interface M3ERemoteCustomControl {
-  type: 'button' | 'segmented';
+  type: 'button' | 'segmented' | 'selector';
   label?: string;
   icon?: string;
   action_type?: M3ERemoteCustomActionType;
@@ -373,6 +373,8 @@ export interface M3ERemoteCustomControl {
   device?: string;
   state_entity?: string;
   active_state?: string;
+  /** For type === 'selector': which attribute supplies the option list */
+  selector_attribute?: 'auto' | 'options' | 'source_list' | 'sound_mode_list';
   segments?: M3ERemoteCustomSegment[];
 }
 

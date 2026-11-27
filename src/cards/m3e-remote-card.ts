@@ -20,6 +20,7 @@ import {
 import {
   remoteCustomControlStyles,
   renderRemoteCustomControls,
+  type RemoteSelectorRequest,
 } from '../utils/remote-custom-controls';
 
 const CHEVRON_UP_SVG = html`
@@ -55,6 +56,7 @@ export class M3ERemoteCard extends LitElement {
   @state() private _padOffsetY = 0;
   @state() private _padActive = false;
   @state() private _padTapPulse = false;
+  @state() private _selectorSheet: RemoteSelectorRequest | null = null;
 
   @query('dialog.source-dialog') private _sourceDialogEl?: HTMLDialogElement;
   @query('.source-dialog-surface') private _sourceSurfaceEl?: HTMLElement;
@@ -167,7 +169,8 @@ export class M3ERemoteCard extends LitElement {
     );
   }
 
-  private _openSourceDialog(): void {
+  private _openSelectorDialog(req: RemoteSelectorRequest): void {
+    this._selectorSheet = req;
     const dlg = this._sourceDialogEl;
     if (!dlg || dlg.open) return;
     dlg.showModal();
@@ -181,6 +184,7 @@ export class M3ERemoteCard extends LitElement {
     if (!dlg || !dlg.open) return;
     animateDialogClose(dlg, this._sourceSurfaceEl ?? null, () => {
       if (dlg.open) dlg.close();
+      this._selectorSheet = null;
     });
   }
 
@@ -338,6 +342,16 @@ export class M3ERemoteCard extends LitElement {
           ),
         )
       : [];
+    const currentSoundMode = String(targetEnt?.attributes.sound_mode ?? '').trim();
+    const soundModeList = Array.isArray(targetEnt?.attributes.sound_mode_list)
+      ? Array.from(
+          new Set(
+            (targetEnt!.attributes.sound_mode_list as unknown[])
+              .map((s) => String(s ?? '').trim())
+              .filter(Boolean),
+          ),
+        )
+      : [];
 
     const title = resolveEntityName(this.hass, ent, this._config.name) || this._config.entity;
     const stateLabel =
@@ -383,7 +397,17 @@ export class M3ERemoteCard extends LitElement {
                     class="source-chip"
                     @click=${() => {
                       if (sourceList.length > 0 && media) {
-                        this._openSourceDialog();
+                        this._openSelectorDialog({
+                          title: t(this.hass, 'sources'),
+                          options: sourceList,
+                          current: currentSource,
+                          onSelect: (src: string) => {
+                            this.hass?.callService('media_player', 'select_source', {
+                              entity_id: media.entity_id,
+                              source: src,
+                            });
+                          },
+                        });
                       } else if (targetEnt) {
                         this._openMoreInfo(targetEnt.entity_id);
                       }
@@ -671,17 +695,52 @@ export class M3ERemoteCard extends LitElement {
             `
           : nothing}
 
-        <!-- Custom Native Buttons & Segmented Pills -->
+        <!-- Native Sound Mode Selector (when supported by media_player) -->
+        ${soundModeList.length > 0 && media
+          ? html`
+              <button
+                type="button"
+                class="custom-selector-card"
+                @click=${() => {
+                  this._openSelectorDialog({
+                    title: 'Sound mode',
+                    options: soundModeList,
+                    current: currentSoundMode,
+                    onSelect: (mode: string) => {
+                      this.hass?.callService('media_player', 'select_sound_mode', {
+                        entity_id: media.entity_id,
+                        sound_mode: mode,
+                      });
+                    },
+                  });
+                }}
+              >
+                <span class="custom-selector-left">
+                  <span class="custom-selector-text">
+                    <span class="custom-selector-title">Sound mode</span>
+                    ${currentSoundMode
+                      ? html`<span class="custom-selector-val">${currentSoundMode}</span>`
+                      : nothing}
+                  </span>
+                </span>
+                <span class="custom-selector-chevron">${CHEVRON_DOWN_SVG}</span>
+              </button>
+            `
+          : nothing}
+
+        <!-- Custom Native Buttons, Segmented Pills & Selectors -->
         ${renderRemoteCustomControls(
           this.hass,
           this._config.entity,
           this._config.remote_custom_controls,
           this._config.remote_buttons,
           this._config.remote_device,
+          (req) => this._openSelectorDialog(req),
+          (eid) => this._openMoreInfo(eid),
         )}
       </ha-card>
 
-      <!-- Source Picker Sheet Dialog -->
+      <!-- Unified Selector Sheet Dialog (Sources, Sound Mode & Custom Selectors) -->
       <dialog
         class="source-dialog"
         @click=${(e: MouseEvent) => {
@@ -703,26 +762,22 @@ export class M3ERemoteCard extends LitElement {
             >
               ${CHEVRON_DOWN_SVG}
             </button>
-            <span>${t(this.hass, 'sources')}</span>
+            <span>${this._selectorSheet?.title ?? t(this.hass, 'sources')}</span>
           </div>
           <div class="source-list">
-            ${sourceList.map((src) => {
-              const selected = src.toLowerCase() === currentSource.toLowerCase();
+            ${(this._selectorSheet?.options ?? []).map((opt) => {
+              const selected =
+                opt.toLowerCase() === (this._selectorSheet?.current ?? '').toLowerCase();
               return html`
                 <button
                   type="button"
                   class="source-option ${selected ? 'is-selected' : ''}"
                   @click=${() => {
-                    if (media) {
-                      this.hass?.callService('media_player', 'select_source', {
-                        entity_id: media.entity_id,
-                        source: src,
-                      });
-                    }
+                    this._selectorSheet?.onSelect(opt);
                     this._closeSourceDialog();
                   }}
                 >
-                  <span>${src}</span>
+                  <span>${opt}</span>
                   ${selected ? html`<span class="check-mark">✓</span>` : nothing}
                 </button>
               `;

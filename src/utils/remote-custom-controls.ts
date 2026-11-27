@@ -6,8 +6,144 @@ import type {
 } from '../types/home-assistant';
 import {
   executeCustomRemoteAction,
+  findSiblingEntityId,
   isCustomRemoteItemActive,
 } from './remote-commands';
+
+export interface RemoteSelectorRequest {
+  title: string;
+  options: string[];
+  current: string;
+  onSelect: (option: string) => void;
+}
+
+const CHEVRON_DOWN_SVG = html`
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41Z" />
+  </svg>
+`;
+
+function dedupStrings(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return Array.from(new Set(raw.map((v) => String(v ?? '').trim()).filter(Boolean)));
+}
+
+export function resolveCustomSelector(
+  hass: HomeAssistant,
+  primaryEntityId: string,
+  ctrl: M3ERemoteCustomControl,
+): { title: string; current: string; request: RemoteSelectorRequest | null; entityId?: string } {
+  const targetId =
+    ctrl.entity?.trim() ||
+    findSiblingEntityId(hass, primaryEntityId, 'media_player') ||
+    primaryEntityId;
+  const ent = targetId ? hass.states[targetId] : undefined;
+  const domain = targetId.split('.')[0];
+  const title =
+    ctrl.label?.trim() ||
+    String(ent?.attributes.friendly_name ?? '').trim() ||
+    targetId;
+
+  if (!ent) {
+    return { title, current: '', request: null, entityId: targetId };
+  }
+
+  const mode = ctrl.selector_attribute || 'auto';
+
+  if (mode === 'options' || (mode === 'auto' && (domain === 'input_select' || domain === 'select'))) {
+    const options = dedupStrings(ent.attributes.options);
+    const current = String(ent.state ?? '').trim();
+    return {
+      title,
+      current,
+      entityId: targetId,
+      request:
+        options.length > 0
+          ? {
+              title,
+              options,
+              current,
+              onSelect: (option: string) => {
+                hass.callService(domain === 'select' ? 'select' : 'input_select', 'select_option', {
+                  entity_id: targetId,
+                  option,
+                });
+              },
+            }
+          : null,
+    };
+  }
+
+  if (mode === 'sound_mode_list') {
+    const options = dedupStrings(ent.attributes.sound_mode_list);
+    const current = String(ent.attributes.sound_mode ?? '').trim();
+    return {
+      title,
+      current,
+      entityId: targetId,
+      request:
+        options.length > 0
+          ? {
+              title,
+              options,
+              current,
+              onSelect: (option: string) => {
+                hass.callService('media_player', 'select_sound_mode', {
+                  entity_id: targetId,
+                  sound_mode: option,
+                });
+              },
+            }
+          : null,
+    };
+  }
+
+  // Default for media_player / source_list
+  const sourceOptions = dedupStrings(ent.attributes.source_list);
+  if (sourceOptions.length > 0) {
+    const current = String(ent.attributes.source ?? '').trim();
+    return {
+      title,
+      current,
+      entityId: targetId,
+      request: {
+        title,
+        options: sourceOptions,
+        current,
+        onSelect: (option: string) => {
+          hass.callService('media_player', 'select_source', {
+            entity_id: targetId,
+            source: option,
+          });
+        },
+      },
+    };
+  }
+
+  // Fallback to sound_mode_list if present
+  const soundOptions = dedupStrings(ent.attributes.sound_mode_list);
+  if (soundOptions.length > 0) {
+    const current = String(ent.attributes.sound_mode ?? '').trim();
+    return {
+      title,
+      current,
+      entityId: targetId,
+      request: {
+        title,
+        options: soundOptions,
+        current,
+        onSelect: (option: string) => {
+          hass.callService('media_player', 'select_sound_mode', {
+            entity_id: targetId,
+            sound_mode: option,
+          });
+        },
+      },
+    };
+  }
+
+  return { title, current: String(ent.state ?? ''), request: null, entityId: targetId };
+}
 
 export const remoteCustomControlStyles = css`
   .custom-controls-stack {
@@ -81,7 +217,95 @@ export const remoteCustomControlStyles = css`
     text-overflow: ellipsis;
   }
 
-  /* Custom Segmented M3 Pill (2 or 3 segments with sliding tonal indicator) */
+  /* Custom Native Selector Pill */
+  .custom-selector-card {
+    height: 54px;
+    width: 100%;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 20px;
+    background: var(--md-sys-color-surface-container-high, #282930);
+    color: var(--md-sys-color-on-surface, #e3e2e6);
+    font: inherit;
+    font-size: 14.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    transition:
+      transform var(--m3e-spring-spatial-fast, 200ms cubic-bezier(0.2, 0, 0, 1)),
+      border-radius var(--m3e-spring-bouncy, 420ms cubic-bezier(0.34, 1.4, 0.64, 1)),
+      background-color var(--m3e-spring-effects-fast, 160ms ease);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .custom-selector-card:hover {
+    background: color-mix(
+      in srgb,
+      var(--md-sys-color-on-surface, #e3e2e6) 7%,
+      var(--md-sys-color-surface-container-high, #282930)
+    );
+  }
+
+  .custom-selector-card:active {
+    transform: scale(0.97);
+    border-radius: 16px;
+  }
+
+  .custom-selector-left {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .custom-selector-left ha-icon {
+    --mdc-icon-size: 20px;
+    flex: 0 0 auto;
+    color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+  }
+
+  .custom-selector-text {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+  }
+
+  .custom-selector-title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .custom-selector-val {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .custom-selector-chevron {
+    flex: 0 0 20px;
+    width: 20px;
+    height: 20px;
+    display: grid;
+    place-items: center;
+    color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+  }
+
+  .custom-selector-chevron svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Custom Segmented M3 Pill (2 to 4 segments with sliding tonal indicator) */
   .custom-seg-pill {
     position: relative;
     height: 52px;
@@ -177,18 +401,22 @@ export function renderRemoteCustomControls(
   controls: M3ERemoteCustomControl[] | undefined,
   manualButtons?: M3ERemoteButtonsConfig,
   defaultRemoteDevice?: string,
+  onOpenSelector?: (req: RemoteSelectorRequest) => void,
+  onFallbackMoreInfo?: (entityId: string) => void,
 ): TemplateResult | typeof nothing {
   if (!hass || !controls || controls.length === 0) return nothing;
 
-  // Group consecutive single buttons into 2-column rows; render segmented pills full-width
   const blocks: Array<
     | { kind: 'buttons'; items: M3ERemoteCustomControl[] }
     | { kind: 'segmented'; item: M3ERemoteCustomControl }
+    | { kind: 'selector'; item: M3ERemoteCustomControl }
   > = [];
 
   for (const ctrl of controls) {
     if (ctrl.type === 'segmented') {
       blocks.push({ kind: 'segmented', item: ctrl });
+    } else if (ctrl.type === 'selector') {
+      blocks.push({ kind: 'selector', item: ctrl });
     } else {
       const last = blocks[blocks.length - 1];
       if (last && last.kind === 'buttons') {
@@ -230,6 +458,35 @@ export function renderRemoteCustomControls(
                 `;
               })}
             </div>
+          `;
+        }
+
+        if (block.kind === 'selector') {
+          const resolved = resolveCustomSelector(hass, primaryEntityId, block.item);
+          return html`
+            <button
+              type="button"
+              class="custom-selector-card"
+              @click=${() => {
+                navigator.vibrate?.(10);
+                if (resolved.request && onOpenSelector) {
+                  onOpenSelector(resolved.request);
+                } else if (resolved.entityId && onFallbackMoreInfo) {
+                  onFallbackMoreInfo(resolved.entityId);
+                }
+              }}
+            >
+              <span class="custom-selector-left">
+                ${block.item.icon ? html`<ha-icon .icon=${block.item.icon}></ha-icon>` : nothing}
+                <span class="custom-selector-text">
+                  <span class="custom-selector-title">${resolved.title}</span>
+                  ${resolved.current
+                    ? html`<span class="custom-selector-val">${resolved.current}</span>`
+                    : nothing}
+                </span>
+              </span>
+              <span class="custom-selector-chevron">${CHEVRON_DOWN_SVG}</span>
+            </button>
           `;
         }
 

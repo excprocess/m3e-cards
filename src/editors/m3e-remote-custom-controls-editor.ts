@@ -147,6 +147,19 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
     this._emit(next);
   }
 
+  private _addSelector(): void {
+    const next: M3ERemoteCustomControl[] = [
+      ...this.controls,
+      {
+        type: 'selector',
+        label: 'Selettore',
+        selector_attribute: 'auto',
+      },
+    ];
+    this._expandedIdx = next.length - 1;
+    this._emit(next);
+  }
+
   private _removeControl(idx: number): void {
     const next = this.controls.filter((_, i) => i !== idx);
     if (this._expandedIdx === idx) this._expandedIdx = null;
@@ -212,6 +225,7 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
       device: 'Device ID (opzionale)',
       state_entity: 'Entità stato attivo (opzionale)',
       active_state: 'Stato attivo (es. on, off, Cinema)',
+      selector_attribute: 'Lista opzioni',
     };
     return labels[schema.name] ?? schema.name;
   };
@@ -228,6 +242,9 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
           <button type="button" class="add-btn" @click=${() => this._addSegmented()}>
             + Pillola segmentata
           </button>
+          <button type="button" class="add-btn" @click=${() => this._addSelector()}>
+            + Selettore
+          </button>
         </div>
 
         ${this.controls.length === 0
@@ -242,7 +259,9 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
               const title =
                 ctrl.type === 'segmented'
                   ? `Pillola: ${(ctrl.segments ?? []).map((s) => s.label || '…').join(' | ')}`
-                  : `Pulsante: ${ctrl.label || ctrl.command || ctrl.player_action || 'Senza nome'}`;
+                  : ctrl.type === 'selector'
+                    ? `Selettore: ${ctrl.label || ctrl.entity || 'Senza nome'}`
+                    : `Pulsante: ${ctrl.label || ctrl.command || ctrl.player_action || 'Senza nome'}`;
 
               return html`
                 <div class="ctrl-card">
@@ -304,7 +323,51 @@ export class M3ERemoteCustomControlsEditor extends LitElement {
                             ></ha-form>
                           </div>
                         `
-                      : html`
+                      : ctrl.type === 'selector'
+                        ? html`
+                            <div class="ctrl-body">
+                              <ha-form
+                                .hass=${this.hass}
+                                .data=${ctrl}
+                                .schema=${[
+                                  {
+                                    type: 'grid',
+                                    name: '',
+                                    schema: [
+                                      { name: 'label', selector: { text: {} } },
+                                      { name: 'icon', selector: { icon: {} } },
+                                    ],
+                                  },
+                                  {
+                                    name: 'entity',
+                                    selector: {
+                                      entity: { domain: ['input_select', 'select', 'media_player'] },
+                                    },
+                                  },
+                                  {
+                                    name: 'selector_attribute',
+                                    selector: {
+                                      select: {
+                                        mode: 'dropdown',
+                                        options: [
+                                          { value: 'auto', label: 'Automatico (opzioni / sorgenti)' },
+                                          { value: 'options', label: 'Opzioni (select / input_select)' },
+                                          { value: 'source_list', label: 'Sorgenti (source_list)' },
+                                          { value: 'sound_mode_list', label: 'Modalità audio (sound_mode_list)' },
+                                        ],
+                                      },
+                                    },
+                                  },
+                                ]}
+                                .computeLabel=${this._computeLabel}
+                                @value-changed=${(e: CustomEvent<{ value: Partial<M3ERemoteCustomControl> }>) => {
+                                  e.stopPropagation();
+                                  this._updateControl(idx, e.detail.value);
+                                }}
+                              ></ha-form>
+                            </div>
+                          `
+                        : html`
                           <div class="ctrl-body">
                             <ha-form
                               .hass=${this.hass}

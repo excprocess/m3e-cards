@@ -25,6 +25,7 @@ import { executeRemoteCommand, type RemoteActionKey } from '../utils/remote-comm
 import {
   remoteCustomControlStyles,
   renderRemoteCustomControls,
+  type RemoteSelectorRequest,
 } from '../utils/remote-custom-controls';
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
@@ -163,7 +164,7 @@ export class M3EStatusCard extends LitElement {
   @state() private _dialDragging = false;
   @state() private _dialTemp: number | null = null;
   @state() private _activeSheet: ClimateSheetKind = null;
-  @state() private _remoteSourceSheetOpen = false;
+  @state() private _remoteSelectorSheet: RemoteSelectorRequest | null = null;
 
   // Media volume slider interaction state
   @state() private _volDragging = false;
@@ -310,7 +311,7 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_dialDragging') ||
       changedProps.has('_dialTemp') ||
       changedProps.has('_activeSheet') ||
-      changedProps.has('_remoteSourceSheetOpen') ||
+      changedProps.has('_remoteSelectorSheet') ||
       changedProps.has('_volDragging') ||
       changedProps.has('_volPct') ||
       changedProps.has('_historyPoints') ||
@@ -778,6 +779,7 @@ export class M3EStatusCard extends LitElement {
     window.getSelection()?.removeAllRanges();
     const tileRect = originRect ?? this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
+    this._remoteSelectorSheet = null;
     this._popupOpen = true;
     if (this._resolvedPopupType === 'sensor' || this._resolvedPopupType === 'custom') {
       void this._fetchHistory();
@@ -796,6 +798,7 @@ export class M3EStatusCard extends LitElement {
     animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
       this._activeSheet = null;
+      this._remoteSelectorSheet = null;
     });
   }
 
@@ -1868,6 +1871,17 @@ export class M3EStatusCard extends LitElement {
       : [];
     const sourceLabel = currentSource || t(this.hass, 'sources');
 
+    const currentSoundMode = String(targetEnt?.attributes.sound_mode ?? '').trim();
+    const soundModeList = Array.isArray(targetEnt?.attributes.sound_mode_list)
+      ? Array.from(
+          new Set(
+            (targetEnt!.attributes.sound_mode_list as unknown[])
+              .map((s) => String(s ?? '').trim())
+              .filter(Boolean),
+          ),
+        )
+      : [];
+
     return html`
       <!-- Compact Google Home Gesture Touchpad -->
       <div
@@ -2074,7 +2088,17 @@ export class M3EStatusCard extends LitElement {
           class="secondary-action-card"
           @click=${() => {
             if (sourceList.length > 0 && media) {
-              this._remoteSourceSheetOpen = true;
+              this._remoteSelectorSheet = {
+                title: t(this.hass, 'sources'),
+                options: sourceList,
+                current: currentSource,
+                onSelect: (src: string) => {
+                  this.hass?.callService('media_player', 'select_source', {
+                    entity_id: media.entity_id,
+                    source: src,
+                  });
+                },
+              };
             } else if (targetEnt) {
               this._openMoreInfo(targetEnt.entity_id);
             }
@@ -2084,46 +2108,73 @@ export class M3EStatusCard extends LitElement {
           <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
         </button>
 
+        ${soundModeList.length > 0 && media
+          ? html`
+              <button
+                type="button"
+                class="secondary-action-card"
+                @click=${() => {
+                  this._remoteSelectorSheet = {
+                    title: 'Sound mode',
+                    options: soundModeList,
+                    current: currentSoundMode,
+                    onSelect: (mode: string) => {
+                      this.hass?.callService('media_player', 'select_sound_mode', {
+                        entity_id: media.entity_id,
+                        sound_mode: mode,
+                      });
+                    },
+                  };
+                }}
+              >
+                <span>${currentSoundMode || 'Sound mode'}</span>
+                <span class="trait-chevron">${CHEVRON_DOWN_SVG}</span>
+              </button>
+            `
+          : nothing}
+
         ${renderRemoteCustomControls(
           this.hass,
           this._config!.entity,
           this._config?.remote_custom_controls,
           this._config?.remote_buttons,
           this._config?.remote_device,
+          (req) => {
+            this._remoteSelectorSheet = req;
+          },
+          (eid) => this._openMoreInfo(eid),
         )}
       </div>
 
-      ${this._remoteSourceSheetOpen && sourceList.length > 0 && media
+      ${this._remoteSelectorSheet
         ? html`
-            <div class="mode-sheet-backdrop" @click=${() => (this._remoteSourceSheetOpen = false)}>
+            <div class="mode-sheet-backdrop" @click=${() => (this._remoteSelectorSheet = null)}>
               <div class="mode-sheet" @click=${(e: Event) => e.stopPropagation()}>
                 <div class="mode-sheet-header">
                   <button
                     type="button"
                     class="icon-btn"
-                    @click=${() => (this._remoteSourceSheetOpen = false)}
+                    @click=${() => (this._remoteSelectorSheet = null)}
                     aria-label=${t(this.hass, 'close')}
                   >
                     ${CHEVRON_DOWN_SVG}
                   </button>
-                  <span>${t(this.hass, 'sources')}</span>
+                  <span>${this._remoteSelectorSheet.title}</span>
                 </div>
                 <div class="mode-sheet-list">
-                  ${sourceList.map((src) => {
-                    const selected = src === currentSource;
+                  ${this._remoteSelectorSheet.options.map((opt) => {
+                    const selected =
+                      opt.toLowerCase() === this._remoteSelectorSheet!.current.toLowerCase();
                     return html`
                       <button
                         type="button"
                         class="mode-option ${selected ? 'selected mode-off' : ''}"
                         @click=${() => {
-                          this.hass?.callService('media_player', 'select_source', {
-                            entity_id: media.entity_id,
-                            source: src,
-                          });
-                          this._remoteSourceSheetOpen = false;
+                          this._remoteSelectorSheet?.onSelect(opt);
+                          this._remoteSelectorSheet = null;
                         }}
                       >
-                        <span>${src}</span>
+                        <span>${opt}</span>
                         ${selected ? html`<span class="check-mark">✓</span>` : nothing}
                       </button>
                     `;
@@ -2800,19 +2851,31 @@ export class M3EStatusCard extends LitElement {
 
       ha-card.status-tile.has-entity-picture .tile-title {
         color: var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6));
+        text-shadow: 0 1px 10px
+          color-mix(
+            in srgb,
+            var(--art-bg, var(--md-sys-color-primary-container, #24252d)) 72%,
+            transparent
+          );
       }
 
       ha-card.status-tile.has-entity-picture .tile-subtitle,
       ha-card.status-tile.has-entity-picture .tile-chevron {
         color: color-mix(
           in srgb,
-          var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6)) 82%,
+          var(--art-fg, var(--md-sys-color-on-primary-container, #e3e2e6)) 88%,
           transparent
         );
+        text-shadow: 0 1px 8px
+          color-mix(
+            in srgb,
+            var(--art-bg, var(--md-sys-color-primary-container, #24252d)) 68%,
+            transparent
+          );
       }
 
       ha-card.status-tile.has-entity-picture .tile-inner {
-        padding-inline-start: 82px;
+        padding-inline-start: 16px;
       }
 
       .entity-picture-backdrop {
@@ -2820,8 +2883,8 @@ export class M3EStatusCard extends LitElement {
         inset-block: 0;
         inset-inline-start: 0;
         height: 100%;
-        width: 136px;
-        max-width: 64%;
+        width: 164px;
+        max-width: 72%;
         pointer-events: none;
         overflow: hidden;
         z-index: 0;
@@ -2845,6 +2908,27 @@ export class M3EStatusCard extends LitElement {
           rgba(0, 0, 0, 0.05) 92%,
           rgba(0, 0, 0, 0) 100%
         );
+      }
+
+      .entity-picture-backdrop::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          to right,
+          color-mix(
+            in srgb,
+            var(--art-bg, var(--md-sys-color-primary-container, #24252d)) 46%,
+            transparent
+          ) 0%,
+          color-mix(
+            in srgb,
+            var(--art-bg, var(--md-sys-color-primary-container, #24252d)) 30%,
+            transparent
+          ) 58%,
+          transparent 100%
+        );
+        pointer-events: none;
       }
 
       .status-tile.has-features.features-bottom .entity-picture-backdrop {
@@ -3061,6 +3145,7 @@ export class M3EStatusCard extends LitElement {
         padding: 0;
         border: 0;
         background: transparent;
+        overflow: visible;
         max-width: min(440px, calc(100vw - 24px));
         max-height: calc(100dvh - 24px);
         width: 100%;
@@ -3098,11 +3183,14 @@ export class M3EStatusCard extends LitElement {
           margin: auto 0 0 0;
           max-width: 100vw;
           max-height: 94dvh;
+          border-radius: 28px 28px 0 0;
+          overflow: hidden;
         }
 
         .dialog-surface {
           border-radius: 28px 28px 0 0;
           max-height: 94dvh;
+          box-shadow: none;
           padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
         }
       }
@@ -3677,21 +3765,23 @@ export class M3EStatusCard extends LitElement {
 
       /* Inline Mode Selector Bottom Sheet */
       .mode-sheet-backdrop {
-        position: absolute;
+        position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.42);
+        background: rgba(0, 0, 0, 0.48);
         display: flex;
         align-items: flex-end;
-        z-index: 10;
+        justify-content: center;
+        z-index: 40;
         animation: m3e-fade-in 180ms cubic-bezier(0.2, 0, 0, 1);
       }
 
       .mode-sheet {
         width: 100%;
-        max-height: 78%;
+        max-width: 440px;
+        max-height: 76dvh;
         background: var(--md-sys-color-surface-container, #1e1f26);
         border-radius: 28px 28px 0 0;
-        padding: 16px 16px 20px;
+        padding: 16px 16px calc(20px + env(safe-area-inset-bottom, 0px));
         display: flex;
         flex-direction: column;
         gap: 12px;
