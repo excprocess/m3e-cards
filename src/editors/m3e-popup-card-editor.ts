@@ -5,6 +5,11 @@ import type {
   LovelaceCardConfig,
   M3EPopupCardConfig,
 } from '../types/home-assistant';
+import {
+  registerPopupEditor,
+  unregisterPopupEditor,
+  type M3EPopupEditorHandle,
+} from '../utils/popup-editor-bridge';
 
 async function ensureStackEditorElementsLoaded(): Promise<void> {
   if (
@@ -23,13 +28,15 @@ async function ensureStackEditorElementsLoaded(): Promise<void> {
     ).loadCardHelpers?.();
     if (helpers) {
       const dummy = await helpers.createCardElement({ type: 'vertical-stack', cards: [] });
-      const ctor = dummy.constructor as { getConfigElement?: () => Promise<HTMLElement> | HTMLElement };
+      const ctor = dummy.constructor as {
+        getConfigElement?: () => Promise<HTMLElement> | HTMLElement;
+      };
       if (typeof ctor?.getConfigElement === 'function') {
         await ctor.getConfigElement();
       }
     }
   } catch {
-    // fallback silently
+    // ignore
   }
 }
 
@@ -40,6 +47,26 @@ export class M3EPopupCardEditor extends LitElement {
   @state() private _config?: M3EPopupCardConfig;
   @state() private _editingCardIdx: number | null = null;
   @state() private _pickingNewCard = false;
+
+  private readonly _bridgeHandle: M3EPopupEditorHandle = {
+    getConfig: () => this._config,
+    updateCards: (cards) => {
+      if (!this._config) return;
+      this._emitConfig({ ...this._config, cards });
+    },
+    openAddCard: () => {
+      void ensureStackEditorElementsLoaded().then(() => {
+        this._editingCardIdx = null;
+        this._pickingNewCard = true;
+      });
+    },
+    openEditCard: (index) => {
+      void ensureStackEditorElementsLoaded().then(() => {
+        this._pickingNewCard = false;
+        this._editingCardIdx = index;
+      });
+    },
+  };
 
   public setConfig(config: M3EPopupCardConfig): void {
     this._config = {
@@ -52,7 +79,13 @@ export class M3EPopupCardEditor extends LitElement {
 
   public connectedCallback(): void {
     super.connectedCallback();
+    registerPopupEditor(this._bridgeHandle);
     void ensureStackEditorElementsLoaded();
+  }
+
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    unregisterPopupEditor(this._bridgeHandle);
   }
 
   private _emitConfig(next: M3EPopupCardConfig): void {
@@ -70,22 +103,6 @@ export class M3EPopupCardEditor extends LitElement {
     if (!this._config) return;
     this._emitConfig({ ...this._config, ...e.detail.value });
   };
-
-  private _moveCard(idx: number, delta: -1 | 1): void {
-    if (!this._config) return;
-    const cards = [...(this._config.cards ?? [])];
-    const target = idx + delta;
-    if (target < 0 || target >= cards.length) return;
-    const [item] = cards.splice(idx, 1);
-    cards.splice(target, 0, item);
-    this._emitConfig({ ...this._config, cards });
-  }
-
-  private _removeCard(idx: number): void {
-    if (!this._config) return;
-    const cards = (this._config.cards ?? []).filter((_, i) => i !== idx);
-    this._emitConfig({ ...this._config, cards });
-  }
 
   private _onCardPicked = (e: CustomEvent<{ config?: LovelaceCardConfig }>): void => {
     e.stopPropagation();
@@ -121,7 +138,7 @@ export class M3EPopupCardEditor extends LitElement {
   protected render() {
     if (!this.hass || !this._config) return nothing;
 
-    // Sub-view 1: Native HA Card Picker
+    // Sub-view 1: Native HA Card Picker (opened by clicking "+ Add card" on the live preview)
     if (this._pickingNewCard) {
       return html`
         <div class="sub-editor">
@@ -144,7 +161,7 @@ export class M3EPopupCardEditor extends LitElement {
       `;
     }
 
-    // Sub-view 2: Native HA Child Card Editor
+    // Sub-view 2: Native HA Child Card Editor (opened by clicking the edit pencil on any preview card)
     if (this._editingCardIdx !== null) {
       const childCfg = this._config.cards?.[this._editingCardIdx];
       if (childCfg) {
@@ -213,8 +230,6 @@ export class M3EPopupCardEditor extends LitElement {
       },
     ];
 
-    const cards = this._config.cards ?? [];
-
     return html`
       <div class="editor-stack">
         <ha-form
@@ -224,85 +239,6 @@ export class M3EPopupCardEditor extends LitElement {
           .computeLabel=${this._computeLabel}
           @value-changed=${this._onValueChanged}
         ></ha-form>
-
-        <div class="cards-section">
-          <div class="cards-section-title">Card nel Pop-up (${cards.length})</div>
-
-          ${cards.length > 0
-            ? html`
-                <div class="cards-list">
-                  ${cards.map((c, idx) => {
-                    const label =
-                      (typeof c.name === 'string' && c.name) ||
-                      (typeof c.title === 'string' && c.title) ||
-                      (typeof c.entity === 'string' && c.entity) ||
-                      c.type;
-                    return html`
-                      <div class="card-row">
-                        <button
-                          type="button"
-                          class="card-row-main"
-                          @click=${async () => {
-                            await ensureStackEditorElementsLoaded();
-                            this._editingCardIdx = idx;
-                          }}
-                        >
-                          <span class="card-row-name">${label}</span>
-                          <span class="card-row-type">${c.type}</span>
-                        </button>
-                        <div class="card-row-actions">
-                          <button
-                            type="button"
-                            class="mini-btn"
-                            title="Sposta su"
-                            ?disabled=${idx === 0}
-                            @click=${() => this._moveCard(idx, -1)}
-                          >
-                            ↑
-                          </button>
-                          <button
-                            type="button"
-                            class="mini-btn"
-                            title="Sposta giù"
-                            ?disabled=${idx === cards.length - 1}
-                            @click=${() => this._moveCard(idx, 1)}
-                          >
-                            ↓
-                          </button>
-                          <button
-                            type="button"
-                            class="mini-btn danger"
-                            title="Rimuovi"
-                            @click=${() => this._removeCard(idx)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    `;
-                  })}
-                </div>
-              `
-            : html`
-                <div class="cards-hint">
-                  Consigliato: inserisci questa card come prima card di una <strong>Sezione</strong>
-                  di Home Assistant (o di un Vertical Stack) per aggiungere, spostare e ridimensionare
-                  le card nativamente dalla dashboard, oppure aggiungile direttamente qui sotto.
-                </div>
-              `}
-
-          <button
-            type="button"
-            class="add-card-pill"
-            @click=${async () => {
-              await ensureStackEditorElementsLoaded();
-              this._pickingNewCard = true;
-            }}
-          >
-            <span class="add-plus">+</span>
-            <span>Add card</span>
-          </button>
-        </div>
       </div>
     `;
   }
@@ -311,130 +247,7 @@ export class M3EPopupCardEditor extends LitElement {
     .editor-stack {
       display: flex;
       flex-direction: column;
-      gap: 16px;
-    }
-
-    .cards-section {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .cards-section-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--primary-text-color, #e3e2e6);
-    }
-
-    .cards-hint {
-      font-size: 12.5px;
-      line-height: 1.45;
-      color: var(--secondary-text-color, #9aa0a6);
-    }
-
-    .cards-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .card-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
-      border-radius: 14px;
-      border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.12));
-      background: var(--secondary-background-color, rgba(255, 255, 255, 0.04));
-    }
-
-    .card-row-main {
-      flex: 1 1 auto;
-      min-width: 0;
-      border: 0;
-      padding: 2px 4px;
-      background: transparent;
-      color: inherit;
-      font: inherit;
-      text-align: left;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      cursor: pointer;
-    }
-
-    .card-row-name {
-      font-size: 13.5px;
-      font-weight: 500;
-      color: var(--primary-text-color, #e3e2e6);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-row-type {
-      font-size: 11.5px;
-      color: var(--secondary-text-color, #9aa0a6);
-    }
-
-    .card-row-actions {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .mini-btn {
-      width: 28px;
-      height: 28px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--secondary-background-color, rgba(255, 255, 255, 0.08));
-      color: var(--primary-text-color, #e3e2e6);
-      font: inherit;
-      font-size: 14px;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-    }
-
-    .mini-btn:disabled {
-      opacity: 0.35;
-      cursor: default;
-    }
-
-    .mini-btn.danger {
-      color: var(--error-color, #f2b8b5);
-    }
-
-    /* Native HA-inspired dashed pill "+ Add card" button */
-    .add-card-pill {
-      width: 100%;
-      height: 52px;
-      border-radius: 9999px;
-      border: 2px dashed var(--divider-color, rgba(255, 255, 255, 0.28));
-      background: color-mix(in srgb, var(--primary-color, #a8c7fa) 6%, transparent);
-      color: var(--primary-text-color, #e3e2e6);
-      font: inherit;
-      font-size: 14.5px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-      transition:
-        border-color 180ms ease,
-        background-color 180ms ease;
-    }
-
-    .add-card-pill:hover {
-      border-color: var(--primary-color, #a8c7fa);
-      background: color-mix(in srgb, var(--primary-color, #a8c7fa) 12%, transparent);
-    }
-
-    .add-plus {
-      font-size: 20px;
-      line-height: 1;
+      gap: 14px;
     }
 
     .sub-editor {

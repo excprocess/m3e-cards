@@ -21,10 +21,31 @@ import {
   registerM3EPopupForPicker,
   unregisterM3EPopupForPicker,
 } from '../utils/navigation-picker-bridge';
+import {
+  findMatchingPopupEditor,
+  readDashboardCardClipboard,
+  writeDashboardCardClipboard,
+} from '../utils/popup-editor-bridge';
 
 interface HACardElement extends HTMLElement {
   hass?: HomeAssistant;
   setConfig?: (config: LovelaceCardConfig) => void;
+  getGridOptions?: () => { columns?: number | 'full'; rows?: number | 'auto' };
+}
+
+interface HACardEditModeElement extends HTMLElement {
+  hass?: HomeAssistant;
+  lovelace?: { editMode: boolean; saveConfig: () => Promise<void> };
+  path?: [number, number, number];
+  hiddenOverlay?: boolean;
+}
+
+interface HASortableElement extends HTMLElement {
+  disabled?: boolean;
+  draggableSelector?: string;
+  rollback?: boolean;
+  invertSwap?: boolean;
+  options?: Record<string, unknown>;
 }
 
 interface HACardHelpers {
@@ -53,22 +74,49 @@ const ACTIVE_STATES = new Set([
   'true',
 ]);
 
+function resolveCardGridSpan(
+  cfg: LovelaceCardConfig,
+  cardEl?: HACardElement,
+): { cols: number; rows?: number } {
+  const cfgGrid = (cfg.grid_options ?? {}) as { columns?: number | 'full'; rows?: number | 'auto' };
+  const defGrid = cardEl?.getGridOptions?.();
+  const rawCols = cfgGrid.columns ?? defGrid?.columns ?? 12;
+  const cols =
+    rawCols === 'full'
+      ? 12
+      : typeof rawCols === 'number' && Number.isFinite(rawCols)
+        ? Math.max(1, Math.min(12, Math.round(rawCols)))
+        : 12;
+
+  const rawRows = cfgGrid.rows ?? defGrid?.rows;
+  const rows =
+    typeof rawRows === 'number' && Number.isFinite(rawRows) && rawRows > 0
+      ? Math.round(rawRows)
+      : undefined;
+
+  return { cols, rows };
+}
+
 @customElement('m3e-popup-card')
 export class M3EPopupCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
   @state() private _config?: M3EPopupCardConfig;
   @state() private _isOpen = false;
   @state() private _isEditMode = false;
+  @state() private _isDialogPreview = false;
   @state() private _isSectionGrid = false;
 
   @query('dialog.m3e-popup-dialog') private _dialogEl?: HTMLDialogElement;
   @query('.dialog-surface') private _surfaceEl?: HTMLElement;
   @query('.cards-host') private _cardsHostEl?: HTMLElement;
+  @query('.preview-cards-host') private _previewHostEl?: HTMLElement;
   @query('.stack-portal') private _stackPortalEl?: HTMLElement;
 
   private _registeredTarget = '';
   private _cardElements: HACardElement[] = [];
+  private _editModeElements: HACardEditModeElement[] = [];
   private _lastCardsJson = '';
+  private _lastBuildWasPreview = false;
   private _adoptedSiblings: Array<{
     el: HTMLElement;
     parent: Node;
@@ -85,6 +133,7 @@ export class M3EPopupCard extends LitElement {
       name: 'Pop-up',
       show_header_button: true,
       show_state: true,
+      cards: [],
     };
   }
 
@@ -128,6 +177,9 @@ export class M3EPopupCard extends LitElement {
       this._checkEditMode();
       this._syncContainerLayout();
       this._checkTriggerMatch();
+      if (this._isDialogPreview) {
+        void this._syncEmbeddedCards();
+      }
     });
   }
 
@@ -160,25 +212,25 @@ export class M3EPopupCard extends LitElement {
   private _checkEditMode(): void {
     const urlEdit = window.location.search.includes('edit=1');
     let domEdit = false;
+    let inPreviewDialog = false;
     let node: Node | null = this;
     while (node) {
       if (node instanceof HTMLElement) {
         const tag = node.tagName.toLowerCase();
-        if (
-          tag === 'hui-card-preview' ||
-          tag === 'hui-dialog-edit-card' ||
-          tag === 'hui-card-edit-mode' ||
-          node.classList.contains('edit-mode')
-        ) {
+        if (tag === 'hui-card-preview' || tag === 'hui-dialog-edit-card') {
+          inPreviewDialog = true;
           domEdit = true;
-          break;
+        } else if (tag === 'hui-card-edit-mode' || node.classList.contains('edit-mode')) {
+          domEdit = true;
         }
       }
       node = node.parentNode ?? (node instanceof ShadowRoot ? node.host : null);
     }
+
     const nextEdit = urlEdit || domEdit;
-    if (nextEdit !== this._isEditMode) {
+    if (nextEdit !== this._isEditMode || inPreviewDialog !== this._isDialogPreview) {
       this._isEditMode = nextEdit;
+      this._isDialogPreview = inPreviewDialog;
       if (nextEdit) {
         if (this._isOpen) this.closePopup(false);
         this._restoreAdoptedSiblings();
@@ -189,13 +241,8 @@ export class M3EPopupCard extends LitElement {
     }
   }
 
-  /**
-   * Detects whether this card is the first card of either:
-   * - a native Home Assistant Section (`hui-grid-section` / `hui-section`)
-   * - a native Home Assistant `vertical-stack` (`hui-vertical-stack-card`)
-   */
   private _findEnclosingContainer(): EnclosingContainer | null {
-    // Walk up past hui-card / hui-card-edit-mode wrappers to find the direct card wrapper
+    if (this._isDialogPreview) return null;
     let cardWrapper: HTMLElement | null = this.parentElement;
     while (cardWrapper && cardWrapper.parentElement) {
       const container = cardWrapper.parentElement;
@@ -204,11 +251,13 @@ export class M3EPopupCard extends LitElement {
         const hostTag = rootNode.host.tagName.toLowerCase();
         if (hostTag === 'hui-grid-section') {
           if (container.firstElementChild === cardWrapper) {
-            // Find outer <hui-section> element to collapse it out of Sections grid in view mode
             let outerSection: HTMLElement | undefined;
             const gridHost = rootNode.host as HTMLElement;
             const gridRoot = gridHost.getRootNode();
-            if (gridRoot instanceof ShadowRoot && gridRoot.host?.tagName.toLowerCase() === 'hui-section') {
+            if (
+              gridRoot instanceof ShadowRoot &&
+              gridRoot.host?.tagName.toLowerCase() === 'hui-section'
+            ) {
               outerSection = gridRoot.host as HTMLElement;
             } else {
               outerSection = gridHost;
@@ -238,7 +287,6 @@ export class M3EPopupCard extends LitElement {
       return;
     }
 
-    // In View Mode while closed: collapse the section out of grid flow while keeping <dialog> usable
     const siblings = Array.from(enc.container.children).filter(
       (el) => el !== enc.cardWrapper,
     ) as HTMLElement[];
@@ -324,6 +372,7 @@ export class M3EPopupCard extends LitElement {
   };
 
   private _onPopupOpenEvent = (e: CustomEvent<{ target?: string }>): void => {
+    if (this._isDialogPreview) return;
     const incoming = normalizePopupTarget(e.detail?.target);
     const mine = normalizePopupTarget(this._config?.hash);
     if (incoming && mine && incoming === mine) {
@@ -352,7 +401,7 @@ export class M3EPopupCard extends LitElement {
   }
 
   public async openPopup(): Promise<void> {
-    if (this._isOpen) return;
+    if (this._isOpen || this._isDialogPreview) return;
     this._isOpen = true;
     await this.updateComplete;
     await this._syncEmbeddedCards();
@@ -389,13 +438,210 @@ export class M3EPopupCard extends LitElement {
     }
   }
 
-  private async _syncEmbeddedCards(): Promise<void> {
+  private _updatePreviewCards(updater: (cards: LovelaceCardConfig[]) => LovelaceCardConfig[]): void {
+    if (!this._config) return;
+    const nextCards = updater([...(this._config.cards ?? [])]);
+    this._config = { ...this._config, cards: nextCards };
+
+    const editor = findMatchingPopupEditor(this._config);
+    if (editor) {
+      editor.updateCards(nextCards);
+    } else {
+      this.dispatchEvent(
+        new CustomEvent('config-changed', {
+          bubbles: true,
+          composed: true,
+          detail: { config: this._config },
+        }),
+      );
+    }
+    void this._syncEmbeddedCards(true);
+  }
+
+  private _buildSortablePreviewContainer(
+    cardsCfg: LovelaceCardConfig[],
+    cardEls: HACardElement[],
+  ): HTMLElement {
+    const sortable = document.createElement('ha-sortable') as HASortableElement;
+    sortable.disabled = false;
+    sortable.draggableSelector = '.card';
+    sortable.rollback = false;
+    sortable.invertSwap = true;
+    sortable.options = {
+      delay: 100,
+      delayOnTouchOnly: true,
+      invertedSwapThreshold: 0.7,
+    };
+
+    const grid = document.createElement('div');
+    grid.className = 'popup-cards-grid edit-mode';
+    this._editModeElements = [];
+
+    for (let i = 0; i < cardEls.length; i++) {
+      const cfg = cardsCfg[i];
+      const cardEl = cardEls[i];
+      const { cols, rows } = resolveCardGridSpan(cfg, cardEl);
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'card';
+      wrapper.style.gridColumn = `span ${cols}`;
+      if (rows) wrapper.style.gridRow = `span ${rows}`;
+
+      const editModeEl = document.createElement('hui-card-edit-mode') as HACardEditModeElement;
+      editModeEl.hass = this.hass;
+      editModeEl.lovelace = {
+        editMode: true,
+        saveConfig: async () => {},
+      };
+      editModeEl.path = [0, 0, i];
+      editModeEl.hiddenOverlay = false;
+      editModeEl.appendChild(cardEl);
+
+      this._editModeElements.push(editModeEl);
+      wrapper.appendChild(editModeEl);
+      grid.appendChild(wrapper);
+    }
+
+    // Native dashed "+ Add card" pill directly inside the preview pop-up
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'add-card-pill';
+    const addLabel =
+      (this.hass as unknown as { localize?: (k: string) => string })?.localize?.(
+        'ui.panel.lovelace.editor.section.add_card',
+      ) || 'Add card';
+    addBtn.innerHTML = `<span class="add-plus">+</span><span>${addLabel}</span>`;
+    addBtn.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      findMatchingPopupEditor(this._config)?.openAddCard();
+    });
+    grid.appendChild(addBtn);
+
+    sortable.addEventListener('item-moved', (ev: Event) => {
+      ev.stopPropagation();
+      const { oldIndex, newIndex } = (ev as CustomEvent<{ oldIndex: number; newIndex: number }>)
+        .detail;
+      if (typeof oldIndex !== 'number' || typeof newIndex !== 'number') return;
+      this._updatePreviewCards((cards) => {
+        const [moved] = cards.splice(oldIndex, 1);
+        if (moved) cards.splice(newIndex, 0, moved);
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('drag-start', () => {
+      for (const el of this._editModeElements) el.hiddenOverlay = true;
+    });
+    sortable.addEventListener('drag-end', () => {
+      for (const el of this._editModeElements) el.hiddenOverlay = false;
+    });
+
+    sortable.addEventListener('ll-edit-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      if (typeof idx === 'number') {
+        findMatchingPopupEditor(this._config)?.openEditCard(idx);
+      }
+    });
+
+    sortable.addEventListener('ll-duplicate-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      if (typeof idx !== 'number') return;
+      this._updatePreviewCards((cards) => {
+        if (cards[idx]) cards.splice(idx + 1, 0, JSON.parse(JSON.stringify(cards[idx])));
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('ll-delete-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      if (typeof idx !== 'number') return;
+      this._updatePreviewCards((cards) => {
+        cards.splice(idx, 1);
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('ll-copy-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      const card = typeof idx === 'number' ? this._config?.cards?.[idx] : undefined;
+      if (card) writeDashboardCardClipboard(card);
+    });
+
+    sortable.addEventListener('ll-cut-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      const card = typeof idx === 'number' ? this._config?.cards?.[idx] : undefined;
+      if (!card || typeof idx !== 'number') return;
+      writeDashboardCardClipboard(card);
+      this._updatePreviewCards((cards) => {
+        cards.splice(idx, 1);
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('ll-paste-card', (ev: Event) => {
+      ev.stopPropagation();
+      const idx = (ev as CustomEvent<{ path?: number[] }>).detail?.path?.[2];
+      const pasted = readDashboardCardClipboard();
+      if (!pasted) return;
+      this._updatePreviewCards((cards) => {
+        const at = typeof idx === 'number' ? Math.min(idx + 1, cards.length) : cards.length;
+        cards.splice(at, 0, pasted);
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('ll-change-grid-options', (ev: Event) => {
+      ev.stopPropagation();
+      const detail = (
+        ev as CustomEvent<{ path?: number[]; gridOptions?: Record<string, unknown> }>
+      ).detail;
+      const idx = detail?.path?.[2];
+      const gridOptions = detail?.gridOptions;
+      if (typeof idx !== 'number' || !gridOptions) return;
+      this._updatePreviewCards((cards) => {
+        const current = cards[idx];
+        if (current) {
+          cards[idx] = {
+            ...current,
+            grid_options: {
+              ...((current.grid_options as Record<string, unknown>) ?? {}),
+              ...gridOptions,
+            },
+          };
+        }
+        return cards;
+      });
+    });
+
+    sortable.addEventListener('ll-move-to-section', (ev: Event) => {
+      ev.stopPropagation();
+    });
+
+    sortable.appendChild(grid);
+    return sortable;
+  }
+
+  private async _syncEmbeddedCards(forceRebuild = false): Promise<void> {
     const cardsCfg = this._config?.cards ?? [];
-    if (cardsCfg.length === 0) return;
+    const targetHost = this._isDialogPreview ? this._previewHostEl : this._cardsHostEl;
+    if (!targetHost) return;
 
     const json = JSON.stringify(cardsCfg);
-    if (json !== this._lastCardsJson) {
+    const needsRebuild =
+      forceRebuild ||
+      json !== this._lastCardsJson ||
+      this._lastBuildWasPreview !== this._isDialogPreview ||
+      targetHost.childElementCount === 0;
+
+    if (needsRebuild) {
       this._lastCardsJson = json;
+      this._lastBuildWasPreview = this._isDialogPreview;
+
       const helpers = await (
         window as unknown as { loadCardHelpers?: () => Promise<HACardHelpers> }
       ).loadCardHelpers?.();
@@ -407,8 +653,7 @@ export class M3EPopupCard extends LitElement {
           if (helpers?.createCardElement) {
             el = await helpers.createCardElement(cfg);
           } else if (cfg.type?.startsWith('custom:')) {
-            const tag = cfg.type.slice(7);
-            el = document.createElement(tag) as HACardElement;
+            el = document.createElement(cfg.type.slice(7)) as HACardElement;
             el.setConfig?.(cfg);
           }
           if (el) {
@@ -420,22 +665,29 @@ export class M3EPopupCard extends LitElement {
         }
       }
       this._cardElements = nextEls;
-    }
 
-    if (this._cardsHostEl) {
-      const existing = Array.from(this._cardsHostEl.children);
-      const same =
-        existing.length === this._cardElements.length &&
-        existing.every((el, idx) => el === this._cardElements[idx]);
-      if (!same) {
-        this._cardsHostEl.replaceChildren(...this._cardElements);
+      if (this._isDialogPreview) {
+        const sortable = this._buildSortablePreviewContainer(cardsCfg, nextEls);
+        targetHost.replaceChildren(sortable);
+      } else {
+        const grid = document.createElement('div');
+        grid.className = 'popup-cards-grid';
+        for (let i = 0; i < nextEls.length; i++) {
+          const { cols, rows } = resolveCardGridSpan(cardsCfg[i], nextEls[i]);
+          const cell = document.createElement('div');
+          cell.className = 'card';
+          cell.style.gridColumn = `span ${cols}`;
+          if (rows) cell.style.gridRow = `span ${rows}`;
+          cell.appendChild(nextEls[i]);
+          grid.appendChild(cell);
+        }
+        targetHost.replaceChildren(grid);
       }
     }
 
     if (this.hass) {
-      for (const el of this._cardElements) {
-        el.hass = this.hass;
-      }
+      for (const el of this._cardElements) el.hass = this.hass;
+      for (const em of this._editModeElements) em.hass = this.hass;
     }
   }
 
@@ -444,8 +696,11 @@ export class M3EPopupCard extends LitElement {
       this._syncRegistration();
     }
     if (
-      this._isOpen &&
-      (changedProps.has('hass') || changedProps.has('_config') || changedProps.has('_isOpen'))
+      (this._isOpen || this._isDialogPreview) &&
+      (changedProps.has('hass') ||
+        changedProps.has('_config') ||
+        changedProps.has('_isOpen') ||
+        changedProps.has('_isDialogPreview'))
     ) {
       void this._syncEmbeddedCards();
     }
@@ -547,7 +802,7 @@ export class M3EPopupCard extends LitElement {
           type="button"
           class="close-btn"
           aria-label="Chiudi"
-          @click=${() => (isPreview ? void this.openPopup() : this.closePopup(true))}
+          @click=${() => (!isPreview ? this.closePopup(true) : undefined)}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path
@@ -559,12 +814,12 @@ export class M3EPopupCard extends LitElement {
 
         <div class="dialog-title-wrap">
           <span class="dialog-title">${title}</span>
-          ${stateLabel || isPreview
+          ${stateLabel || (isPreview && !this._isDialogPreview)
             ? html`
                 <span class="dialog-sub">
-                  ${stateLabel}${stateLabel && isPreview ? ' · ' : ''}${isPreview
-                    ? this._config?.hash || '#popup'
-                    : ''}
+                  ${stateLabel}${stateLabel && isPreview && !this._isDialogPreview
+                    ? ' · '
+                    : ''}${isPreview && !this._isDialogPreview ? this._config?.hash || '#popup' : ''}
                 </span>
               `
             : nothing}
@@ -590,6 +845,18 @@ export class M3EPopupCard extends LitElement {
 
   protected render() {
     if (!this._config) return nothing;
+
+    // Inside HA Card Editor Preview Pane: full live interactive M3E Pop-up with drag/resize/Add card!
+    if (this._isDialogPreview) {
+      return html`
+        <div class="editor-preview-surface">
+          ${this._renderHeaderBar(true)}
+          <div class="popup-body">
+            <div class="preview-cards-host"></div>
+          </div>
+        </div>
+      `;
+    }
 
     return html`
       ${this._isEditMode
@@ -627,7 +894,18 @@ export class M3EPopupCard extends LitElement {
         height: auto;
       }
 
-      /* Clean native header preview in Dashboard Edit Mode (fits 1 HA Section row = 56px cleanly) */
+      /* Full interactive M3E Pop-up surface inside HA's Card Editor Preview */
+      .editor-preview-surface {
+        background: var(--md-sys-color-surface, #131316);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        border-radius: 28px;
+        padding: 18px 18px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Clean native header preview when sitting on Dashboard Edit Mode (fits 1 HA Section row) */
       .edit-header-host {
         display: flex;
         align-items: center;
@@ -799,7 +1077,7 @@ export class M3EPopupCard extends LitElement {
         --mdc-icon-size: 21px;
       }
 
-      /* Popup Body: unified elevated surface tokens for all child cards */
+      /* Popup Body: unified elevated surface tokens + 12-col HA Sections-compatible grid */
       .popup-body {
         display: flex;
         flex-direction: column;
@@ -810,10 +1088,59 @@ export class M3EPopupCard extends LitElement {
         --m3e-card-border-radius: 24px;
       }
 
-      .cards-host {
+      .popup-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 10px;
+        align-items: stretch;
+      }
+
+      .popup-cards-grid > .card {
+        min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+      }
+
+      .popup-cards-grid > .card > * {
+        width: 100%;
+        height: 100%;
+      }
+
+      .add-card-pill {
+        grid-column: 1 / -1;
+        width: 100%;
+        height: 54px;
+        margin-top: 4px;
+        border-radius: 9999px;
+        border: 2px dashed var(--md-sys-color-outline-variant, rgba(255, 255, 255, 0.24));
+        background: color-mix(in srgb, var(--md-sys-color-primary, #a8c7fa) 5%, transparent);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        font: inherit;
+        font-size: 14.5px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition:
+          border-color 180ms ease,
+          background-color 180ms ease,
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .add-card-pill:hover {
+        border-color: var(--md-sys-color-primary, #a8c7fa);
+        background: color-mix(in srgb, var(--md-sys-color-primary, #a8c7fa) 11%, transparent);
+      }
+
+      .add-card-pill:active {
+        transform: scale(0.98);
+      }
+
+      .add-plus {
+        font-size: 20px;
+        line-height: 1;
       }
 
       .stack-portal {
@@ -822,7 +1149,6 @@ export class M3EPopupCard extends LitElement {
         gap: 12px;
       }
 
-      /* Preserve native Home Assistant 12-column Sections grid & card resize spans */
       .stack-portal.is-section-grid {
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
