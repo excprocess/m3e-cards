@@ -14339,7 +14339,14 @@ var ya = Object.defineProperty, xa = Object.getOwnPropertyDescriptor, Re = (t, e
 };
 let Gt = class extends A {
   constructor() {
-    super(...arguments), this._expandedIndex = 0, this._computeTopLabel = (t) => ({
+    super(...arguments), this._expandedIndex = 0, this._onItemMoved = (t) => {
+      if (t.stopPropagation(), !this._config) return;
+      const { oldIndex: e, newIndex: i } = t.detail, s = [...this._config.items ?? []];
+      if (e < 0 || i < 0 || e >= s.length || i >= s.length || e === i)
+        return;
+      const [r] = s.splice(e, 1);
+      s.splice(i, 0, r), this._expandedIndex === e ? this._expandedIndex = i : this._expandedIndex > e && this._expandedIndex <= i ? this._expandedIndex -= 1 : this._expandedIndex < e && this._expandedIndex >= i && (this._expandedIndex += 1), this._emitConfig({ ...this._config, items: s });
+    }, this._computeTopLabel = (t) => ({
       title: "Titolo in alto a sinistra",
       icon: "Icona in alto a sinistra (vuoto = Casa M3)",
       show_unit: "Mostra unità di misura accanto ai valori"
@@ -14392,11 +14399,6 @@ let Gt = class extends A {
     const i = [...this._config.items ?? []];
     i.splice(t, 1), this._expandedIndex >= i.length && (this._expandedIndex = Math.max(0, i.length - 1)), this._emitConfig({ ...this._config, items: i });
   }
-  _moveItem(t, e, i) {
-    if (i.stopPropagation(), !this._config) return;
-    const s = [...this._config.items ?? []], r = t + e;
-    r < 0 || r >= s.length || ([s[t], s[r]] = [s[r], s[t]], this._expandedIndex === t ? this._expandedIndex = r : this._expandedIndex === r && (this._expandedIndex = t), this._emitConfig({ ...this._config, items: s }));
-  }
   _buildTopSchema() {
     return [
       {
@@ -14429,97 +14431,116 @@ let Gt = class extends A {
     const t = this._config.items ?? [];
     return c`
       <div class="editor-root">
-        <ha-form
-          .hass=${this.hass}
-          .data=${{
+        <ha-expansion-panel outlined expanded>
+          <ha-icon slot="leading-icon" icon="mdi:text-short"></ha-icon>
+          <span slot="header">Content</span>
+          <div class="panel-body">
+            <ha-form
+              .hass=${this.hass}
+              .data=${{
       title: this._config.title ?? "",
       icon: this._config.icon ?? "",
       show_unit: !!this._config.show_unit
     }}
-          .schema=${this._buildTopSchema()}
-          .computeLabel=${this._computeTopLabel}
-          @value-changed=${this._onTopChanged}
-        ></ha-form>
+              .schema=${this._buildTopSchema()}
+              .computeLabel=${this._computeTopLabel}
+              @value-changed=${this._onTopChanged}
+            ></ha-form>
+          </div>
+        </ha-expansion-panel>
 
-        <div class="section-header">
-          <span class="section-title">Sensori a confronto (${t.length})</span>
-        </div>
-
-        <div class="items-list">
-          ${t.map((e, i) => {
-      const s = this._expandedIndex === i, r = {
+        <ha-expansion-panel outlined expanded>
+          <ha-icon slot="leading-icon" icon="mdi:format-list-bulleted"></ha-icon>
+          <span slot="header">Sensori (${t.length})</span>
+          <div class="panel-body">
+            ${t.length === 0 ? c`<div class="empty-hint">Nessun sensore aggiunto.</div>` : c`
+                  <ha-sortable
+                    handle-selector=".drag-handle"
+                    @item-moved=${this._onItemMoved}
+                  >
+                    <div class="items-list">
+                      ${t.map((e, i) => {
+      const s = this._expandedIndex === i, r = e.entity ? this.hass?.states[e.entity] : void 0, a = {
         entity: e.entity ?? "",
         name: e.name ?? "",
         attribute: e.attribute ?? ""
       };
       return c`
-              <div class="item-card ${s ? "is-expanded" : ""}">
-                <div
-                  class="item-header"
-                  role="button"
-                  tabindex="0"
-                  @click=${() => {
+                          <div class="item-row ${s ? "is-expanded" : ""}">
+                            <div
+                              class="item-header"
+                              role="button"
+                              tabindex="0"
+                              @click=${() => {
         this._expandedIndex = s ? -1 : i;
       }}
-                >
-                  <div class="item-header-left">
-                    <span class="item-index">${i + 1}</span>
-                    <div class="item-summary">
-                      <span class="item-title">${this._itemTitle(e, i)}</span>
-                      <span class="item-sub">
-                        ${e.entity ? e.attribute ? `${e.entity} · ${e.attribute}` : e.entity : "Seleziona un sensore"}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="item-actions">
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Sposta su"
-                      ?disabled=${i === 0}
-                      @click=${(a) => this._moveItem(i, -1, a)}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Sposta giù"
-                      ?disabled=${i === t.length - 1}
-                      @click=${(a) => this._moveItem(i, 1, a)}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn danger"
-                      title="Rimuovi"
-                      @click=${(a) => this._removeItem(i, a)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
+                            >
+                              <div class="drag-handle" @click=${(o) => o.stopPropagation()}>
+                                <ha-icon icon="mdi:drag"></ha-icon>
+                              </div>
 
-                ${s ? c`
-                      <div class="item-body">
-                        <ha-form
-                          .hass=${this.hass}
-                          .data=${r}
-                          .schema=${this._buildItemSchema(e)}
-                          .computeLabel=${this._computeItemLabel}
-                          @value-changed=${(a) => this._onItemChanged(i, a)}
-                        ></ha-form>
-                      </div>
-                    ` : m}
-              </div>
-            `;
+                              <div class="item-icon" aria-hidden="true">
+                                ${r ? c`<ha-state-icon
+                                      .hass=${this.hass}
+                                      .stateObj=${r}
+                                    ></ha-state-icon>` : c`<ha-icon icon="mdi:gauge"></ha-icon>`}
+                              </div>
+
+                              <div class="item-summary">
+                                <span class="item-title">${this._itemTitle(e, i)}</span>
+                                <span class="item-sub">
+                                  ${e.entity ? e.attribute ? `${e.entity} · ${e.attribute}` : e.entity : "Seleziona un sensore"}
+                                </span>
+                              </div>
+
+                              <div class="item-actions">
+                                <ha-icon-button
+                                  class="row-action"
+                                  .label=${s ? "Comprimi" : "Modifica"}
+                                  @click=${(o) => {
+        o.stopPropagation(), this._expandedIndex = s ? -1 : i;
+      }}
+                                >
+                                  <ha-icon
+                                    icon=${s ? "mdi:chevron-up" : "mdi:chevron-down"}
+                                  ></ha-icon>
+                                </ha-icon-button>
+                                <ha-icon-button
+                                  class="row-action danger"
+                                  .label=${"Rimuovi"}
+                                  @click=${(o) => this._removeItem(i, o)}
+                                >
+                                  <ha-icon icon="mdi:delete-outline"></ha-icon>
+                                </ha-icon-button>
+                              </div>
+                            </div>
+
+                            ${s ? c`
+                                  <div class="item-body">
+                                    <ha-form
+                                      .hass=${this.hass}
+                                      .data=${a}
+                                      .schema=${this._buildItemSchema(e)}
+                                      .computeLabel=${this._computeItemLabel}
+                                      @value-changed=${(o) => this._onItemChanged(i, o)}
+                                    ></ha-form>
+                                  </div>
+                                ` : m}
+                          </div>
+                        `;
     })}
-        </div>
+                    </div>
+                  </ha-sortable>
+                `}
 
-        <button type="button" class="add-btn" @click=${this._addItem}>
-          + Aggiungi sensore
-        </button>
+            <div class="add-row">
+              <ha-button appearance="filled" size="small" @click=${this._addItem}>
+                <ha-icon slot="start" icon="mdi:plus"></ha-icon>
+                Aggiungi sensore
+              </ha-button>
+            </div>
+          </div>
+        </ha-expansion-panel>
       </div>
     `;
   }
@@ -14532,78 +14553,100 @@ Gt.styles = I`
     .editor-root {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .section-header {
+    ha-expansion-panel {
+      display: block;
+      --expansion-panel-summary-padding: 0 16px;
+      --expansion-panel-content-padding: 0;
+    }
+
+    .panel-body {
+      padding: 12px 16px 16px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 4px;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .section-title {
+    .empty-hint {
       font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
       color: var(--secondary-text-color);
-      text-transform: uppercase;
+      padding: 4px 2px;
     }
 
     .items-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .item-card {
-      border-radius: 16px;
-      border: 1px solid var(--divider-color, rgba(128, 128, 128, 0.25));
-      background: var(--secondary-background-color, rgba(128, 128, 128, 0.06));
+    .item-row {
+      border-radius: var(--ha-border-radius-lg, 12px);
+      border: 1px solid var(--outline-color, var(--divider-color));
+      background: var(--card-background-color, transparent);
       overflow: hidden;
+      transition: border-color 150ms ease;
+    }
+
+    .item-row.is-expanded {
+      border-color: var(--primary-color);
     }
 
     .item-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
+      gap: 8px;
+      min-height: 52px;
+      padding: 4px 6px 4px 8px;
       cursor: pointer;
       user-select: none;
     }
 
-    .item-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
+    .item-header:hover {
+      background: var(--secondary-background-color, rgba(128, 128, 128, 0.06));
     }
 
-    .item-index {
-      width: 24px;
-      height: 24px;
+    .drag-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 36px;
+      color: var(--secondary-text-color);
+      cursor: grab;
+      flex-shrink: 0;
+      --mdc-icon-size: 20px;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .item-icon {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: var(--primary-color, #4285f4);
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
+      background: var(--secondary-background-color, rgba(128, 128, 128, 0.12));
+      color: var(--secondary-text-color);
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      --mdc-icon-size: 19px;
     }
 
     .item-summary {
       display: flex;
       flex-direction: column;
       min-width: 0;
+      flex: 1;
     }
 
     .item-title {
       font-size: 14px;
       font-weight: 500;
+      line-height: 1.3;
       color: var(--primary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -14612,6 +14655,7 @@ Gt.styles = I`
 
     .item-sub {
       font-size: 12px;
+      line-height: 1.3;
       color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -14621,66 +14665,28 @@ Gt.styles = I`
     .item-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
       flex-shrink: 0;
     }
 
-    .icon-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
+    .row-action {
       color: var(--secondary-text-color);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 150ms ease;
+      --mdc-icon-button-size: 36px;
+      --mdc-icon-size: 20px;
     }
 
-    .icon-btn:hover:not(:disabled) {
-      background: rgba(128, 128, 128, 0.16);
-      color: var(--primary-text-color);
-    }
-
-    .icon-btn:disabled {
-      opacity: 0.3;
-      cursor: default;
-    }
-
-    .icon-btn.danger:hover {
-      color: var(--error-color, #d93025);
-      background: rgba(217, 48, 37, 0.12);
+    .row-action.danger:hover {
+      color: var(--error-color);
     }
 
     .item-body {
-      padding: 4px 12px 14px;
-      border-top: 1px solid var(--divider-color, rgba(128, 128, 128, 0.18));
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--divider-color);
     }
 
-    .add-btn {
-      align-self: flex-start;
-      padding: 10px 18px;
-      border-radius: 9999px;
-      border: none;
-      background: var(--primary-color, #4285f4);
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 13.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 150ms ease, transform 150ms ease;
-    }
-
-    .add-btn:hover {
-      opacity: 0.92;
-    }
-
-    .add-btn:active {
-      transform: scale(0.97);
+    .add-row {
+      display: flex;
+      justify-content: flex-start;
+      padding-top: 2px;
     }
   `;
 Re([

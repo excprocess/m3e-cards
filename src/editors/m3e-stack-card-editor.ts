@@ -77,20 +77,31 @@ export class M3EStackCardEditor extends LitElement {
     this._emitConfig({ ...this._config, items });
   }
 
-  private _moveItem(index: number, delta: -1 | 1, ev: Event): void {
+  private _onItemMoved = (ev: CustomEvent<{ oldIndex: number; newIndex: number }>): void => {
     ev.stopPropagation();
     if (!this._config) return;
+    const { oldIndex, newIndex } = ev.detail;
     const items = [...(this._config.items ?? [])];
-    const target = index + delta;
-    if (target < 0 || target >= items.length) return;
-    [items[index], items[target]] = [items[target], items[index]];
-    if (this._expandedIndex === index) {
-      this._expandedIndex = target;
-    } else if (this._expandedIndex === target) {
-      this._expandedIndex = index;
+    if (
+      oldIndex < 0 ||
+      newIndex < 0 ||
+      oldIndex >= items.length ||
+      newIndex >= items.length ||
+      oldIndex === newIndex
+    ) {
+      return;
+    }
+    const [moved] = items.splice(oldIndex, 1);
+    items.splice(newIndex, 0, moved);
+    if (this._expandedIndex === oldIndex) {
+      this._expandedIndex = newIndex;
+    } else if (this._expandedIndex > oldIndex && this._expandedIndex <= newIndex) {
+      this._expandedIndex -= 1;
+    } else if (this._expandedIndex < oldIndex && this._expandedIndex >= newIndex) {
+      this._expandedIndex += 1;
     }
     this._emitConfig({ ...this._config, items });
-  }
+  };
 
   private _buildTopSchema(): unknown[] {
     return [
@@ -158,106 +169,132 @@ export class M3EStackCardEditor extends LitElement {
 
     return html`
       <div class="editor-root">
-        <ha-form
-          .hass=${this.hass}
-          .data=${{
-            title: this._config.title ?? '',
-            icon: this._config.icon ?? '',
-            show_unit: Boolean(this._config.show_unit),
-          }}
-          .schema=${this._buildTopSchema()}
-          .computeLabel=${this._computeTopLabel}
-          @value-changed=${this._onTopChanged}
-        ></ha-form>
+        <ha-expansion-panel outlined expanded>
+          <ha-icon slot="leading-icon" icon="mdi:text-short"></ha-icon>
+          <span slot="header">Content</span>
+          <div class="panel-body">
+            <ha-form
+              .hass=${this.hass}
+              .data=${{
+                title: this._config.title ?? '',
+                icon: this._config.icon ?? '',
+                show_unit: Boolean(this._config.show_unit),
+              }}
+              .schema=${this._buildTopSchema()}
+              .computeLabel=${this._computeTopLabel}
+              @value-changed=${this._onTopChanged}
+            ></ha-form>
+          </div>
+        </ha-expansion-panel>
 
-        <div class="section-header">
-          <span class="section-title">Sensori a confronto (${items.length})</span>
-        </div>
+        <ha-expansion-panel outlined expanded>
+          <ha-icon slot="leading-icon" icon="mdi:format-list-bulleted"></ha-icon>
+          <span slot="header">Sensori (${items.length})</span>
+          <div class="panel-body">
+            ${items.length === 0
+              ? html`<div class="empty-hint">Nessun sensore aggiunto.</div>`
+              : html`
+                  <ha-sortable
+                    handle-selector=".drag-handle"
+                    @item-moved=${this._onItemMoved}
+                  >
+                    <div class="items-list">
+                      ${items.map((item, idx) => {
+                        const expanded = this._expandedIndex === idx;
+                        const stateObj = item.entity ? this.hass?.states[item.entity] : undefined;
+                        const formData = {
+                          entity: item.entity ?? '',
+                          name: item.name ?? '',
+                          attribute: item.attribute ?? '',
+                        };
 
-        <div class="items-list">
-          ${items.map((item, idx) => {
-            const expanded = this._expandedIndex === idx;
-            const formData = {
-              entity: item.entity ?? '',
-              name: item.name ?? '',
-              attribute: item.attribute ?? '',
-            };
+                        return html`
+                          <div class="item-row ${expanded ? 'is-expanded' : ''}">
+                            <div
+                              class="item-header"
+                              role="button"
+                              tabindex="0"
+                              @click=${() => {
+                                this._expandedIndex = expanded ? -1 : idx;
+                              }}
+                            >
+                              <div class="drag-handle" @click=${(e: Event) => e.stopPropagation()}>
+                                <ha-icon icon="mdi:drag"></ha-icon>
+                              </div>
 
-            return html`
-              <div class="item-card ${expanded ? 'is-expanded' : ''}">
-                <div
-                  class="item-header"
-                  role="button"
-                  tabindex="0"
-                  @click=${() => {
-                    this._expandedIndex = expanded ? -1 : idx;
-                  }}
-                >
-                  <div class="item-header-left">
-                    <span class="item-index">${idx + 1}</span>
-                    <div class="item-summary">
-                      <span class="item-title">${this._itemTitle(item, idx)}</span>
-                      <span class="item-sub">
-                        ${item.entity
-                          ? item.attribute
-                            ? `${item.entity} · ${item.attribute}`
-                            : item.entity
-                          : 'Seleziona un sensore'}
-                      </span>
+                              <div class="item-icon" aria-hidden="true">
+                                ${stateObj
+                                  ? html`<ha-state-icon
+                                      .hass=${this.hass}
+                                      .stateObj=${stateObj}
+                                    ></ha-state-icon>`
+                                  : html`<ha-icon icon="mdi:gauge"></ha-icon>`}
+                              </div>
+
+                              <div class="item-summary">
+                                <span class="item-title">${this._itemTitle(item, idx)}</span>
+                                <span class="item-sub">
+                                  ${item.entity
+                                    ? item.attribute
+                                      ? `${item.entity} · ${item.attribute}`
+                                      : item.entity
+                                    : 'Seleziona un sensore'}
+                                </span>
+                              </div>
+
+                              <div class="item-actions">
+                                <ha-icon-button
+                                  class="row-action"
+                                  .label=${expanded ? 'Comprimi' : 'Modifica'}
+                                  @click=${(e: Event) => {
+                                    e.stopPropagation();
+                                    this._expandedIndex = expanded ? -1 : idx;
+                                  }}
+                                >
+                                  <ha-icon
+                                    icon=${expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+                                  ></ha-icon>
+                                </ha-icon-button>
+                                <ha-icon-button
+                                  class="row-action danger"
+                                  .label=${'Rimuovi'}
+                                  @click=${(e: Event) => this._removeItem(idx, e)}
+                                >
+                                  <ha-icon icon="mdi:delete-outline"></ha-icon>
+                                </ha-icon-button>
+                              </div>
+                            </div>
+
+                            ${expanded
+                              ? html`
+                                  <div class="item-body">
+                                    <ha-form
+                                      .hass=${this.hass}
+                                      .data=${formData}
+                                      .schema=${this._buildItemSchema(item)}
+                                      .computeLabel=${this._computeItemLabel}
+                                      @value-changed=${(
+                                        e: CustomEvent<{ value: Record<string, unknown> }>,
+                                      ) => this._onItemChanged(idx, e)}
+                                    ></ha-form>
+                                  </div>
+                                `
+                              : nothing}
+                          </div>
+                        `;
+                      })}
                     </div>
-                  </div>
-                  <div class="item-actions">
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Sposta su"
-                      ?disabled=${idx === 0}
-                      @click=${(e: Event) => this._moveItem(idx, -1, e)}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn"
-                      title="Sposta giù"
-                      ?disabled=${idx === items.length - 1}
-                      @click=${(e: Event) => this._moveItem(idx, 1, e)}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      class="icon-btn danger"
-                      title="Rimuovi"
-                      @click=${(e: Event) => this._removeItem(idx, e)}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
+                  </ha-sortable>
+                `}
 
-                ${expanded
-                  ? html`
-                      <div class="item-body">
-                        <ha-form
-                          .hass=${this.hass}
-                          .data=${formData}
-                          .schema=${this._buildItemSchema(item)}
-                          .computeLabel=${this._computeItemLabel}
-                          @value-changed=${(e: CustomEvent<{ value: Record<string, unknown> }>) =>
-                            this._onItemChanged(idx, e)}
-                        ></ha-form>
-                      </div>
-                    `
-                  : nothing}
-              </div>
-            `;
-          })}
-        </div>
-
-        <button type="button" class="add-btn" @click=${this._addItem}>
-          + Aggiungi sensore
-        </button>
+            <div class="add-row">
+              <ha-button appearance="filled" size="small" @click=${this._addItem}>
+                <ha-icon slot="start" icon="mdi:plus"></ha-icon>
+                Aggiungi sensore
+              </ha-button>
+            </div>
+          </div>
+        </ha-expansion-panel>
       </div>
     `;
   }
@@ -270,78 +307,100 @@ export class M3EStackCardEditor extends LitElement {
     .editor-root {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .section-header {
+    ha-expansion-panel {
+      display: block;
+      --expansion-panel-summary-padding: 0 16px;
+      --expansion-panel-content-padding: 0;
+    }
+
+    .panel-body {
+      padding: 12px 16px 16px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 4px;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    .section-title {
+    .empty-hint {
       font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
       color: var(--secondary-text-color);
-      text-transform: uppercase;
+      padding: 4px 2px;
     }
 
     .items-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
-    .item-card {
-      border-radius: 16px;
-      border: 1px solid var(--divider-color, rgba(128, 128, 128, 0.25));
-      background: var(--secondary-background-color, rgba(128, 128, 128, 0.06));
+    .item-row {
+      border-radius: var(--ha-border-radius-lg, 12px);
+      border: 1px solid var(--outline-color, var(--divider-color));
+      background: var(--card-background-color, transparent);
       overflow: hidden;
+      transition: border-color 150ms ease;
+    }
+
+    .item-row.is-expanded {
+      border-color: var(--primary-color);
     }
 
     .item-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
+      gap: 8px;
+      min-height: 52px;
+      padding: 4px 6px 4px 8px;
       cursor: pointer;
       user-select: none;
     }
 
-    .item-header-left {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 0;
-      flex: 1;
+    .item-header:hover {
+      background: var(--secondary-background-color, rgba(128, 128, 128, 0.06));
     }
 
-    .item-index {
-      width: 24px;
-      height: 24px;
+    .drag-handle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 36px;
+      color: var(--secondary-text-color);
+      cursor: grab;
+      flex-shrink: 0;
+      --mdc-icon-size: 20px;
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .item-icon {
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
-      background: var(--primary-color, #4285f4);
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 600;
-      display: flex;
+      background: var(--secondary-background-color, rgba(128, 128, 128, 0.12));
+      color: var(--secondary-text-color);
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      --mdc-icon-size: 19px;
     }
 
     .item-summary {
       display: flex;
       flex-direction: column;
       min-width: 0;
+      flex: 1;
     }
 
     .item-title {
       font-size: 14px;
       font-weight: 500;
+      line-height: 1.3;
       color: var(--primary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -350,6 +409,7 @@ export class M3EStackCardEditor extends LitElement {
 
     .item-sub {
       font-size: 12px;
+      line-height: 1.3;
       color: var(--secondary-text-color);
       white-space: nowrap;
       overflow: hidden;
@@ -359,66 +419,28 @@ export class M3EStackCardEditor extends LitElement {
     .item-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
       flex-shrink: 0;
     }
 
-    .icon-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: none;
-      background: transparent;
+    .row-action {
       color: var(--secondary-text-color);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background-color 150ms ease;
+      --mdc-icon-button-size: 36px;
+      --mdc-icon-size: 20px;
     }
 
-    .icon-btn:hover:not(:disabled) {
-      background: rgba(128, 128, 128, 0.16);
-      color: var(--primary-text-color);
-    }
-
-    .icon-btn:disabled {
-      opacity: 0.3;
-      cursor: default;
-    }
-
-    .icon-btn.danger:hover {
-      color: var(--error-color, #d93025);
-      background: rgba(217, 48, 37, 0.12);
+    .row-action.danger:hover {
+      color: var(--error-color);
     }
 
     .item-body {
-      padding: 4px 12px 14px;
-      border-top: 1px solid var(--divider-color, rgba(128, 128, 128, 0.18));
+      padding: 12px 14px 14px;
+      border-top: 1px solid var(--divider-color);
     }
 
-    .add-btn {
-      align-self: flex-start;
-      padding: 10px 18px;
-      border-radius: 9999px;
-      border: none;
-      background: var(--primary-color, #4285f4);
-      color: #ffffff;
-      font-family: inherit;
-      font-size: 13.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 150ms ease, transform 150ms ease;
-    }
-
-    .add-btn:hover {
-      opacity: 0.92;
-    }
-
-    .add-btn:active {
-      transform: scale(0.97);
+    .add-row {
+      display: flex;
+      justify-content: flex-start;
+      padding-top: 2px;
     }
   `;
 }
