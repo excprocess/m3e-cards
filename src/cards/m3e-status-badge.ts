@@ -143,7 +143,8 @@ export class M3EStatusBadge extends LitElement {
                 select: {
                   mode: 'dropdown',
                   options: [
-                    { value: 'glance', label: 'Glance Mini (Cerchio 36px · At a Glance)' },
+                    { value: 'glance', label: 'Glance Mini (Cerchio 38px · At a Glance)' },
+                    { value: 'glance_icon', label: 'Glance Mini Solo Icona (Cerchio compatto)' },
                     { value: 'split', label: 'Split Tonal Pill (Telemetria doppia zona)' },
                     { value: 'dot', label: 'Minimal Dot Badge (Ultra-compatto con pallino)' },
                     { value: 'alert', label: 'Squircle Morph Badge (Alert · Pillola ↔ Squircle)' },
@@ -420,6 +421,7 @@ export class M3EStatusBadge extends LitElement {
         type="button"
         class="m3e-badge style-${style} ${stateClass} ${hasProgress ? 'has-progress' : ''} ${this._pressed ? 'is-pressed' : ''} ${clickable ? 'is-clickable' : ''}"
         style=${hasProgress ? `--badge-pct: ${progressPct.toFixed(1)}%;` : ''}
+        title="${name}${valueText ? ` · ${valueText}` : ''}"
         aria-label="${name}${valueText ? `, ${valueText}` : ''}"
         @pointerdown=${(e: PointerEvent) => {
           if (!clickable || (e.pointerType === 'mouse' && e.button !== 0)) return;
@@ -434,7 +436,7 @@ export class M3EStatusBadge extends LitElement {
           ? html`<span class="badge-progress-fill" aria-hidden="true"></span>`
           : nothing}
 
-        ${style === 'glance'
+        ${style === 'glance' || style === 'glance_icon'
           ? html`
               <span class="g-circle" aria-hidden="true">
                 ${hasProgress
@@ -454,10 +456,14 @@ export class M3EStatusBadge extends LitElement {
                   : nothing}
                 ${this._renderIcon(entity, isActive)}
               </span>
-              <span class="g-text">
-                ${valueText ? html`<span class="g-val">${valueText}</span>` : nothing}
-                <span class="g-lbl">${name}</span>
-              </span>
+              ${style === 'glance'
+                ? html`
+                    <span class="g-text">
+                      ${valueText ? html`<span class="g-val">${valueText}</span>` : nothing}
+                      <span class="g-lbl">${name}</span>
+                    </span>
+                  `
+                : nothing}
             `
           : style === 'split'
             ? html`
@@ -580,6 +586,24 @@ export class M3EStatusBadge extends LitElement {
         border-radius: 9999px;
       }
 
+      .m3e-badge.style-glance_icon {
+        background: transparent;
+        padding: 0;
+        border-radius: 9999px;
+      }
+
+      .style-glance_icon .g-circle {
+        width: 44px;
+        height: 44px;
+      }
+
+      .style-glance_icon .g-circle svg:not(.g-ring),
+      .style-glance_icon .g-circle ha-icon {
+        width: 21px;
+        height: 21px;
+        --mdc-icon-size: 21px;
+      }
+
       .g-circle {
         position: relative;
         width: 38px;
@@ -625,14 +649,21 @@ export class M3EStatusBadge extends LitElement {
         stroke: var(--md-sys-color-error, #ffb4ab);
       }
 
-      .style-glance.is-active .g-circle {
+      .style-glance.is-active .g-circle,
+      .style-glance_icon.is-active .g-circle {
         background: var(--md-sys-color-primary-container, #2e4379);
         color: var(--md-sys-color-on-primary-container, #dae2ff);
       }
 
-      .style-glance.is-alert .g-circle {
+      .style-glance.is-alert .g-circle,
+      .style-glance_icon.is-alert .g-circle {
         background: var(--md-sys-color-error-container, #93000a);
         color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .style-glance.is-alert .g-ring-fill,
+      .style-glance_icon.is-alert .g-ring-fill {
+        stroke: var(--md-sys-color-error, #ffb4ab);
       }
 
       .g-circle svg,

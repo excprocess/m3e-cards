@@ -399,7 +399,7 @@ export interface M3ERemoteCardConfig extends LovelaceCardConfig {
   remote_custom_controls?: M3ERemoteCustomControl[];
 }
 
-export type M3EStatusBadgeStyle = 'glance' | 'split' | 'dot' | 'alert';
+export type M3EStatusBadgeStyle = 'glance' | 'glance_icon' | 'split' | 'dot' | 'alert';
 
 export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   entity: string;
