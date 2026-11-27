@@ -10,6 +10,7 @@ import {
   resolveStateContent,
 } from '../utils/entity-display';
 import { computeBadgeProgress } from '../utils/badge-progress';
+import { buildM3BadgeTonalPalette } from '../utils/m3-color-harmony';
 import { t } from '../utils/i18n';
 
 const DEFAULT_ACTIVE_STATES = new Set([
@@ -37,13 +38,16 @@ export class M3EStatusBadge extends LitElement {
   @state() private _config?: M3EStatusBadgeConfig;
   @state() private _pressed = false;
   @state() private _tick = 0;
+  @state() private _alertPulse = false;
 
   private _prevEntity?: HassEntity;
   private _prevProgressEntity?: HassEntity;
   private _prevStartEntity?: HassEntity;
   private _prevEndEntity?: HassEntity;
+  private _prevAlertRaw: string | undefined;
   private _tickTimer: number | null = null;
   private _tickIntervalMs = 0;
+  private _alertPulseTimer: number | null = null;
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
@@ -51,6 +55,10 @@ export class M3EStatusBadge extends LitElement {
       window.clearInterval(this._tickTimer);
       this._tickTimer = null;
       this._tickIntervalMs = 0;
+    }
+    if (this._alertPulseTimer !== null) {
+      window.clearTimeout(this._alertPulseTimer);
+      this._alertPulseTimer = null;
     }
   }
 
@@ -89,6 +97,21 @@ export class M3EStatusBadge extends LitElement {
   public setConfig(config: M3EStatusBadgeConfig): void {
     if (!config || !config.entity) {
       throw new Error('m3e-status-badge: entity is required');
+    }
+    const prev = this._config;
+    if (
+      prev &&
+      (prev.entity !== config.entity ||
+        prev.alert_attribute !== config.alert_attribute ||
+        prev.alert_operator !== config.alert_operator ||
+        prev.alert_value !== config.alert_value)
+    ) {
+      this._prevAlertRaw = undefined;
+      this._alertPulse = false;
+      if (this._alertPulseTimer !== null) {
+        window.clearTimeout(this._alertPulseTimer);
+        this._alertPulseTimer = null;
+      }
     }
     this._config = {
       badge_style: 'glance',
@@ -167,13 +190,51 @@ export class M3EStatusBadge extends LitElement {
                 { name: 'hide_state', selector: { boolean: {} } },
               ],
             },
-            { name: 'alert_color', selector: { boolean: {} } },
             {
               name: 'state_content',
               selector: { ui_state_content: { allow_name: false } },
               context: { filter_entity: 'entity' },
             },
             { name: 'active_state', selector: { text: {} } },
+          ],
+        },
+        {
+          type: 'expandable',
+          name: '',
+          flatten: true,
+          icon: 'mdi:palette',
+          title: 'Colori & Modalità Alert',
+          schema: [
+            { name: 'base_color', selector: { color_rgb: {} } },
+            { name: 'alert_color', selector: { boolean: {} } },
+            { name: 'alert_custom_color', selector: { color_rgb: {} } },
+            {
+              name: 'alert_attribute',
+              selector: { attribute: {} },
+              context: { filter_entity: 'entity' },
+            },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                {
+                  name: 'alert_operator',
+                  selector: {
+                    select: {
+                      mode: 'dropdown',
+                      options: [
+                        { value: 'equals', label: 'Uguale a (stato/valore)' },
+                        { value: 'not_equals', label: 'Diverso da' },
+                        { value: 'above', label: 'Maggiore di (>)' },
+                        { value: 'below', label: 'Minore di (<)' },
+                        { value: 'changed', label: 'Quando cambia (o diverso da)' },
+                      ],
+                    },
+                  },
+                },
+                { name: 'alert_value', selector: { text: {} } },
+              ],
+            },
           ],
         },
         {
@@ -240,7 +301,12 @@ export class M3EStatusBadge extends LitElement {
           icon: 'Icona personalizzata (vuoto = automatica)',
           use_entity_icon: 'Usa icona entità HA (al posto di Google Home)',
           hide_state: 'Nascondi stato',
-          alert_color: 'Usa colore di avviso/errore quando attivo',
+          alert_color: 'Attiva modalità Alert quando l’entità è attiva',
+          base_color: 'Colore base badge (armonizzato Material 3)',
+          alert_custom_color: 'Colore modalità Alert (vuoto = Errore M3)',
+          alert_attribute: 'Attributo da monitorare per Alert (vuoto = stato principale)',
+          alert_operator: 'Condizione Alert',
+          alert_value: 'Valore / soglia Alert (opzionale per "Quando cambia")',
           state_content: 'Contenuto stato (stato / attributi)',
           active_state: 'Stati attivi personalizzati (es. on,open,problem)',
           tap_action: 'Azione al tocco',
@@ -263,7 +329,12 @@ export class M3EStatusBadge extends LitElement {
 
   protected shouldUpdate(changedProps: PropertyValues): boolean {
     if (!this._config) return false;
-    if (changedProps.has('_config') || changedProps.has('_pressed') || changedProps.has('_tick')) {
+    if (
+      changedProps.has('_config') ||
+      changedProps.has('_pressed') ||
+      changedProps.has('_tick') ||
+      changedProps.has('_alertPulse')
+    ) {
       return true;
     }
     if (changedProps.has('hass') && this.hass) {
@@ -317,6 +388,85 @@ export class M3EStatusBadge extends LitElement {
       return custom.includes(raw);
     }
     return DEFAULT_ACTIVE_STATES.has(raw);
+  }
+
+  private _getAlertSourceValue(entity?: HassEntity): string {
+    if (!entity) return '';
+    const attr = this._config?.alert_attribute?.trim();
+    const raw = attr ? entity.attributes?.[attr] : entity.state;
+    if (raw === undefined || raw === null) return '';
+    return typeof raw === 'object' ? JSON.stringify(raw) : String(raw).trim();
+  }
+
+  private _isAlertTriggered(isActive: boolean, style: string): boolean {
+    const cfg = this._config;
+    if (!cfg) return false;
+    const hasCustomCondition = Boolean(
+      cfg.alert_attribute?.trim() || cfg.alert_operator || cfg.alert_value?.trim(),
+    );
+    if (!hasCustomCondition) {
+      return isActive && (Boolean(cfg.alert_color) || style === 'alert');
+    }
+    const entity = this._entity;
+    if (!entity || this._isUnavailable) return false;
+
+    const rawVal = this._getAlertSourceValue(entity);
+    const targetRaw = cfg.alert_value?.trim() ?? '';
+    const op = cfg.alert_operator ?? (targetRaw ? 'equals' : 'changed');
+
+    if (op === 'changed') {
+      if (targetRaw) {
+        return rawVal.toLowerCase() !== targetRaw.toLowerCase();
+      }
+      return this._alertPulse;
+    }
+
+    if (!targetRaw) return false;
+
+    if (op === 'above' || op === 'below') {
+      const numVal = Number(rawVal);
+      const numTarget = Number(targetRaw);
+      if (!Number.isFinite(numVal) || !Number.isFinite(numTarget)) return false;
+      return op === 'above' ? numVal > numTarget : numVal < numTarget;
+    }
+
+    const targets = targetRaw
+      .split(',')
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    const low = rawVal.toLowerCase();
+    if (op === 'equals') return targets.includes(low);
+    if (op === 'not_equals') return rawVal !== '' && !targets.includes(low);
+    return false;
+  }
+
+  protected willUpdate(changedProps: PropertyValues): void {
+    if (!this._config || (!changedProps.has('hass') && !changedProps.has('_config'))) {
+      return;
+    }
+    const hasCustomCondition = Boolean(
+      this._config.alert_attribute?.trim() ||
+        this._config.alert_operator ||
+        this._config.alert_value?.trim(),
+    );
+    const op = this._config.alert_operator ?? (this._config.alert_value?.trim() ? 'equals' : 'changed');
+    if (!hasCustomCondition || op !== 'changed' || this._config.alert_value?.trim()) {
+      return;
+    }
+    const curVal = this._getAlertSourceValue(this._entity);
+    if (this._prevAlertRaw === undefined) {
+      this._prevAlertRaw = curVal;
+    } else if (curVal !== this._prevAlertRaw) {
+      this._prevAlertRaw = curVal;
+      this._alertPulse = true;
+      if (this._alertPulseTimer !== null) {
+        window.clearTimeout(this._alertPulseTimer);
+      }
+      this._alertPulseTimer = window.setTimeout(() => {
+        this._alertPulse = false;
+        this._alertPulseTimer = null;
+      }, 12000);
+    }
   }
 
   private _formatEntityValue(entity?: HassEntity): string {
@@ -398,8 +548,17 @@ export class M3EStatusBadge extends LitElement {
     const style = this._config.badge_style ?? 'glance';
     const isUnavailable = this._isUnavailable;
     const isActive = this._isActive;
-    const isAlert = isActive && (Boolean(this._config.alert_color) || style === 'alert');
+    const isAlert = !isUnavailable && this._isAlertTriggered(isActive, style);
     const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
+
+    const isDark = this.hass?.themes?.darkMode !== false;
+    const palette = isUnavailable
+      ? null
+      : isAlert && this._config.alert_custom_color
+        ? buildM3BadgeTonalPalette(this._config.alert_custom_color, isDark)
+        : !isAlert && this._config.base_color
+          ? buildM3BadgeTonalPalette(this._config.base_color, isDark)
+          : null;
 
     const progress = computeBadgeProgress(this.hass, this._config);
     const hasProgress = progress.percent !== null;
@@ -435,11 +594,24 @@ export class M3EStatusBadge extends LitElement {
     const ringCircumference = 100.53;
     const ringOffset = ringCircumference * (1 - progressPct / 100);
 
+    const inlineStyles: string[] = [];
+    if (hasProgress) inlineStyles.push(`--badge-pct: ${progressPct.toFixed(1)}%`);
+    if (palette) {
+      inlineStyles.push(
+        `--m3e-badge-container: ${palette.container}`,
+        `--m3e-badge-well: ${palette.well}`,
+        `--m3e-badge-progress: ${palette.progressFill}`,
+        `--m3e-badge-on-container: ${palette.onContainer}`,
+        `--m3e-badge-accent: ${palette.accent}`,
+        `--m3e-badge-on-accent: ${palette.onAccent}`,
+      );
+    }
+
     const commonHandlers = html`
       <button
         type="button"
-        class="m3e-badge style-${style} ${stateClass} ${hasProgress ? 'has-progress' : ''} ${this._pressed ? 'is-pressed' : ''} ${clickable ? 'is-clickable' : ''}"
-        style=${hasProgress ? `--badge-pct: ${progressPct.toFixed(1)}%;` : ''}
+        class="m3e-badge style-${style} ${stateClass} ${palette ? 'has-custom-color' : ''} ${hasProgress ? 'has-progress' : ''} ${this._pressed ? 'is-pressed' : ''} ${clickable ? 'is-clickable' : ''}"
+        style=${inlineStyles.length > 0 ? inlineStyles.join('; ') : ''}
         title="${name}${valueText ? ` · ${valueText}` : ''}"
         aria-label="${name}${valueText ? `, ${valueText}` : ''}"
         @pointerdown=${(e: PointerEvent) => {
@@ -451,7 +623,7 @@ export class M3EStatusBadge extends LitElement {
         @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._onTap()}
       >
-        ${hasProgress && (style === 'alert' || style === 'dot')
+        ${hasProgress && (style === 'alert' || style === 'dot' || style === 'split')
           ? html`<span class="badge-progress-fill" aria-hidden="true"></span>`
           : nothing}
 
@@ -488,11 +660,8 @@ export class M3EStatusBadge extends LitElement {
             ? html`
                 <span class="s-left" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
                 <span class="s-right">
-                  ${hasProgress
-                    ? html`<span class="s-progress-fill" aria-hidden="true"></span>`
-                    : nothing}
-                  ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
                   <span class="s-lbl">${name}</span>
+                  ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
                 </span>
               `
             : style === 'dot'
@@ -562,14 +731,37 @@ export class M3EStatusBadge extends LitElement {
       .m3e-badge.is-alert .badge-progress-fill {
         background: color-mix(
           in srgb,
+          var(--md-sys-color-error, #ffb4ab) 24%,
+          transparent
+        );
+      }
+
+      .style-dot.is-alert .badge-progress-fill {
+        background: color-mix(
+          in srgb,
           var(--md-sys-color-error-container, #93000a) 76%,
           transparent
         );
       }
 
-      .style-alert.has-progress.is-active .badge-progress-fill,
-      .style-alert.has-progress.is-alert .badge-progress-fill {
-        background: color-mix(in srgb, currentColor 14%, transparent);
+      .m3e-badge.is-active:not(.is-alert) .badge-progress-fill {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-primary, #b1c5ff) 24%,
+          transparent
+        );
+      }
+
+      .m3e-badge.style-dot.is-active:not(.is-alert) .badge-progress-fill {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-primary-container, #2e4379) 76%,
+          transparent
+        );
+      }
+
+      .m3e-badge.has-custom-color .badge-progress-fill {
+        background: var(--m3e-badge-progress);
       }
 
       .m3e-badge.is-clickable {
@@ -681,6 +873,17 @@ export class M3EStatusBadge extends LitElement {
         stroke: var(--md-sys-color-error, #ffb4ab);
       }
 
+      .style-glance.has-custom-color .g-circle,
+      .style-glance_icon.has-custom-color .g-circle {
+        background: var(--m3e-badge-container);
+        color: var(--m3e-badge-on-container);
+      }
+
+      .style-glance.has-custom-color .g-ring-fill,
+      .style-glance_icon.has-custom-color .g-ring-fill {
+        stroke: var(--m3e-badge-accent);
+      }
+
       .g-circle svg,
       .g-circle ha-icon {
         width: 19px;
@@ -716,92 +919,110 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         2. SPLIT TONAL PILL (Dual-Zone Telemetry Pill — 44px height)
+         2. SPLIT TONAL PILL (Fitbit-Inspired M3 Telemetry Pill — 44px height)
          ===================================================================== */
       .m3e-badge.style-split {
         height: 44px;
-        padding: 0;
+        padding: 4px 14px 4px 4px;
+        gap: 9px;
         border-radius: 9999px;
         overflow: hidden;
         background: var(--md-sys-color-surface-container-high, #292a32);
       }
 
-      .s-left {
-        position: relative;
-        z-index: 1;
-        height: 100%;
-        padding: 0 12px 0 14px;
-        display: inline-flex;
-        align-items: center;
-        background: var(--md-sys-color-surface-container-highest, #34353e);
-        color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
-      }
-
-      .style-split.is-active .s-left {
+      .m3e-badge.style-split.is-active {
         background: var(--md-sys-color-primary-container, #2e4379);
         color: var(--md-sys-color-on-primary-container, #dae2ff);
       }
 
-      .style-split.is-alert .s-left {
+      .m3e-badge.style-split.is-alert {
         background: var(--md-sys-color-error-container, #93000a);
         color: var(--md-sys-color-on-error-container, #ffdad6);
       }
 
+      .m3e-badge.style-split.has-custom-color {
+        background: var(--m3e-badge-container);
+        color: var(--m3e-badge-on-container);
+      }
+
+      .s-left {
+        position: relative;
+        z-index: 1;
+        width: 30px;
+        height: 36px;
+        border-radius: 9999px;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        background: var(--md-sys-color-surface-container-highest, #34353e);
+        color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+        transition:
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default);
+      }
+
+      .style-split.is-active .s-left {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 24%,
+          var(--md-sys-color-primary-container, #2e4379)
+        );
+        color: var(--md-sys-color-on-primary-container, #dae2ff);
+      }
+
+      .style-split.is-alert .s-left {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-scrim, #000000) 26%,
+          var(--md-sys-color-error-container, #93000a)
+        );
+        color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .style-split.has-custom-color .s-left {
+        background: var(--m3e-badge-well);
+        color: var(--m3e-badge-on-container);
+      }
+
       .s-left svg,
       .s-left ha-icon {
-        width: 19px;
-        height: 19px;
-        --mdc-icon-size: 19px;
+        width: 18px;
+        height: 18px;
+        --mdc-icon-size: 18px;
       }
 
       .s-right {
         position: relative;
-        height: 100%;
-        padding: 0 15px 0 12px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        min-width: 0;
-        overflow: hidden;
-      }
-
-      .s-progress-fill {
-        position: absolute;
-        inset-block: 0;
-        inset-inline-start: 0;
-        width: var(--badge-pct, 0%);
-        background: color-mix(
-          in srgb,
-          var(--md-sys-color-primary-container, #2e4379) 76%,
-          transparent
-        );
-        transition: width var(--m3e-spring-spatial-default);
-        pointer-events: none;
-        z-index: 0;
-      }
-
-      .style-split.is-alert .s-progress-fill {
-        background: color-mix(
-          in srgb,
-          var(--md-sys-color-error-container, #93000a) 76%,
-          transparent
-        );
-      }
-
-      .s-val {
-        position: relative;
         z-index: 1;
-        font-size: 14px;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+        min-width: 0;
       }
 
       .s-lbl {
-        position: relative;
-        z-index: 1;
-        font-size: 12px;
+        font-size: 10.5px;
+        font-weight: 600;
+        line-height: 1.15;
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .style-split.is-active .s-lbl,
+      .style-split.is-alert .s-lbl,
+      .style-split.has-custom-color .s-lbl {
+        color: inherit;
+        opacity: 0.88;
+      }
+
+      .s-val {
+        font-size: 13.5px;
+        font-weight: 700;
+        line-height: 1.15;
+        font-variant-numeric: tabular-nums;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -816,6 +1037,11 @@ export class M3EStatusBadge extends LitElement {
         gap: 9px;
         border-radius: 9999px;
         background: var(--md-sys-color-surface-container, #1f2027);
+      }
+
+      .m3e-badge.style-dot.has-custom-color {
+        background: var(--m3e-badge-container);
+        color: var(--m3e-badge-on-container);
       }
 
       .d-wrap {
@@ -839,6 +1065,11 @@ export class M3EStatusBadge extends LitElement {
       .style-dot.is-alert .d-wrap {
         background: var(--md-sys-color-error-container, #93000a);
         color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .style-dot.has-custom-color .d-wrap {
+        background: var(--m3e-badge-well);
+        color: var(--m3e-badge-on-container);
       }
 
       .d-wrap svg,
@@ -866,6 +1097,11 @@ export class M3EStatusBadge extends LitElement {
 
       .style-dot.is-alert .d-dot {
         background: var(--md-sys-color-error, #ffb4ab);
+      }
+
+      .style-dot.has-custom-color .d-dot {
+        background: var(--m3e-badge-accent);
+        border-color: var(--m3e-badge-container);
       }
 
       .d-txt {
@@ -902,6 +1138,11 @@ export class M3EStatusBadge extends LitElement {
         color: var(--md-sys-color-on-error-container, #ffdad6);
       }
 
+      .m3e-badge.style-alert.has-custom-color {
+        background: var(--m3e-badge-container);
+        color: var(--m3e-badge-on-container);
+      }
+
       .m-ic {
         position: relative;
         z-index: 1;
@@ -928,6 +1169,11 @@ export class M3EStatusBadge extends LitElement {
         border-radius: 10px;
         background: var(--md-sys-color-error, #ffb4ab);
         color: var(--md-sys-color-on-error, #690005);
+      }
+
+      .style-alert.has-custom-color .m-ic {
+        background: var(--m3e-badge-accent);
+        color: var(--m3e-badge-on-accent);
       }
 
       .m-ic svg,

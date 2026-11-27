@@ -456,6 +456,16 @@ export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   state_content?: StateContentConfig;
   active_state?: string;
   alert_color?: boolean;
+  /** Optional custom base color (RGB tuple or HEX), harmonized through the Material 3 tonal system */
+  base_color?: [number, number, number] | string;
+  /** Optional custom alert color (RGB tuple or HEX), harmonized through the Material 3 tonal system */
+  alert_custom_color?: [number, number, number] | string;
+  /** Optional attribute on the same entity to watch for Alert mode (empty = main entity state) */
+  alert_attribute?: string;
+  /** Alert condition operator: equals, not_equals, above, below, or changed */
+  alert_operator?: 'equals' | 'not_equals' | 'above' | 'below' | 'changed';
+  /** Target state/attribute value(s) (comma-separated) or numeric threshold for Alert mode */
+  alert_value?: string;
   tap_action?: 'more-info' | 'toggle' | 'navigate' | 'none';
   navigation_path?: string;
   /** Enable Material 3 Expressive progress fill / ring on the badge */
