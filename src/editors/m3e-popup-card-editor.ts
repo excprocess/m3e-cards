@@ -136,6 +136,29 @@ export class M3EPopupCardEditor extends LitElement {
     this._emitConfig({ ...this._config, cards });
   };
 
+  private _updateChildGridOption(key: 'columns' | 'rows', value: number | 'auto'): void {
+    if (!this._config || this._editingCardIdx === null) return;
+    const cards = [...(this._config.cards ?? [])];
+    const current = cards[this._editingCardIdx];
+    if (!current) return;
+    const nextGrid: Record<string, unknown> = {
+      ...((current.grid_options as Record<string, unknown>) ?? {}),
+    };
+    if (value === 'auto') {
+      delete nextGrid[key];
+    } else {
+      nextGrid[key] = value;
+    }
+    const updated: LovelaceCardConfig = { ...current };
+    if (Object.keys(nextGrid).length > 0) {
+      updated.grid_options = nextGrid;
+    } else {
+      delete updated.grid_options;
+    }
+    cards[this._editingCardIdx] = updated;
+    this._emitConfig({ ...this._config, cards });
+  }
+
   private _computeLabel = (schema: { name: string }): string => {
     const labels: Record<string, string> = {
       hash: 'Percorso / #hash del Pop-up',
@@ -256,6 +279,66 @@ export class M3EPopupCardEditor extends LitElement {
                 `
               : editingCfg
                 ? html`
+                    <div class="size-bar">
+                      <div class="size-group">
+                        <span class="size-label">Larghezza</span>
+                        <div class="size-pills">
+                          ${(
+                            [
+                              { label: 'Auto', val: 'auto' },
+                              { label: '1/3', val: 4 },
+                              { label: 'Metà', val: 6 },
+                              { label: '2/3', val: 8 },
+                              { label: 'Intera', val: 12 },
+                            ] as const
+                          ).map((opt) => {
+                            const cur =
+                              (editingCfg.grid_options as { columns?: number } | undefined)
+                                ?.columns ?? 'auto';
+                            const active = cur === opt.val;
+                            return html`
+                              <button
+                                type="button"
+                                class="size-pill ${active ? 'is-active' : ''}"
+                                @click=${() => this._updateChildGridOption('columns', opt.val)}
+                              >
+                                ${opt.label}
+                              </button>
+                            `;
+                          })}
+                        </div>
+                      </div>
+
+                      <div class="size-group">
+                        <span class="size-label">Altezza</span>
+                        <div class="size-pills">
+                          ${(
+                            [
+                              { label: 'Auto', val: 'auto' },
+                              { label: '1', val: 1 },
+                              { label: '2', val: 2 },
+                              { label: '3', val: 3 },
+                              { label: '4', val: 4 },
+                            ] as const
+                          ).map((opt) => {
+                            const cur =
+                              (editingCfg.grid_options as { rows?: number } | undefined)?.rows ??
+                              'auto';
+                            const active = cur === opt.val;
+                            return html`
+                              <button
+                                type="button"
+                                class="size-pill ${active ? 'is-active' : ''}"
+                                @click=${() => this._updateChildGridOption('rows', opt.val)}
+                              >
+                                ${opt.label}
+                              </button>
+                            `;
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
                     <hui-card-element-editor
                       .hass=${this.hass}
                       .lovelace=${this.lovelace}
@@ -275,6 +358,58 @@ export class M3EPopupCardEditor extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 14px;
+      min-height: min(480px, 58dvh);
+    }
+
+    .size-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      border-radius: 18px;
+      background: var(--secondary-background-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+    }
+
+    .size-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .size-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--secondary-text-color, #9aa0a6);
+    }
+
+    .size-pills {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 9999px;
+      background: var(--card-background-color, rgba(0, 0, 0, 0.22));
+    }
+
+    .size-pill {
+      height: 30px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--primary-text-color, #e3e2e6);
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .size-pill.is-active {
+      background: var(--md-sys-color-primary-container, var(--primary-color, #364067));
+      color: var(--md-sys-color-on-primary-container, #ffffff);
+      font-weight: 600;
     }
 
     dialog.nested-ha-dialog {

@@ -75,7 +75,7 @@ const { is: ns, defineProperty: ls, getOwnPropertyDescriptor: cs, getOwnProperty
   return i;
 } }, Ye = (t, e) => !ns(t, e), oi = { attribute: !0, type: String, converter: we, reflect: !1, useDefault: !1, hasChanged: Ye };
 Symbol.metadata ??= Symbol("metadata"), Se.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let Dt = class extends HTMLElement {
+let zt = class extends HTMLElement {
   static addInitializer(e) {
     this._$Ei(), (this.l ??= []).push(e);
   }
@@ -256,15 +256,15 @@ let Dt = class extends HTMLElement {
   firstUpdated(e) {
   }
 };
-Dt.elementStyles = [], Dt.shadowRootOptions = { mode: "open" }, Dt[se("elementProperties")] = /* @__PURE__ */ new Map(), Dt[se("finalized")] = /* @__PURE__ */ new Map(), ms?.({ ReactiveElement: Dt }), (Se.reactiveElementVersions ??= []).push("2.1.2");
+zt.elementStyles = [], zt.shadowRootOptions = { mode: "open" }, zt[se("elementProperties")] = /* @__PURE__ */ new Map(), zt[se("finalized")] = /* @__PURE__ */ new Map(), ms?.({ ReactiveElement: zt }), (Se.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const Ke = globalThis, ni = (t) => t, $e = Ke.trustedTypes, li = $e ? $e.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, Di = "$lit$", mt = `lit$${Math.random().toFixed(9).slice(2)}$`, zi = "?" + mt, fs = `<${zi}>`, Mt = document, oe = () => Mt.createComment(""), ne = (t) => t === null || typeof t != "object" && typeof t != "function", qe = Array.isArray, gs = (t) => qe(t) || typeof t?.[Symbol.iterator] == "function", De = `[ 	
-\f\r]`, Jt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ci = /-->/g, di = />/g, $t = RegExp(`>|${De}(?:([^\\s"'>=/]+)(${De}*=${De}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), pi = /'/g, hi = /"/g, Hi = /^(?:script|style|textarea|title)$/i, Ri = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = Ri(1), ze = Ri(2), Ht = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), ui = /* @__PURE__ */ new WeakMap(), Pt = Mt.createTreeWalker(Mt, 129);
+const Ke = globalThis, ni = (t) => t, $e = Ke.trustedTypes, li = $e ? $e.createPolicy("lit-html", { createHTML: (t) => t }) : void 0, zi = "$lit$", mt = `lit$${Math.random().toFixed(9).slice(2)}$`, Di = "?" + mt, fs = `<${Di}>`, Mt = document, oe = () => Mt.createComment(""), ne = (t) => t === null || typeof t != "object" && typeof t != "function", qe = Array.isArray, gs = (t) => qe(t) || typeof t?.[Symbol.iterator] == "function", ze = `[ 	
+\f\r]`, Jt = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, ci = /-->/g, di = />/g, $t = RegExp(`>|${ze}(?:([^\\s"'>=/]+)(${ze}*=${ze}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), pi = /'/g, hi = /"/g, Hi = /^(?:script|style|textarea|title)$/i, Ri = (t) => (e, ...i) => ({ _$litType$: t, strings: e, values: i }), l = Ri(1), De = Ri(2), Ht = Symbol.for("lit-noChange"), h = Symbol.for("lit-nothing"), ui = /* @__PURE__ */ new WeakMap(), Pt = Mt.createTreeWalker(Mt, 129);
 function Ni(t, e) {
   if (!qe(t) || !t.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return li !== void 0 ? li.createHTML(e) : e;
@@ -277,7 +277,7 @@ const vs = (t, e) => {
     let p, d, u = -1, g = 0;
     for (; g < c.length && (o.lastIndex = g, d = o.exec(c), d !== null); ) g = o.lastIndex, o === Jt ? d[1] === "!--" ? o = ci : d[1] !== void 0 ? o = di : d[2] !== void 0 ? (Hi.test(d[2]) && (r = RegExp("</" + d[2], "g")), o = $t) : d[3] !== void 0 && (o = $t) : o === $t ? d[0] === ">" ? (o = r ?? Jt, u = -1) : d[1] === void 0 ? u = -2 : (u = o.lastIndex - d[2].length, p = d[1], o = d[3] === void 0 ? $t : d[3] === '"' ? hi : pi) : o === hi || o === pi ? o = $t : o === ci || o === di ? o = Jt : (o = $t, r = void 0);
     const f = o === $t && t[n + 1].startsWith("/>") ? " " : "";
-    a += o === Jt ? c + fs : u >= 0 ? (s.push(p), c.slice(0, u) + Di + c.slice(u) + mt + f) : c + mt + (u === -2 ? n : f);
+    a += o === Jt ? c + fs : u >= 0 ? (s.push(p), c.slice(0, u) + zi + c.slice(u) + mt + f) : c + mt + (u === -2 ? n : f);
   }
   return [Ni(t, a + (t[i] || "<?>") + (e === 2 ? "</svg>" : e === 3 ? "</math>" : "")), s];
 };
@@ -293,7 +293,7 @@ class le {
     }
     for (; (r = Pt.nextNode()) !== null && c.length < n; ) {
       if (r.nodeType === 1) {
-        if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(Di)) {
+        if (r.hasAttributes()) for (const u of r.getAttributeNames()) if (u.endsWith(zi)) {
           const g = d[o++], f = r.getAttribute(u).split(mt), m = /([.?@])?(.*)/.exec(g);
           c.push({ type: 1, index: a, name: m[2], strings: f, ctor: m[1] === "." ? bs : m[1] === "?" ? ys : m[1] === "@" ? xs : Ee }), r.removeAttribute(u);
         } else u.startsWith(mt) && (c.push({ type: 6, index: a }), r.removeAttribute(u));
@@ -305,7 +305,7 @@ class le {
             r.append(u[g], oe());
           }
         }
-      } else if (r.nodeType === 8) if (r.data === zi) c.push({ type: 2, index: a });
+      } else if (r.nodeType === 8) if (r.data === Di) c.push({ type: 2, index: a });
       else {
         let u = -1;
         for (; (u = r.data.indexOf(mt, u + 1)) !== -1; ) c.push({ type: 7, index: a }), u += mt.length - 1;
@@ -493,7 +493,7 @@ const ks = (t, e, i) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const Xe = globalThis;
-let A = class extends Dt {
+let A = class extends zt {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -524,7 +524,7 @@ Cs?.({ LitElement: A });
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const D = (t) => (e, i) => {
+const z = (t) => (e, i) => {
   i !== void 0 ? i.addInitializer(() => {
     customElements.define(t, e);
   }) : customElements.define(t, e);
@@ -1530,7 +1530,7 @@ It([
   M(".dialog-surface")
 ], ct.prototype, "_dialogSurfaceEl", 2);
 ct = It([
-  D("m3e-assist-card")
+  z("m3e-assist-card")
 ], ct);
 function Tt(t, e, i) {
   const s = t?.entity_id ?? "", r = s.split(".")[0], a = String(t?.attributes.device_class ?? "").toLowerCase(), o = String(t?.state ?? "").toLowerCase();
@@ -1969,12 +1969,12 @@ Pe([
   v()
 ], Bt.prototype, "_expandedIndex", 2);
 Bt = Pe([
-  D("m3e-glance-card-editor")
+  z("m3e-glance-card-editor")
 ], Bt);
-var Ds = Object.defineProperty, zs = Object.getOwnPropertyDescriptor, Me = (t, e, i, s) => {
-  for (var r = s > 1 ? void 0 : s ? zs(e, i) : e, a = t.length - 1, o; a >= 0; a--)
+var zs = Object.defineProperty, Ds = Object.getOwnPropertyDescriptor, Me = (t, e, i, s) => {
+  for (var r = s > 1 ? void 0 : s ? Ds(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
-  return s && r && Ds(e, i, r), r;
+  return s && r && zs(e, i, r), r;
 };
 const Hs = /* @__PURE__ */ new Set([
   "on",
@@ -2328,7 +2328,7 @@ Me([
   M(".glance-strip")
 ], Ut.prototype, "_stripEl", 2);
 Ut = Me([
-  D("m3e-glance-card")
+  z("m3e-glance-card")
 ], Ut);
 function ce(t) {
   if (!t) return null;
@@ -3945,7 +3945,7 @@ F([
   M(".dialog-surface")
 ], B.prototype, "_dialogSurfaceEl", 2);
 B = F([
-  D("m3e-light-card")
+  z("m3e-light-card")
 ], B);
 var Gs = Object.defineProperty, Ys = Object.getOwnPropertyDescriptor, Te = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Ys(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -4207,7 +4207,7 @@ Te([
   v()
 ], Vt.prototype, "_optimisticOn", 2);
 Vt = Te([
-  D("m3e-light-control-card")
+  z("m3e-light-control-card")
 ], Vt);
 /**
  * @license
@@ -5161,7 +5161,7 @@ at([
   M(".group-header")
 ], Y.prototype, "_headerEl", 2);
 Y = at([
-  D("m3e-light-group-card")
+  z("m3e-light-group-card")
 ], Y);
 const _i = [
   [/spotify/i, "spotify"],
@@ -5834,7 +5834,7 @@ let N = class extends A {
                           <!-- Output Devices (M3 Expressive Pill = Selected, 20px = Unselected) -->
                           <div class="cast-list" role="radiogroup" aria-label="Dispositivi Cast">
                             ${w.map((S) => {
-      const E = this.hass?.states[S], R = S === this.entityId, wt = E?.attributes.friendly_name || S, J = String(E?.attributes.source ?? "").trim(), it = J || wt, st = typeof E?.attributes.volume_level == "number" ? Math.round(E.attributes.volume_level * 100) : null, z = E?.attributes.device_class === "tv" || S.toLowerCase().includes("tv") || S.toLowerCase().includes("chromecast") || J.toLowerCase().includes("tv") || J.toLowerCase().includes("chromecast");
+      const E = this.hass?.states[S], R = S === this.entityId, wt = E?.attributes.friendly_name || S, J = String(E?.attributes.source ?? "").trim(), it = J || wt, st = typeof E?.attributes.volume_level == "number" ? Math.round(E.attributes.volume_level * 100) : null, D = E?.attributes.device_class === "tv" || S.toLowerCase().includes("tv") || S.toLowerCase().includes("chromecast") || J.toLowerCase().includes("tv") || J.toLowerCase().includes("chromecast");
       return l`
                                 <button
                                   type="button"
@@ -5849,7 +5849,7 @@ let N = class extends A {
                                       <svg viewBox="0 0 24 24" class="cast-dev-icon" aria-hidden="true">
                                         <path
                                           fill="currentColor"
-                                          d=${z ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
+                                          d=${D ? "M21 3H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5v2h8v-2h5a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm0 14H3V5h18v12Z" : "M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02Z"}
                                         />
                                       </svg>
                                       <span class="cast-row-text">
@@ -6947,7 +6947,7 @@ V([
   M(".meta-block")
 ], N.prototype, "_metaBlockEl", 2);
 N = V([
-  D("m3e-media-popup")
+  z("m3e-media-popup")
 ], N);
 var pr = Object.defineProperty, hr = Object.getOwnPropertyDescriptor, et = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? hr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -7737,7 +7737,7 @@ et([
   M("m3e-media-popup")
 ], G.prototype, "_popupEl", 2);
 G = et([
-  D("m3e-media-bar-card")
+  z("m3e-media-bar-card")
 ], G);
 var mr = Object.defineProperty, fr = Object.getOwnPropertyDescriptor, q = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? fr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -8667,7 +8667,7 @@ q([
   P({ attribute: !1 })
 ], j.prototype, "config", 1);
 j = q([
-  D("m3e-media-player-card")
+  z("m3e-media-player-card")
 ], j);
 var br = Object.defineProperty, yr = Object.getOwnPropertyDescriptor, Ae = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? yr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -9082,7 +9082,7 @@ Ae([
   v()
 ], Zt.prototype, "_expandedIndex", 2);
 Zt = Ae([
-  D("m3e-people-card-editor")
+  z("m3e-people-card-editor")
 ], Zt);
 var xr = Object.defineProperty, wr = Object.getOwnPropertyDescriptor, Oe = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? wr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -9523,24 +9523,24 @@ Oe([
   M(".people-container")
 ], Ft.prototype, "_containerEl", 2);
 Ft = Oe([
-  D("m3e-people-card")
+  z("m3e-people-card")
 ], Ft);
-const zt = /* @__PURE__ */ new Set();
+const Dt = /* @__PURE__ */ new Set();
 function $r(t) {
-  zt.add(t);
+  Dt.add(t);
 }
 function kr(t) {
-  zt.delete(t);
+  Dt.delete(t);
 }
 function Be(t) {
-  if (zt.size === 0) return null;
+  if (Dt.size === 0) return null;
   const e = Q(t?.hash);
-  for (const i of zt) {
+  for (const i of Dt) {
     const s = i.getConfig();
     if (s && Q(s.hash) === e)
       return i;
   }
-  return Array.from(zt)[zt.size - 1] ?? null;
+  return Array.from(Dt)[Dt.size - 1] ?? null;
 }
 const ji = "dashboardCardClipboard";
 function xi(t) {
@@ -9639,6 +9639,17 @@ let pt = class extends A {
       })
     );
   }
+  _updateChildGridOption(t, e) {
+    if (!this._config || this._editingCardIdx === null) return;
+    const i = [...this._config.cards ?? []], s = i[this._editingCardIdx];
+    if (!s) return;
+    const r = {
+      ...s.grid_options ?? {}
+    };
+    e === "auto" ? delete r[t] : r[t] = e;
+    const a = { ...s };
+    Object.keys(r).length > 0 ? a.grid_options = r : delete a.grid_options, i[this._editingCardIdx] = a, this._emitConfig({ ...this._config, cards: i });
+  }
   render() {
     if (!this.hass || !this._config) return h;
     const t = [
@@ -9733,6 +9744,56 @@ let pt = class extends A {
                     @config-changed=${this._onCardPicked}
                   ></hui-card-picker>
                 ` : e ? l`
+                    <div class="size-bar">
+                      <div class="size-group">
+                        <span class="size-label">Larghezza</span>
+                        <div class="size-pills">
+                          ${[
+      { label: "Auto", val: "auto" },
+      { label: "1/3", val: 4 },
+      { label: "Metà", val: 6 },
+      { label: "2/3", val: 8 },
+      { label: "Intera", val: 12 }
+    ].map((i) => {
+      const r = (e.grid_options?.columns ?? "auto") === i.val;
+      return l`
+                              <button
+                                type="button"
+                                class="size-pill ${r ? "is-active" : ""}"
+                                @click=${() => this._updateChildGridOption("columns", i.val)}
+                              >
+                                ${i.label}
+                              </button>
+                            `;
+    })}
+                        </div>
+                      </div>
+
+                      <div class="size-group">
+                        <span class="size-label">Altezza</span>
+                        <div class="size-pills">
+                          ${[
+      { label: "Auto", val: "auto" },
+      { label: "1", val: 1 },
+      { label: "2", val: 2 },
+      { label: "3", val: 3 },
+      { label: "4", val: 4 }
+    ].map((i) => {
+      const r = (e.grid_options?.rows ?? "auto") === i.val;
+      return l`
+                              <button
+                                type="button"
+                                class="size-pill ${r ? "is-active" : ""}"
+                                @click=${() => this._updateChildGridOption("rows", i.val)}
+                              >
+                                ${i.label}
+                              </button>
+                            `;
+    })}
+                        </div>
+                      </div>
+                    </div>
+
                     <hui-card-element-editor
                       .hass=${this.hass}
                       .lovelace=${this.lovelace}
@@ -9751,6 +9812,58 @@ pt.styles = I`
       display: flex;
       flex-direction: column;
       gap: 14px;
+      min-height: min(480px, 58dvh);
+    }
+
+    .size-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      border-radius: 18px;
+      background: var(--secondary-background-color, rgba(255, 255, 255, 0.05));
+      border: 1px solid var(--divider-color, rgba(255, 255, 255, 0.1));
+    }
+
+    .size-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .size-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--secondary-text-color, #9aa0a6);
+    }
+
+    .size-pills {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      border-radius: 9999px;
+      background: var(--card-background-color, rgba(0, 0, 0, 0.22));
+    }
+
+    .size-pill {
+      height: 30px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--primary-text-color, #e3e2e6);
+      font: inherit;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .size-pill.is-active {
+      background: var(--md-sys-color-primary-container, var(--primary-color, #364067));
+      color: var(--md-sys-color-on-primary-container, #ffffff);
+      font-weight: 600;
     }
 
     dialog.nested-ha-dialog {
@@ -9857,7 +9970,7 @@ Lt([
   M("dialog.nested-ha-dialog")
 ], pt.prototype, "_modalEl", 2);
 pt = Lt([
-  D("m3e-popup-card-editor")
+  z("m3e-popup-card-editor")
 ], pt);
 const Fe = "m3e_popups", Wi = "M3E Pop-ups", rt = [];
 function Qe() {
@@ -9996,10 +10109,10 @@ function Lr() {
   }).catch(() => {
   }));
 }
-var Dr = Object.defineProperty, zr = Object.getOwnPropertyDescriptor, X = (t, e, i, s) => {
-  for (var r = s > 1 ? void 0 : s ? zr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
+var zr = Object.defineProperty, Dr = Object.getOwnPropertyDescriptor, X = (t, e, i, s) => {
+  for (var r = s > 1 ? void 0 : s ? Dr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
     (o = t[a]) && (r = (s ? o(e, i, r) : o(r)) || r);
-  return s && r && Dr(e, i, r), r;
+  return s && r && zr(e, i, r), r;
 };
 const Hr = /* @__PURE__ */ new Set([
   "on",
@@ -10016,7 +10129,7 @@ const Hr = /* @__PURE__ */ new Set([
   "true"
 ]);
 function Ci(t, e) {
-  const i = t.grid_options ?? {}, s = e?.getGridOptions?.(), r = i.columns ?? s?.columns ?? 12, a = r === "full" ? 12 : typeof r == "number" && Number.isFinite(r) ? Math.max(1, Math.min(12, Math.round(r))) : 12, o = i.rows ?? s?.rows, n = typeof o == "number" && Number.isFinite(o) && o > 0 ? Math.round(o) : void 0;
+  const i = t.grid_options ?? {}, s = e?.getGridOptions?.(), r = i.columns ?? s?.columns ?? 12, a = r === "full" ? 12 : typeof r == "number" && Number.isFinite(r) ? Math.max(1, Math.min(12, Math.round(r))) : 12, o = i.rows, n = typeof o == "number" && Number.isFinite(o) && o > 0 ? Math.round(o) : void 0;
   return { cols: a, rows: n };
 }
 let W = class extends A {
@@ -10464,6 +10577,9 @@ W.styles = [
         display: flex;
         flex-direction: column;
         gap: 16px;
+        max-height: 68dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       /* Clean native header preview when sitting on Dashboard Edit Mode (fits 1 HA Section row) */
@@ -10652,6 +10768,7 @@ W.styles = [
       .popup-cards-grid {
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-rows: minmax(56px, auto);
         gap: 10px;
         align-items: stretch;
       }
@@ -10767,7 +10884,7 @@ X([
   M(".stack-portal")
 ], W.prototype, "_stackPortalEl", 2);
 W = X([
-  D("m3e-popup-card")
+  z("m3e-popup-card")
 ], W);
 var Rr = Object.defineProperty, Nr = Object.getOwnPropertyDescriptor, Ie = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Nr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -11266,7 +11383,7 @@ Ie([
   v()
 ], jt.prototype, "_expandedIdx", 2);
 jt = Ie([
-  D("m3e-remote-custom-controls-editor")
+  z("m3e-remote-custom-controls-editor")
 ], jt);
 var Zr = Object.defineProperty, Fr = Object.getOwnPropertyDescriptor, ti = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Fr(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -11490,7 +11607,7 @@ ti([
   v()
 ], de.prototype, "_config", 2);
 de = ti([
-  D("m3e-remote-card-editor")
+  z("m3e-remote-card-editor")
 ], de);
 const jr = {
   androidtv_remote: {
@@ -13719,7 +13836,7 @@ ot([
   M(".source-dialog-surface")
 ], K.prototype, "_sourceSurfaceEl", 2);
 K = ot([
-  D("m3e-remote-card")
+  z("m3e-remote-card")
 ], K);
 var ia = Object.defineProperty, sa = Object.getOwnPropertyDescriptor, ue = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? sa(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -14145,7 +14262,7 @@ ue([
   v()
 ], At.prototype, "_activated", 2);
 At = ue([
-  D("m3e-scene-card")
+  z("m3e-scene-card")
 ], At);
 var aa = Object.defineProperty, oa = Object.getOwnPropertyDescriptor, Le = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? oa(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -14508,7 +14625,7 @@ Le([
   v()
 ], Wt.prototype, "_expandedIndex", 2);
 Wt = Le([
-  D("m3e-stack-card-editor")
+  z("m3e-stack-card-editor")
 ], Wt);
 var na = Object.defineProperty, la = Object.getOwnPropertyDescriptor, ii = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? la(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -14725,7 +14842,7 @@ ii([
   v()
 ], pe.prototype, "_config", 2);
 pe = ii([
-  D("m3e-stack-card")
+  z("m3e-stack-card")
 ], pe);
 const qi = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/, ca = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/, Xi = /* @__PURE__ */ new Set(["s", "sec", "secs", "second", "seconds", "min", "mins", "minute", "minutes", "m", "h", "hr", "hrs", "hour", "hours", "d", "day", "days"]);
 function Ti(t) {
@@ -15713,7 +15830,7 @@ me([
   v()
 ], Ot.prototype, "_tick", 2);
 Ot = me([
-  D("m3e-status-badge")
+  z("m3e-status-badge")
 ], Ot);
 let ve = null, _e = null;
 function Ce(t, e = 4e3) {
@@ -15917,7 +16034,7 @@ Yt([
   v()
 ], ft.prototype, "_customEditorEl", 2);
 ft = Yt([
-  D("m3e-feature-sub-editor")
+  z("m3e-feature-sub-editor")
 ], ft);
 var va = Object.defineProperty, _a = Object.getOwnPropertyDescriptor, Kt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? _a(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -16466,7 +16583,7 @@ Kt([
   v()
 ], gt.prototype, "_subElementEditorConfig", 2);
 gt = Kt([
-  D("m3e-status-card-editor")
+  z("m3e-status-card-editor")
 ], gt);
 var ba = Object.defineProperty, ya = Object.getOwnPropertyDescriptor, L = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? ya(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -17185,7 +17302,7 @@ let O = class extends A {
     }}
           @pointerleave=${() => this._historyHoverIdx = null}
         >
-          ${ze`
+          ${De`
             <defs>
               <linearGradient id=${T} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.28" />
@@ -17197,7 +17314,7 @@ let O = class extends A {
             <line x1=${g} y1=${u - f} x2=${d - g} y2=${u - f} class="history-grid-line" />
             <path d=${b} fill="url(#${T})" />
             <path d=${w} class="history-line" />
-            ${C !== null ? ze`<line x1=${k.x} y1=${f} x2=${k.x} y2=${u - f} class="history-cursor-line" />` : h}
+            ${C !== null ? De`<line x1=${k.x} y1=${f} x2=${k.x} y2=${u - f} class="history-cursor-line" />` : h}
             <circle cx=${k.x} cy=${k.y} r="4.5" class="history-dot" />
           `}
         </svg>
@@ -17304,7 +17421,7 @@ let O = class extends A {
     `;
   }
   _renderClimatePopup() {
-    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), p = r !== null ? this._tempToDeg(r) : null, d = 140, u = 140, g = 114, f = Ca(d, u, g, be, be + Et), m = ae(d, u, g, c), w = p !== null ? ae(d, u, g, p) : null, b = p !== null ? ae(d, u, g - 22, p) : null, C = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], k = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], $ = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], y = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], T = String(t?.attributes.preset_mode ?? "none"), _ = String(t?.attributes.fan_mode ?? "auto"), H = String(t?.attributes.swing_mode ?? "off"), S = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((z) => z.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((z) => z.attributes.device_class === "humidity").state}%` : null, E = k.length > 0, R = $.length > 0, wt = y.length > 0, J = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", it = (z) => z.replace(/_/g, " ").replace(/^./, (fe) => fe.toUpperCase()), st = this._activeSheet === "mode" ? { title: "Select a mode", options: C, current: e, onSelect: (z) => this._setClimateMode(z) } : this._activeSheet === "preset" ? { title: "Select preset", options: k, current: T, onSelect: (z) => this._setClimatePreset(z) } : this._activeSheet === "fan" ? { title: "Fan speed", options: $, current: _, onSelect: (z) => this._setClimateFan(z) } : this._activeSheet === "swing" ? { title: "Swing mode", options: y, current: H, onSelect: (z) => this._setClimateSwing(z) } : null;
+    const t = this._entity, e = String(t?.state ?? "off").toLowerCase(), i = e === "off", s = this._climateTarget, r = this._climateCurrent, a = this._outdoorEntity, o = Math.floor(s), n = Math.abs(s - o - 0.5) < 0.05, c = this._tempToDeg(s), p = r !== null ? this._tempToDeg(r) : null, d = 140, u = 140, g = 114, f = Ca(d, u, g, be, be + Et), m = ae(d, u, g, c), w = p !== null ? ae(d, u, g, p) : null, b = p !== null ? ae(d, u, g - 22, p) : null, C = Array.isArray(t?.attributes.hvac_modes) ? t.attributes.hvac_modes : ["heat", "cool", "off"], k = Array.isArray(t?.attributes.preset_modes) ? t.attributes.preset_modes : [], $ = Array.isArray(t?.attributes.fan_modes) ? t.attributes.fan_modes : [], y = Array.isArray(t?.attributes.swing_modes) ? t.attributes.swing_modes : [], T = String(t?.attributes.preset_mode ?? "none"), _ = String(t?.attributes.fan_mode ?? "auto"), H = String(t?.attributes.swing_mode ?? "off"), S = typeof t?.attributes.current_humidity == "number" ? `${t.attributes.current_humidity}%` : this._getSiblingSensors().find((D) => D.attributes.device_class === "humidity") ? `${this._getSiblingSensors().find((D) => D.attributes.device_class === "humidity").state}%` : null, E = k.length > 0, R = $.length > 0, wt = y.length > 0, J = e === "heat" || e === "heating" ? "mode-heat" : e === "cool" || e === "cooling" ? "mode-cool" : "mode-off", it = (D) => D.replace(/_/g, " ").replace(/^./, (fe) => fe.toUpperCase()), st = this._activeSheet === "mode" ? { title: "Select a mode", options: C, current: e, onSelect: (D) => this._setClimateMode(D) } : this._activeSheet === "preset" ? { title: "Select preset", options: k, current: T, onSelect: (D) => this._setClimatePreset(D) } : this._activeSheet === "fan" ? { title: "Fan speed", options: $, current: _, onSelect: (D) => this._setClimateFan(D) } : this._activeSheet === "swing" ? { title: "Swing mode", options: y, current: H, onSelect: (D) => this._setClimateSwing(D) } : null;
     return l`
       <div class="climate-hero ${J} ${this._dialDragging ? "is-dragging" : ""}">
         <div
@@ -17318,7 +17435,7 @@ let O = class extends A {
             <circle cx=${d} cy=${u} r="132" class="dial-bg-circle" />
             <path d=${f} class="dial-arc-track" />
 
-            ${w && b ? ze`
+            ${w && b ? De`
                   <circle cx=${w.x} cy=${w.y} r="3.5" class="dial-ambient-dot" />
                   <text
                     x=${b.x}
@@ -17350,7 +17467,7 @@ let O = class extends A {
                   </span>
                 `}
 
-            <div class="dial-steppers" @pointerdown=${(z) => z.stopPropagation()}>
+            <div class="dial-steppers" @pointerdown=${(D) => D.stopPropagation()}>
               <button
                 type="button"
                 class="dial-step-btn"
@@ -17472,7 +17589,7 @@ let O = class extends A {
       <!-- Unified Inline Bottom Sheet for Mode / Preset / Fan / Swing -->
       ${st ? l`
             <div class="mode-sheet-backdrop" @click=${() => this._activeSheet = null}>
-              <div class="mode-sheet" @click=${(z) => z.stopPropagation()}>
+              <div class="mode-sheet" @click=${(D) => D.stopPropagation()}>
                 <div class="mode-sheet-header">
                   <button
                     type="button"
@@ -17485,15 +17602,15 @@ let O = class extends A {
                   <span>${st.title}</span>
                 </div>
                 <div class="mode-sheet-list">
-                  ${st.options.map((z) => {
-      const fe = z.toLowerCase() === st.current.toLowerCase(), rs = this._activeSheet === "mode" ? z === "heat" ? "mode-heat" : z === "cool" ? "mode-cool" : "mode-off" : "mode-off";
+                  ${st.options.map((D) => {
+      const fe = D.toLowerCase() === st.current.toLowerCase(), rs = this._activeSheet === "mode" ? D === "heat" ? "mode-heat" : D === "cool" ? "mode-cool" : "mode-off" : "mode-off";
       return l`
                       <button
                         type="button"
                         class="mode-option ${fe ? `selected ${rs}` : ""}"
-                        @click=${() => st.onSelect(z)}
+                        @click=${() => st.onSelect(D)}
                       >
-                        <span>${it(z)}</span>
+                        <span>${it(D)}</span>
                         ${fe ? l`<span class="check-mark">✓</span>` : h}
                       </button>
                     `;
@@ -19998,7 +20115,7 @@ L([
   v()
 ], O.prototype, "_padTapPulse", 2);
 O = L([
-  D("m3e-status-card")
+  z("m3e-status-card")
 ], O);
 var Sa = Object.defineProperty, Ea = Object.getOwnPropertyDescriptor, qt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Ea(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -20513,7 +20630,7 @@ qt([
   M(".thermostat-card")
 ], vt.prototype, "_cardEl", 2);
 vt = qt([
-  D("m3e-thermostat-card")
+  z("m3e-thermostat-card")
 ], vt);
 var Pa = Object.defineProperty, Ma = Object.getOwnPropertyDescriptor, Xt = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Ma(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -20840,7 +20957,7 @@ Xt([
   v()
 ], _t.prototype, "_subElementEditorConfig", 2);
 _t = Xt([
-  D("m3e-toggle-card-editor")
+  z("m3e-toggle-card-editor")
 ], _t);
 var Ta = Object.defineProperty, Aa = Object.getOwnPropertyDescriptor, ht = (t, e, i, s) => {
   for (var r = s > 1 ? void 0 : s ? Aa(e, i) : e, a = t.length - 1, o; a >= 0; a--)
@@ -21633,7 +21750,7 @@ ht([
   M(".dialog-surface")
 ], tt.prototype, "_dialogSurfaceEl", 2);
 tt = ht([
-  D("m3e-toggle-card")
+  z("m3e-toggle-card")
 ], tt);
 Lr();
 function Z(t) {

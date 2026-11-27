@@ -88,7 +88,7 @@ function resolveCardGridSpan(
         ? Math.max(1, Math.min(12, Math.round(rawCols)))
         : 12;
 
-  const rawRows = cfgGrid.rows ?? defGrid?.rows;
+  const rawRows = cfgGrid.rows;
   const rows =
     typeof rawRows === 'number' && Number.isFinite(rawRows) && rawRows > 0
       ? Math.round(rawRows)
@@ -910,6 +910,9 @@ export class M3EPopupCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 16px;
+        max-height: 68dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
 
       /* Clean native header preview when sitting on Dashboard Edit Mode (fits 1 HA Section row) */
@@ -1098,6 +1101,7 @@ export class M3EPopupCard extends LitElement {
       .popup-cards-grid {
         display: grid;
         grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-auto-rows: minmax(56px, auto);
         gap: 10px;
         align-items: stretch;
       }
