@@ -60,11 +60,23 @@ export type {
   M3EToggleCardConfig,
 } from './types/home-assistant';
 
+import type { HomeAssistant, LovelaceCardConfig } from './types/home-assistant';
+
+export interface CustomCardEntitySuggestion {
+  config: LovelaceCardConfig;
+  label?: string;
+}
+
 interface CustomCardEntry {
   type: string;
   name: string;
   description: string;
   preview?: boolean;
+  documentationURL?: string;
+  getEntitySuggestion?: (
+    hass: HomeAssistant,
+    entityId: string,
+  ) => CustomCardEntitySuggestion | CustomCardEntitySuggestion[] | null;
 }
 
 declare global {
@@ -73,6 +85,97 @@ declare global {
     customBadges?: CustomCardEntry[];
   }
 }
+
+function getDomain(entityId: string): string {
+  return entityId.split('.')[0] ?? '';
+}
+
+function isLightGroupEntity(hass: HomeAssistant, entityId: string): boolean {
+  if (getDomain(entityId) !== 'light') return false;
+  const members = hass?.states?.[entityId]?.attributes?.entity_id;
+  return Array.isArray(members) && members.length > 0;
+}
+
+function isNumericSensor(hass: HomeAssistant, entityId: string): boolean {
+  if (getDomain(entityId) !== 'sensor') return false;
+  const st = hass?.states?.[entityId];
+  if (!st) return false;
+  if (typeof st.attributes?.unit_of_measurement === 'string' && st.attributes.unit_of_measurement) {
+    return true;
+  }
+  const n = Number(st.state);
+  return st.state !== '' && !Number.isNaN(n) && Number.isFinite(n);
+}
+
+const TOGGLE_DOMAINS = new Set([
+  'switch',
+  'input_boolean',
+  'fan',
+  'humidifier',
+  'lock',
+  'valve',
+  'siren',
+]);
+
+const SCENE_DOMAINS = new Set(['scene', 'script', 'button', 'input_button', 'automation']);
+
+const STATUS_CARD_DOMAINS = new Set([
+  'sensor',
+  'binary_sensor',
+  'climate',
+  'media_player',
+  'remote',
+  'select',
+  'input_select',
+  'switch',
+  'cover',
+  'lock',
+  'fan',
+  'vacuum',
+  'weather',
+  'alarm_control_panel',
+  'timer',
+  'counter',
+  'number',
+  'input_number',
+  'calendar',
+  'water_heater',
+  'humidifier',
+  'device_tracker',
+  'person',
+]);
+
+const GLANCE_DOMAINS = new Set([
+  'sensor',
+  'binary_sensor',
+  'weather',
+  'climate',
+  'lock',
+  'cover',
+  'alarm_control_panel',
+  'person',
+]);
+
+const BADGE_DOMAINS = new Set([
+  'sensor',
+  'binary_sensor',
+  'person',
+  'device_tracker',
+  'climate',
+  'weather',
+  'lock',
+  'cover',
+  'alarm_control_panel',
+  'timer',
+  'counter',
+  'number',
+  'input_number',
+  'switch',
+  'light',
+  'fan',
+  'media_player',
+  'vacuum',
+]);
 
 function registerCard(entry: CustomCardEntry): void {
   window.customCards = window.customCards || [];
@@ -94,6 +197,10 @@ registerCard({
   description:
     'Google Home–style horizontal light slider tile with vertical capsule popup, shape morphing, and Material You integration.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (getDomain(entityId) !== 'light') return null;
+    return { config: { type: 'custom:m3e-light-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -102,6 +209,25 @@ registerCard({
   description:
     'Google Home–style status tile with dual state icons, device sibling auto-discovery, and modular popups (Sensor, Selector, Climate, Remote, Media).',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    const domain = getDomain(entityId);
+    if (!STATUS_CARD_DOMAINS.has(domain)) return null;
+    const popup_type =
+      domain === 'sensor' || domain === 'binary_sensor'
+        ? 'sensor'
+        : domain === 'climate'
+          ? 'climate'
+          : domain === 'media_player'
+            ? 'media'
+            : domain === 'remote'
+              ? 'remote'
+              : domain === 'select' || domain === 'input_select'
+                ? 'selector'
+                : 'custom';
+    return {
+      config: { type: 'custom:m3e-status-card', entity: entityId, popup_type },
+    };
+  },
 });
 
 registerCard({
@@ -110,6 +236,10 @@ registerCard({
   description:
     'Google Home–style switch/outlet toggle tile with morphing vertical switch popup.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (!TOGGLE_DOMAINS.has(getDomain(entityId))) return null;
+    return { config: { type: 'custom:m3e-toggle-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -118,6 +248,10 @@ registerCard({
   description:
     'Google Home–style one-tap scene, script, or button tile with animated activation feedback.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (!SCENE_DOMAINS.has(getDomain(entityId))) return null;
+    return { config: { type: 'custom:m3e-scene-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -126,6 +260,12 @@ registerCard({
   description:
     'Google Home–style dual-choice pill switch with sliding indicator to turn on/off lights or all home lights.',
   preview: true,
+  getEntitySuggestion: (hass, entityId) => {
+    if (!isLightGroupEntity(hass, entityId)) return null;
+    return {
+      config: { type: 'custom:m3e-light-control-card', entities: [entityId] },
+    };
+  },
 });
 
 registerCard({
@@ -134,6 +274,10 @@ registerCard({
   description:
     'Google Home–style expandable light group bar with aggregate brightness slider and 2-column child light grid.',
   preview: true,
+  getEntitySuggestion: (hass, entityId) => {
+    if (!isLightGroupEntity(hass, entityId)) return null;
+    return { config: { type: 'custom:m3e-light-group-card', entity: entityId } };
+  },
 });
 
 const assistCardEntry: CustomCardEntry = {
@@ -142,6 +286,11 @@ const assistCardEntry: CustomCardEntry = {
   description:
     'Google Home–style "Ask Home" Assist bar with a left Home/Away input_select mode selector.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    const domain = getDomain(entityId);
+    if (domain !== 'input_select' && domain !== 'select') return null;
+    return { config: { type: 'custom:m3e-assist-card', entity: entityId } };
+  },
 };
 registerCard(assistCardEntry);
 registerBadge(assistCardEntry);
@@ -152,6 +301,12 @@ registerCard({
   description:
     'Google Home–style horizontally scrollable At a Glance bar with circular tonal icon badges and per-entity state/attribute customization.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (!GLANCE_DOMAINS.has(getDomain(entityId))) return null;
+    return {
+      config: { type: 'custom:m3e-glance-card', items: [{ entity: entityId }] },
+    };
+  },
 });
 
 registerCard({
@@ -160,6 +315,13 @@ registerCard({
   description:
     'At a Glance card dedicated to people (avatar, name, location) with scrollable, full-row, vertical list, and compact layout modes.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    const domain = getDomain(entityId);
+    if (domain !== 'person' && domain !== 'device_tracker') return null;
+    return {
+      config: { type: 'custom:m3e-people-card', items: [{ entity: entityId }] },
+    };
+  },
 });
 
 registerCard({
@@ -168,6 +330,10 @@ registerCard({
   description:
     'Full-width Google Home–style thermostat card with +/- pill steppers, heat/cool semantic colors, offline state, and full climate dial popup.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (getDomain(entityId) !== 'climate') return null;
+    return { config: { type: 'custom:m3e-thermostat-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -176,6 +342,17 @@ registerCard({
   description:
     'Google Home–style comparison card to list and compare multiple sensors side-by-side with customizable header icon and title.',
   preview: true,
+  getEntitySuggestion: (hass, entityId) => {
+    if (!isNumericSensor(hass, entityId)) return null;
+    const friendly = String(hass?.states?.[entityId]?.attributes?.friendly_name ?? '').trim();
+    return {
+      config: {
+        type: 'custom:m3e-stack-card',
+        ...(friendly ? { title: friendly } : {}),
+        items: [{ entity: entityId }],
+      },
+    };
+  },
 });
 
 registerCard({
@@ -184,6 +361,10 @@ registerCard({
   description:
     'Footer-ready Google Home–style media player bar with squircle artwork, auto-scrolling marquee metadata, Cast/Source selector, and Play/Pause button.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (getDomain(entityId) !== 'media_player') return null;
+    return { config: { type: 'custom:m3e-media-bar-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -192,6 +373,10 @@ registerCard({
   description:
     'Full-bleed Material 3 Expressive media player card with dynamic artwork color extraction, shape-morphing Play/Pause, and animated wavy progress slider.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (getDomain(entityId) !== 'media_player') return null;
+    return { config: { type: 'custom:m3e-media-player-card', entity: entityId } };
+  },
 });
 
 registerCard({
@@ -208,6 +393,11 @@ registerCard({
   description:
     'Google Home–style Material 3 Expressive TV & Media remote card with gesture touchpad / D-Pad, volume rocker, out-of-the-box multi-platform commands, and custom native buttons & segmented pills.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    const domain = getDomain(entityId);
+    if (domain !== 'remote' && domain !== 'media_player') return null;
+    return { config: { type: 'custom:m3e-remote-card', entity: entityId } };
+  },
 });
 
 const statusBadgeEntry: CustomCardEntry = {
@@ -216,6 +406,10 @@ const statusBadgeEntry: CustomCardEntry = {
   description:
     'Compact Material 3 Expressive status badge (Glance Mini, Split Tonal Pill, Minimal Dot, Squircle Alert) for dashboard headers or compact grids.',
   preview: true,
+  getEntitySuggestion: (_hass, entityId) => {
+    if (!BADGE_DOMAINS.has(getDomain(entityId))) return null;
+    return { config: { type: 'custom:m3e-status-badge', entity: entityId } };
+  },
 };
 registerBadge(statusBadgeEntry);
 registerCard(statusBadgeEntry);

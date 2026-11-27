@@ -40,6 +40,8 @@ Before writing or modifying **any** card, popup, sheet, or control in this repos
 6. **Native HA GUI Editor & Automatic EN/IT Localization:**
    - Provide `getStubConfig()` and panelized `getConfigForm()` / custom editor (`Content`, `Interactions`, `Features`; `name: ''` + `flatten: true` on `expandable` groups).
    - Localize all user-facing strings via `src/utils/i18n.ts` (EN default, IT when `hass.language` starts with `'it'`).
+7. **Home Assistant "By entity" Community Suggestions (`getEntitySuggestion`):**
+   - Every entity-bound card or badge registered in `src/index.ts` (`window.customCards` / `window.customBadges`) MUST define **`getEntitySuggestion(hass, entityId)`** (HA 2026.6+) scoped strictly to the domains/attributes it genuinely supports (e.g. `light`, light groups via `attributes.entity_id`, `climate`, `media_player`, numeric `sensor`, etc.), returning `{ config }` (or an array of `{ config, label }`) or `null` for unsupported entities. Pure container cards (like `m3e-popup-card`) intentionally omit it to keep the picker clean.
 
 ---
 
