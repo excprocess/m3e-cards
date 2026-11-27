@@ -9,6 +9,7 @@ import {
   resolveEntityName,
   resolveStateContent,
 } from '../utils/entity-display';
+import { computeBadgeProgress } from '../utils/badge-progress';
 import { t } from '../utils/i18n';
 
 const DEFAULT_ACTIVE_STATES = new Set([
@@ -38,29 +39,49 @@ export class M3EStatusBadge extends LitElement {
   @state() private _tick = 0;
 
   private _prevEntity?: HassEntity;
+  private _prevStartEntity?: HassEntity;
+  private _prevEndEntity?: HassEntity;
   private _tickTimer: number | null = null;
+  private _tickIntervalMs = 0;
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
     if (this._tickTimer !== null) {
       window.clearInterval(this._tickTimer);
       this._tickTimer = null;
+      this._tickIntervalMs = 0;
     }
   }
 
   protected updated(): void {
+    const isTimerActive =
+      this._entity?.entity_id.startsWith('timer.') && this._entity.state === 'active';
+    const progress = this._config ? computeBadgeProgress(this.hass, this._config) : null;
     const isTs = Boolean(
       this._entity &&
         (this._entity.attributes.device_class === 'timestamp' ||
           formatRelativeTimestamp(String(this._entity.state ?? ''), this.hass) !== null),
     );
-    if (isTs && this._tickTimer === null) {
-      this._tickTimer = window.setInterval(() => {
-        this._tick++;
-      }, 30000);
-    } else if (!isTs && this._tickTimer !== null) {
-      window.clearInterval(this._tickTimer);
-      this._tickTimer = null;
+
+    const desiredMs = isTimerActive
+      ? 1000
+      : progress?.isTimeBased
+        ? 5000
+        : isTs
+          ? 30000
+          : 0;
+
+    if (desiredMs !== this._tickIntervalMs) {
+      if (this._tickTimer !== null) {
+        window.clearInterval(this._tickTimer);
+        this._tickTimer = null;
+      }
+      this._tickIntervalMs = desiredMs;
+      if (desiredMs > 0) {
+        this._tickTimer = window.setInterval(() => {
+          this._tick++;
+        }, desiredMs);
+      }
     }
   }
 
@@ -157,6 +178,35 @@ export class M3EStatusBadge extends LitElement {
           type: 'expandable',
           name: '',
           flatten: true,
+          icon: 'mdi:progress-clock',
+          title: 'Progress (Entity Progress Badge)',
+          schema: [
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'progress_enabled', selector: { boolean: {} } },
+                { name: 'progress_start_now', selector: { boolean: {} } },
+              ],
+            },
+            { name: 'progress_start_entity', selector: { entity: {} } },
+            { name: 'progress_start_value', selector: { text: {} } },
+            { name: 'progress_end_entity', selector: { entity: {} } },
+            { name: 'progress_end_value', selector: { text: {} } },
+            {
+              type: 'grid',
+              name: '',
+              schema: [
+                { name: 'progress_invert', selector: { boolean: {} } },
+                { name: 'progress_show_percent', selector: { boolean: {} } },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'expandable',
+          name: '',
+          flatten: true,
           icon: 'mdi:gesture-tap',
           title: 'Interactions',
           schema: [
@@ -191,6 +241,14 @@ export class M3EStatusBadge extends LitElement {
           active_state: 'Stati attivi personalizzati (es. on,open,problem)',
           tap_action: 'Azione al tocco',
           navigation_path: 'Percorso / #popup Bubble Card / script',
+          progress_enabled: 'Abilita Entity Progress Badge',
+          progress_start_now: 'Partenza da ora (sveglie / remaining time)',
+          progress_start_entity: 'Entità valore iniziale (numero, counter, data/ora)',
+          progress_start_value: 'Valore iniziale fisso (es. 0, 07:30, now)',
+          progress_end_entity: 'Entità valore finale (numero, counter, data/ora, timer)',
+          progress_end_value: 'Valore finale fisso (es. 100, 22:00, minuti max)',
+          progress_invert: 'Inverti barra (100% → 0%)',
+          progress_show_percent: 'Mostra percentuale (%)',
         };
         return labels[schema.name] ?? schema.name;
       },
@@ -204,9 +262,22 @@ export class M3EStatusBadge extends LitElement {
     }
     if (changedProps.has('hass') && this.hass) {
       const next = this.hass.states[this._config.entity];
+      const nextStart = this._config.progress_start_entity
+        ? this.hass.states[this._config.progress_start_entity]
+        : undefined;
+      const nextEnd = this._config.progress_end_entity
+        ? this.hass.states[this._config.progress_end_entity]
+        : undefined;
       const oldHass = changedProps.get('hass') as HomeAssistant | undefined;
-      if (next !== this._prevEntity || oldHass?.themes?.darkMode !== this.hass.themes?.darkMode) {
+      if (
+        next !== this._prevEntity ||
+        nextStart !== this._prevStartEntity ||
+        nextEnd !== this._prevEndEntity ||
+        oldHass?.themes?.darkMode !== this.hass.themes?.darkMode
+      ) {
         this._prevEntity = next;
+        this._prevStartEntity = nextStart;
+        this._prevEndEntity = nextEnd;
         return true;
       }
       return false;
@@ -318,12 +389,20 @@ export class M3EStatusBadge extends LitElement {
     const isAlert = isActive && (Boolean(this._config.alert_color) || style === 'alert');
     const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
 
-    const baseVal = this._formatPrimaryState();
+    const progress = computeBadgeProgress(this.hass, this._config);
+    const hasProgress = progress.percent !== null;
+    const progressPct = progress.percent ?? 0;
+
+    const baseVal = progress.liveRemainingText || this._formatPrimaryState();
     const hideState = Boolean(this._config.hide_state);
     const stateContentVal = !hideState
       ? resolveStateContent(this.hass, entity, this._config.state_content, baseVal)
       : null;
-    const valueText = hideState ? '' : (stateContentVal ?? baseVal);
+    let valueText = hideState ? '' : (stateContentVal ?? baseVal);
+    if (!hideState && this._config.progress_show_percent && hasProgress) {
+      const pctLabel = `${Math.round(progressPct)}%`;
+      valueText = valueText && !valueText.includes('%') ? `${valueText} · ${pctLabel}` : pctLabel;
+    }
 
     const stateClass = isUnavailable
       ? 'is-unavailable'
@@ -333,11 +412,14 @@ export class M3EStatusBadge extends LitElement {
           ? 'is-active'
           : 'is-inactive';
     const clickable = (this._config.tap_action ?? 'more-info') !== 'none';
+    const ringCircumference = 100.53;
+    const ringOffset = ringCircumference * (1 - progressPct / 100);
 
     const commonHandlers = html`
       <button
         type="button"
-        class="m3e-badge style-${style} ${stateClass} ${this._pressed ? 'is-pressed' : ''} ${clickable ? 'is-clickable' : ''}"
+        class="m3e-badge style-${style} ${stateClass} ${hasProgress ? 'has-progress' : ''} ${this._pressed ? 'is-pressed' : ''} ${clickable ? 'is-clickable' : ''}"
+        style=${hasProgress ? `--badge-pct: ${progressPct.toFixed(1)}%;` : ''}
         aria-label="${name}${valueText ? `, ${valueText}` : ''}"
         @pointerdown=${(e: PointerEvent) => {
           if (!clickable || (e.pointerType === 'mouse' && e.button !== 0)) return;
@@ -348,9 +430,30 @@ export class M3EStatusBadge extends LitElement {
         @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._onTap()}
       >
+        ${hasProgress && (style === 'alert' || style === 'dot')
+          ? html`<span class="badge-progress-fill" aria-hidden="true"></span>`
+          : nothing}
+
         ${style === 'glance'
           ? html`
-              <span class="g-circle" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
+              <span class="g-circle" aria-hidden="true">
+                ${hasProgress
+                  ? html`
+                      <svg class="g-ring" viewBox="0 0 36 36" aria-hidden="true">
+                        <circle class="g-ring-track" cx="18" cy="18" r="16" />
+                        <circle
+                          class="g-ring-fill"
+                          cx="18"
+                          cy="18"
+                          r="16"
+                          stroke-dasharray=${ringCircumference}
+                          stroke-dashoffset=${ringOffset}
+                        />
+                      </svg>
+                    `
+                  : nothing}
+                ${this._renderIcon(entity, isActive)}
+              </span>
               <span class="g-text">
                 ${valueText ? html`<span class="g-val">${valueText}</span>` : nothing}
                 <span class="g-lbl">${name}</span>
@@ -360,6 +463,9 @@ export class M3EStatusBadge extends LitElement {
             ? html`
                 <span class="s-left" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
                 <span class="s-right">
+                  ${hasProgress
+                    ? html`<span class="s-progress-fill" aria-hidden="true"></span>`
+                    : nothing}
                   ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
                   <span class="s-lbl">${name}</span>
                 </span>
@@ -399,6 +505,8 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .m3e-badge {
+        position: relative;
+        overflow: hidden;
         border: 0;
         margin: 0;
         font-family: inherit;
@@ -413,6 +521,34 @@ export class M3EStatusBadge extends LitElement {
           color var(--m3e-spring-effects-default),
           border-radius var(--m3e-spring-morph);
         -webkit-tap-highlight-color: transparent;
+      }
+
+      .badge-progress-fill {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: var(--badge-pct, 0%);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-primary-container, #2e4379) 76%,
+          transparent
+        );
+        transition: width var(--m3e-spring-spatial-default);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .m3e-badge.is-alert .badge-progress-fill {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-error-container, #93000a) 76%,
+          transparent
+        );
+      }
+
+      .style-alert.has-progress.is-active .badge-progress-fill,
+      .style-alert.has-progress.is-alert .badge-progress-fill {
+        background: color-mix(in srgb, currentColor 14%, transparent);
       }
 
       .m3e-badge.is-clickable {
@@ -445,8 +581,9 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .g-circle {
-        width: 36px;
-        height: 36px;
+        position: relative;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         display: grid;
         place-items: center;
@@ -459,6 +596,33 @@ export class M3EStatusBadge extends LitElement {
         transition:
           background-color var(--m3e-spring-effects-default),
           color var(--m3e-spring-effects-default);
+      }
+
+      .g-ring {
+        position: absolute;
+        inset: -1px;
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        transform: rotate(-90deg);
+        pointer-events: none;
+      }
+
+      .g-ring-track {
+        fill: none;
+        stroke: color-mix(in srgb, var(--md-sys-color-outline-variant, #74777f) 38%, transparent);
+        stroke-width: 2.6;
+      }
+
+      .g-ring-fill {
+        fill: none;
+        stroke: var(--md-sys-color-primary, #b1c5ff);
+        stroke-width: 2.8;
+        stroke-linecap: round;
+        transition: stroke-dashoffset var(--m3e-spring-spatial-default);
+      }
+
+      .style-glance.is-alert .g-ring-fill {
+        stroke: var(--md-sys-color-error, #ffb4ab);
       }
 
       .style-glance.is-active .g-circle {
@@ -506,10 +670,10 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         2. SPLIT TONAL PILL (Dual-Zone Telemetry Pill)
+         2. SPLIT TONAL PILL (Dual-Zone Telemetry Pill — 44px height)
          ===================================================================== */
       .m3e-badge.style-split {
-        height: 36px;
+        height: 44px;
         padding: 0;
         border-radius: 9999px;
         overflow: hidden;
@@ -517,8 +681,10 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .s-left {
+        position: relative;
+        z-index: 1;
         height: 100%;
-        padding: 0 10px 0 11px;
+        padding: 0 12px 0 14px;
         display: inline-flex;
         align-items: center;
         background: var(--md-sys-color-surface-container-highest, #34353e);
@@ -537,28 +703,58 @@ export class M3EStatusBadge extends LitElement {
 
       .s-left svg,
       .s-left ha-icon {
-        width: 17px;
-        height: 17px;
-        --mdc-icon-size: 17px;
+        width: 19px;
+        height: 19px;
+        --mdc-icon-size: 19px;
       }
 
       .s-right {
-        padding: 0 13px 0 10px;
+        position: relative;
+        height: 100%;
+        padding: 0 15px 0 12px;
         display: inline-flex;
-        align-items: baseline;
-        gap: 5px;
+        align-items: center;
+        gap: 6px;
         min-width: 0;
+        overflow: hidden;
+      }
+
+      .s-progress-fill {
+        position: absolute;
+        inset-block: 0;
+        inset-inline-start: 0;
+        width: var(--badge-pct, 0%);
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-primary-container, #2e4379) 76%,
+          transparent
+        );
+        transition: width var(--m3e-spring-spatial-default);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .style-split.is-alert .s-progress-fill {
+        background: color-mix(
+          in srgb,
+          var(--md-sys-color-error-container, #93000a) 76%,
+          transparent
+        );
       }
 
       .s-val {
-        font-size: 13.5px;
+        position: relative;
+        z-index: 1;
+        font-size: 14px;
         font-weight: 600;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
       }
 
       .s-lbl {
-        font-size: 11.5px;
+        position: relative;
+        z-index: 1;
+        font-size: 12px;
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         white-space: nowrap;
         overflow: hidden;
@@ -566,20 +762,21 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         3. MINIMAL DOT BADGE (Ultra-compact with semantic status dot)
+         3. MINIMAL DOT BADGE (Compact with semantic status dot — 40px)
          ===================================================================== */
       .m3e-badge.style-dot {
-        height: 36px;
-        padding: 4px 12px 4px 4px;
-        gap: 8px;
+        height: 40px;
+        padding: 4px 14px 4px 4px;
+        gap: 9px;
         border-radius: 9999px;
         background: var(--md-sys-color-surface-container, #1f2027);
       }
 
       .d-wrap {
         position: relative;
-        width: 28px;
-        height: 28px;
+        z-index: 1;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: grid;
         place-items: center;
@@ -626,7 +823,9 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .d-txt {
-        font-size: 13px;
+        position: relative;
+        z-index: 1;
+        font-size: 13.5px;
         font-weight: 500;
         font-variant-numeric: tabular-nums;
         white-space: nowrap;
@@ -658,6 +857,8 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .m-ic {
+        position: relative;
+        z-index: 1;
         width: 34px;
         height: 34px;
         border-radius: 9999px;
@@ -691,6 +892,8 @@ export class M3EStatusBadge extends LitElement {
       }
 
       .m-col {
+        position: relative;
+        z-index: 1;
         display: flex;
         flex-direction: column;
         gap: 1px;

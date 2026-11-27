@@ -413,6 +413,22 @@ export interface M3EStatusBadgeConfig extends LovelaceCardConfig {
   alert_color?: boolean;
   tap_action?: 'more-info' | 'toggle' | 'navigate' | 'none';
   navigation_path?: string;
+  /** Enable Material 3 Expressive progress fill / ring on the badge */
+  progress_enabled?: boolean;
+  /** Entity providing the start / minimum value (number, counter, date, timestamp, input_datetime) */
+  progress_start_entity?: string;
+  /** Static start / minimum value (number, HH:MM, ISO date, or "now") */
+  progress_start_value?: string | number;
+  /** Use current time ("now") as the start reference for alarms / remaining time / countdowns */
+  progress_start_now?: boolean;
+  /** Entity providing the end / maximum value (number, counter, date, timestamp, input_datetime, timer) */
+  progress_end_entity?: string;
+  /** Static end / maximum value (number, HH:MM, ISO date, or max minutes for remaining time) */
+  progress_end_value?: string | number;
+  /** Invert progress bar direction (100% -> 0% instead of 0% -> 100%) */
+  progress_invert?: boolean;
+  /** Append/show percentage in the badge value */
+  progress_show_percent?: boolean;
 }
 
 export interface M3EStatusCardConfig extends LovelaceCardConfig {
