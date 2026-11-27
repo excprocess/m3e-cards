@@ -502,7 +502,7 @@ export class M3EPopupCard extends LitElement {
       grid.appendChild(wrapper);
     }
 
-    // Native dashed "+ Add card" pill directly inside the preview pop-up
+    // Native Home Assistant dashed "+ Add card" button directly inside the preview pop-up
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'add-card-pill';
@@ -510,7 +510,14 @@ export class M3EPopupCard extends LitElement {
       (this.hass as unknown as { localize?: (k: string) => string })?.localize?.(
         'ui.panel.lovelace.editor.section.add_card',
       ) || 'Add card';
-    addBtn.innerHTML = `<span class="add-plus">+</span><span>${addLabel}</span>`;
+    addBtn.setAttribute('aria-label', addLabel);
+    addBtn.title = addLabel;
+    const plusIcon = document.createElement('ha-svg-icon') as HTMLElement & { path?: string };
+    plusIcon.path = 'M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z';
+    const textSpan = document.createElement('span');
+    textSpan.textContent = addLabel;
+    addBtn.appendChild(plusIcon);
+    addBtn.appendChild(textSpan);
     addBtn.addEventListener('click', (ev) => {
       ev.stopPropagation();
       findMatchingPopupEditor(this._config)?.openAddCard();
@@ -1096,12 +1103,16 @@ export class M3EPopupCard extends LitElement {
       }
 
       .popup-cards-grid > .card {
+        position: relative;
         min-width: 0;
         display: flex;
         flex-direction: column;
       }
 
-      .popup-cards-grid > .card > * {
+      .popup-cards-grid > .card > *,
+      .popup-cards-grid hui-card-edit-mode {
+        position: relative;
+        display: block;
         width: 100%;
         height: 100%;
       }
@@ -1109,14 +1120,14 @@ export class M3EPopupCard extends LitElement {
       .add-card-pill {
         grid-column: 1 / -1;
         width: 100%;
-        height: 54px;
+        height: 56px;
         margin-top: 4px;
-        border-radius: 9999px;
-        border: 2px dashed var(--md-sys-color-outline-variant, rgba(255, 255, 255, 0.24));
-        background: color-mix(in srgb, var(--md-sys-color-primary, #a8c7fa) 5%, transparent);
-        color: var(--md-sys-color-on-surface, #e3e2e6);
+        border-radius: var(--ha-card-border-radius, 28px);
+        border: 2px dashed var(--outline-color, var(--divider-color, rgba(255, 255, 255, 0.24)));
+        background: transparent;
+        color: var(--primary-text-color, var(--md-sys-color-on-surface, #e3e2e6));
         font: inherit;
-        font-size: 14.5px;
+        font-size: 14px;
         font-weight: 500;
         display: inline-flex;
         align-items: center;
@@ -1125,22 +1136,21 @@ export class M3EPopupCard extends LitElement {
         cursor: pointer;
         transition:
           border-color 180ms ease,
-          background-color 180ms ease,
-          transform var(--m3e-spring-spatial-fast);
+          background-color 180ms ease;
       }
 
       .add-card-pill:hover {
-        border-color: var(--md-sys-color-primary, #a8c7fa);
-        background: color-mix(in srgb, var(--md-sys-color-primary, #a8c7fa) 11%, transparent);
+        border-color: var(--primary-color, var(--md-sys-color-primary, #a8c7fa));
+        background: color-mix(
+          in srgb,
+          var(--primary-color, var(--md-sys-color-primary, #a8c7fa)) 8%,
+          transparent
+        );
       }
 
-      .add-card-pill:active {
-        transform: scale(0.98);
-      }
-
-      .add-plus {
-        font-size: 20px;
-        line-height: 1;
+      .add-card-pill ha-svg-icon {
+        --mdc-icon-size: 22px;
+        display: inline-flex;
       }
 
       .stack-portal {
