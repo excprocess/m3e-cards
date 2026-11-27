@@ -121,13 +121,6 @@ function reopenParentPopupDialog(
   };
 
   setTimeout(() => {
-    const existing = getActiveEditCardDialog();
-    if (existing && typeof existing.showDialog === 'function') {
-      existing.showDialog(nextParams);
-      applyDialogDirtyBaseline(existing, originalBaseline);
-      return;
-    }
-
     homeAssistant.dispatchEvent(
       new CustomEvent('show-dialog', {
         bubbles: true,
@@ -139,10 +132,15 @@ function reopenParentPopupDialog(
         },
       }),
     );
+
     requestAnimationFrame(() => {
+      const dialog = getActiveEditCardDialog();
+      if (dialog && dialog._params !== nextParams && typeof dialog.showDialog === 'function') {
+        dialog.showDialog(nextParams);
+      }
       applyDialogDirtyBaseline(getActiveEditCardDialog(), originalBaseline);
     });
-  }, 0);
+  }, 30);
 }
 
 function openChildInOfficialEditDialog(
@@ -159,6 +157,7 @@ function openChildInOfficialEditDialog(
   }
 
   let handled = false;
+  let fallbackTimer: number | undefined;
   const hadOwnClose = Object.prototype.hasOwnProperty.call(activeDialog, 'closeDialog');
   const origClose = activeDialog.closeDialog;
 
@@ -174,7 +173,12 @@ function openChildInOfficialEditDialog(
   const finishAndReopen = () => {
     if (handled) return;
     handled = true;
+    if (fallbackTimer !== undefined) {
+      window.clearTimeout(fallbackTimer);
+      fallbackTimer = undefined;
+    }
     restoreClose();
+    activeDialog.removeEventListener('dialog-closed', onDialogClosed);
     window.removeEventListener('dialog-closed', onDialogClosed, true);
     cleanupProxy();
     reopenParentPopupDialog(parentParams, getUpdatedPopupConfig(), originalBaseline);
@@ -187,21 +191,32 @@ function openChildInOfficialEditDialog(
       activeDialog!.closeDialog = wrappedClose;
       return false;
     }
-    finishAndReopen();
+    // Wait for <ha-dialog> close animation & _dialogClosed() to fire `dialog-closed`.
+    // Keep a safety fallback in case an older HA build closes without emitting `dialog-closed`.
+    if (fallbackTimer === undefined) {
+      fallbackTimer = window.setTimeout(() => {
+        if (!handled && !activeDialog?._params) {
+          finishAndReopen();
+        }
+      }, 450);
+    }
     return true;
   }
 
   const onDialogClosed = (ev: Event) => {
     const detail = (ev as CustomEvent<{ dialog?: string }>).detail;
-    if (detail?.dialog !== 'hui-dialog-edit-card') return;
-    const hostRoot = getHomeAssistantHost()?.shadowRoot;
-    if (hostRoot?.contains(activeDialog)) return;
+    const isTargetDialog =
+      detail?.dialog === 'hui-dialog-edit-card' ||
+      ev.target === activeDialog ||
+      (typeof ev.composedPath === 'function' && ev.composedPath().includes(activeDialog));
+    if (!isTargetDialog) return;
     finishAndReopen();
   };
 
-  activeDialog.closeDialog = wrappedClose;
-  window.addEventListener('dialog-closed', onDialogClosed, true);
   activeDialog.showDialog(childDialogParams);
+  activeDialog.closeDialog = wrappedClose;
+  activeDialog.addEventListener('dialog-closed', onDialogClosed);
+  window.addEventListener('dialog-closed', onDialogClosed, true);
   return true;
 }
 
