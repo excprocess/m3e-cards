@@ -1,10 +1,10 @@
 /**
- * Lightweight Material 3 Tonal Color Harmonizer.
+ * Lightweight Material 3 Matte Tonal Color Harmonizer.
  *
- * Converts any user-selected RGB tuple or HEX string into a perceptually balanced
- * Material 3 Expressive tonal palette (`container`, `well`, `progressFill`,
- * `onContainer`, `accent`, `onAccent`) adapted to Dark or Light mode, guaranteeing
- * crisp contrast and Fitbit/Google Home tonal harmony without heavy dependencies.
+ * Converts any Home Assistant `ui_color` name, RGB tuple, or HEX string into a
+ * softly desaturated matte Material 3 Expressive tonal palette (`container`,
+ * `well`, `progressFill`, `onContainer`, `accent`, `onAccent`) adapted to Dark
+ * or Light mode, guaranteeing crisp contrast without harsh saturation.
  */
 
 export type BadgeColorInput = [number, number, number] | string | undefined | null;
@@ -17,6 +17,32 @@ export interface M3BadgeTonalPalette {
   accent: string;
   onAccent: string;
 }
+
+const HA_UI_COLOR_MAP: Record<string, [number, number, number]> = {
+  red: [244, 67, 54],
+  pink: [233, 30, 99],
+  purple: [156, 39, 176],
+  'deep-purple': [103, 58, 183],
+  indigo: [63, 81, 181],
+  blue: [33, 150, 243],
+  'light-blue': [3, 169, 244],
+  cyan: [0, 188, 212],
+  teal: [0, 150, 136],
+  green: [76, 175, 80],
+  'light-green': [139, 195, 74],
+  lime: [205, 220, 57],
+  yellow: [255, 235, 59],
+  amber: [255, 193, 7],
+  orange: [255, 152, 0],
+  'deep-orange': [255, 87, 34],
+  brown: [121, 85, 72],
+  'light-grey': [189, 189, 189],
+  grey: [158, 158, 158],
+  'dark-grey': [97, 97, 97],
+  'blue-grey': [96, 125, 139],
+  black: [33, 33, 33],
+  white: [245, 245, 245],
+};
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
@@ -40,22 +66,27 @@ function parseRgb(input: BadgeColorInput): [number, number, number] | null {
   }
 
   if (typeof input === 'string') {
-    const clean = input.trim().replace(/^#/, '');
-    if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+    const key = input.trim().toLowerCase();
+    if (key in HA_UI_COLOR_MAP) {
+      return HA_UI_COLOR_MAP[key];
+    }
+
+    const clean = key.replace(/^#/, '');
+    if (/^[0-9a-f]{6}$/.test(clean)) {
       return [
         parseInt(clean.slice(0, 2), 16),
         parseInt(clean.slice(2, 4), 16),
         parseInt(clean.slice(4, 6), 16),
       ];
     }
-    if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+    if (/^[0-9a-f]{3}$/.test(clean)) {
       return [
         parseInt(clean[0] + clean[0], 16),
         parseInt(clean[1] + clean[1], 16),
         parseInt(clean[2] + clean[2], 16),
       ];
     }
-    const rgbMatch = input.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
+    const rgbMatch = key.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i);
     if (rgbMatch) {
       return [
         clamp(Number(rgbMatch[1]), 0, 255),
@@ -95,6 +126,35 @@ export function buildM3BadgeTonalPalette(
   input: BadgeColorInput,
   isDark: boolean,
 ): M3BadgeTonalPalette | null {
+  if (typeof input === 'string') {
+    const key = input.trim().toLowerCase();
+    if (!key || key === 'state' || key === 'none') {
+      return null;
+    }
+    if (key === 'primary') {
+      return {
+        container: 'var(--md-sys-color-primary-container, #2e4379)',
+        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-primary-container, #2e4379))',
+        progressFill:
+          'color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 26%, var(--md-sys-color-primary-container, #2e4379))',
+        onContainer: 'var(--md-sys-color-on-primary-container, #dae2ff)',
+        accent: 'var(--md-sys-color-primary, #b1c5ff)',
+        onAccent: 'var(--md-sys-color-on-primary, #142c60)',
+      };
+    }
+    if (key === 'accent') {
+      return {
+        container: 'var(--md-sys-color-tertiary-container, #5a3d5a)',
+        well: 'color-mix(in srgb, var(--md-sys-color-scrim, #000000) 22%, var(--md-sys-color-tertiary-container, #5a3d5a))',
+        progressFill:
+          'color-mix(in srgb, var(--md-sys-color-tertiary, #ebb5ea) 26%, var(--md-sys-color-tertiary-container, #5a3d5a))',
+        onContainer: 'var(--md-sys-color-on-tertiary-container, #ffd7fc)',
+        accent: 'var(--md-sys-color-tertiary, #ebb5ea)',
+        onAccent: 'var(--md-sys-color-on-tertiary, #482948)',
+      };
+    }
+  }
+
   const rgb = parseRgb(input);
   if (!rgb) return null;
 
@@ -105,47 +165,47 @@ export function buildM3BadgeTonalPalette(
     if (isDark) {
       return {
         container: 'hsl(220, 6%, 24%)',
-        well: 'hsl(220, 7%, 15%)',
+        well: 'hsl(220, 7%, 16%)',
         progressFill: 'hsl(220, 6%, 34%)',
-        onContainer: 'hsl(220, 10%, 91%)',
-        accent: 'hsl(220, 10%, 76%)',
+        onContainer: 'hsl(220, 10%, 89%)',
+        accent: 'hsl(220, 10%, 74%)',
         onAccent: 'hsl(220, 10%, 14%)',
       };
     }
     return {
       container: 'hsl(220, 10%, 90%)',
-      well: 'hsl(220, 10%, 82%)',
+      well: 'hsl(220, 10%, 83%)',
       progressFill: 'hsl(220, 10%, 79%)',
-      onContainer: 'hsl(220, 12%, 18%)',
-      accent: 'hsl(220, 12%, 42%)',
+      onContainer: 'hsl(220, 12%, 20%)',
+      accent: 'hsl(220, 12%, 43%)',
       onAccent: '#ffffff',
     };
   }
 
-  // Perceptual M3 chroma clamping: keeps vivid hues rich without harsh neon glare
-  const satContainer = clamp(rawS * 0.72, 26, 62);
-  const satWell = clamp(rawS * 0.78, 28, 66);
-  const satProgress = clamp(rawS * 0.78, 32, 66);
-  const satOn = clamp(rawS * 0.82, 28, 78);
-  const satAccent = clamp(rawS * 0.85, 38, 82);
+  // Soft matte Material 3 chroma clamping
+  const satContainer = clamp(rawS * 0.54, 18, 44);
+  const satWell = clamp(rawS * 0.58, 20, 48);
+  const satProgress = clamp(rawS * 0.62, 24, 52);
+  const satOn = clamp(rawS * 0.65, 22, 62);
+  const satAccent = clamp(rawS * 0.70, 30, 66);
 
   if (isDark) {
     return {
-      container: `hsl(${h}, ${satContainer.toFixed(0)}%, 27%)`,
-      well: `hsl(${h}, ${satWell.toFixed(0)}%, 18%)`,
-      progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 41%)`,
-      onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 90%)`,
-      accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 76%)`,
+      container: `hsl(${h}, ${satContainer.toFixed(0)}%, 24%)`,
+      well: `hsl(${h}, ${satWell.toFixed(0)}%, 16%)`,
+      progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 35%)`,
+      onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 89%)`,
+      accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 74%)`,
       onAccent: `hsl(${h}, ${satWell.toFixed(0)}%, 14%)`,
     };
   }
 
   return {
-    container: `hsl(${h}, ${clamp(satContainer, 28, 64).toFixed(0)}%, 89%)`,
-    well: `hsl(${h}, ${clamp(satWell, 30, 66).toFixed(0)}%, 81%)`,
-    progressFill: `hsl(${h}, ${clamp(satProgress, 34, 68).toFixed(0)}%, 76%)`,
-    onContainer: `hsl(${h}, ${clamp(satOn, 36, 72).toFixed(0)}%, 19%)`,
-    accent: `hsl(${h}, ${clamp(satAccent, 42, 78).toFixed(0)}%, 42%)`,
+    container: `hsl(${h}, ${satContainer.toFixed(0)}%, 90%)`,
+    well: `hsl(${h}, ${satWell.toFixed(0)}%, 83%)`,
+    progressFill: `hsl(${h}, ${satProgress.toFixed(0)}%, 79%)`,
+    onContainer: `hsl(${h}, ${satOn.toFixed(0)}%, 20%)`,
+    accent: `hsl(${h}, ${satAccent.toFixed(0)}%, 43%)`,
     onAccent: '#ffffff',
   };
 }

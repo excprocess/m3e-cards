@@ -167,11 +167,10 @@ export class M3EStatusBadge extends LitElement {
                 select: {
                   mode: 'dropdown',
                   options: [
-                    { value: 'glance', label: 'Glance Mini (Cerchio 38px · At a Glance)' },
+                    { value: 'glance', label: 'Glance Mini (Cerchio · At a Glance)' },
                     { value: 'glance_icon', label: 'Glance Mini Solo Icona (Cerchio compatto)' },
-                    { value: 'split', label: 'Split Tonal Pill (Telemetria doppia zona)' },
+                    { value: 'split', label: 'Split Tonal Pill (Fitbit Squircle · Telemetria)' },
                     { value: 'dot', label: 'Minimal Dot Badge (Ultra-compatto con pallino)' },
-                    { value: 'alert', label: 'Squircle Morph Badge (Alert · Pillola ↔ Squircle)' },
                   ],
                 },
               },
@@ -205,9 +204,15 @@ export class M3EStatusBadge extends LitElement {
           icon: 'mdi:palette',
           title: 'Colori & Modalità Alert',
           schema: [
-            { name: 'base_color', selector: { color_rgb: {} } },
+            {
+              name: 'base_color',
+              selector: { ui_color: { default_color: 'state', include_state: true } },
+            },
             { name: 'alert_color', selector: { boolean: {} } },
-            { name: 'alert_custom_color', selector: { color_rgb: {} } },
+            {
+              name: 'alert_custom_color',
+              selector: { ui_color: { default_color: 'red', include_none: true } },
+            },
             {
               name: 'alert_attribute',
               selector: { attribute: {} },
@@ -545,10 +550,11 @@ export class M3EStatusBadge extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     const entity = this._entity;
-    const style = this._config.badge_style ?? 'glance';
+    const rawStyle = this._config.badge_style ?? 'glance';
+    const style = rawStyle === 'alert' ? 'split' : rawStyle;
     const isUnavailable = this._isUnavailable;
     const isActive = this._isActive;
-    const isAlert = !isUnavailable && this._isAlertTriggered(isActive, style);
+    const isAlert = !isUnavailable && this._isAlertTriggered(isActive, rawStyle);
     const name = resolveEntityName(this.hass, entity, this._config.name, this._config.entity);
 
     const isDark = this.hass?.themes?.darkMode !== false;
@@ -591,7 +597,7 @@ export class M3EStatusBadge extends LitElement {
           ? 'is-active'
           : 'is-inactive';
     const clickable = (this._config.tap_action ?? 'more-info') !== 'none';
-    const ringCircumference = 100.53;
+    const ringCircumference = 119.38;
     const ringOffset = ringCircumference * (1 - progressPct / 100);
 
     const inlineStyles: string[] = [];
@@ -623,29 +629,29 @@ export class M3EStatusBadge extends LitElement {
         @pointercancel=${() => (this._pressed = false)}
         @click=${() => this._onTap()}
       >
-        ${hasProgress && (style === 'alert' || style === 'dot' || style === 'split')
+        ${hasProgress && (style === 'dot' || style === 'split')
           ? html`<span class="badge-progress-fill" aria-hidden="true"></span>`
           : nothing}
 
         ${style === 'glance' || style === 'glance_icon'
           ? html`
-              <span class="g-circle" aria-hidden="true">
+              <span class="g-circle ${hasProgress ? 'has-ring' : ''}" aria-hidden="true">
                 ${hasProgress
                   ? html`
-                      <svg class="g-ring" viewBox="0 0 36 36" aria-hidden="true">
-                        <circle class="g-ring-track" cx="18" cy="18" r="16" />
+                      <svg class="g-ring" viewBox="0 0 44 44" aria-hidden="true">
+                        <circle class="g-ring-track" cx="22" cy="22" r="19" />
                         <circle
                           class="g-ring-fill"
-                          cx="18"
-                          cy="18"
-                          r="16"
+                          cx="22"
+                          cy="22"
+                          r="19"
                           stroke-dasharray=${ringCircumference}
                           stroke-dashoffset=${ringOffset}
                         />
                       </svg>
                     `
                   : nothing}
-                ${this._renderIcon(entity, isActive)}
+                <span class="g-circle-inner">${this._renderIcon(entity, isActive)}</span>
               </span>
               ${style === 'glance'
                 ? html`
@@ -656,29 +662,21 @@ export class M3EStatusBadge extends LitElement {
                   `
                 : nothing}
             `
-          : style === 'split'
+          : style === 'dot'
             ? html`
+                <span class="d-wrap" aria-hidden="true">
+                  ${this._renderIcon(entity, isActive)}
+                  <span class="d-dot"></span>
+                </span>
+                <span class="d-txt">${valueText || name}</span>
+              `
+            : html`
                 <span class="s-left" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
                 <span class="s-right">
                   <span class="s-lbl">${name}</span>
                   ${valueText ? html`<span class="s-val">${valueText}</span>` : nothing}
                 </span>
-              `
-            : style === 'dot'
-              ? html`
-                  <span class="d-wrap" aria-hidden="true">
-                    ${this._renderIcon(entity, isActive)}
-                    <span class="d-dot"></span>
-                  </span>
-                  <span class="d-txt">${valueText || name}</span>
-                `
-              : html`
-                  <span class="m-ic" aria-hidden="true">${this._renderIcon(entity, isActive)}</span>
-                  <span class="m-col">
-                    ${valueText ? html`<span class="m-val">${valueText}</span>` : nothing}
-                    <span class="m-lbl">${name}</span>
-                  </span>
-                `}
+              `}
       </button>
     `;
 
@@ -784,11 +782,11 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         1. GLANCE MINI (Compact At a Glance — 36px circle + value + label)
+         1. GLANCE MINI (Compact At a Glance — 40px/44px circle + thick progress ring)
          ===================================================================== */
       .m3e-badge.style-glance {
         background: transparent;
-        padding: 3px 6px 3px 2px;
+        padding: 2px 6px 2px 2px;
         gap: 9px;
         border-radius: 9999px;
       }
@@ -799,71 +797,75 @@ export class M3EStatusBadge extends LitElement {
         border-radius: 9999px;
       }
 
+      .g-circle {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+      }
+
       .style-glance_icon .g-circle {
         width: 44px;
         height: 44px;
       }
 
-      .style-glance_icon .g-circle svg:not(.g-ring),
-      .style-glance_icon .g-circle ha-icon {
-        width: 21px;
-        height: 21px;
-        --mdc-icon-size: 21px;
-      }
-
-      .g-circle {
-        position: relative;
-        width: 38px;
-        height: 38px;
+      .g-circle-inner {
+        width: 100%;
+        height: 100%;
         border-radius: 50%;
         display: grid;
         place-items: center;
-        flex-shrink: 0;
         background: var(
           --md-sys-color-surface-container-highest,
           var(--secondary-background-color, rgba(128, 128, 128, 0.18))
         );
         color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
         transition:
+          width var(--m3e-spring-spatial-fast),
+          height var(--m3e-spring-spatial-fast),
           background-color var(--m3e-spring-effects-default),
           color var(--m3e-spring-effects-default);
       }
 
+      .g-circle.has-ring .g-circle-inner {
+        width: calc(100% - 11px);
+        height: calc(100% - 11px);
+      }
+
       .g-ring {
         position: absolute;
-        inset: -1px;
-        width: calc(100% + 2px);
-        height: calc(100% + 2px);
+        inset: 0;
+        width: 100%;
+        height: 100%;
         transform: rotate(-90deg);
         pointer-events: none;
       }
 
       .g-ring-track {
         fill: none;
-        stroke: color-mix(in srgb, var(--md-sys-color-outline-variant, #74777f) 38%, transparent);
-        stroke-width: 2.6;
+        stroke: color-mix(in srgb, var(--md-sys-color-outline-variant, #74777f) 34%, transparent);
+        stroke-width: 4.2;
       }
 
       .g-ring-fill {
         fill: none;
         stroke: var(--md-sys-color-primary, #b1c5ff);
-        stroke-width: 2.8;
+        stroke-width: 4.4;
         stroke-linecap: round;
         transition: stroke-dashoffset var(--m3e-spring-spatial-default);
       }
 
-      .style-glance.is-alert .g-ring-fill {
-        stroke: var(--md-sys-color-error, #ffb4ab);
-      }
-
-      .style-glance.is-active .g-circle,
-      .style-glance_icon.is-active .g-circle {
+      .style-glance.is-active .g-circle-inner,
+      .style-glance_icon.is-active .g-circle-inner {
         background: var(--md-sys-color-primary-container, #2e4379);
         color: var(--md-sys-color-on-primary-container, #dae2ff);
       }
 
-      .style-glance.is-alert .g-circle,
-      .style-glance_icon.is-alert .g-circle {
+      .style-glance.is-alert .g-circle-inner,
+      .style-glance_icon.is-alert .g-circle-inner {
         background: var(--md-sys-color-error-container, #93000a);
         color: var(--md-sys-color-on-error-container, #ffdad6);
       }
@@ -873,8 +875,8 @@ export class M3EStatusBadge extends LitElement {
         stroke: var(--md-sys-color-error, #ffb4ab);
       }
 
-      .style-glance.has-custom-color .g-circle,
-      .style-glance_icon.has-custom-color .g-circle {
+      .style-glance.has-custom-color .g-circle-inner,
+      .style-glance_icon.has-custom-color .g-circle-inner {
         background: var(--m3e-badge-container);
         color: var(--m3e-badge-on-container);
       }
@@ -884,11 +886,25 @@ export class M3EStatusBadge extends LitElement {
         stroke: var(--m3e-badge-accent);
       }
 
-      .g-circle svg,
-      .g-circle ha-icon {
+      .g-circle-inner svg,
+      .g-circle-inner ha-icon {
         width: 19px;
         height: 19px;
         --mdc-icon-size: 19px;
+      }
+
+      .style-glance_icon .g-circle-inner svg,
+      .style-glance_icon .g-circle-inner ha-icon {
+        width: 21px;
+        height: 21px;
+        --mdc-icon-size: 21px;
+      }
+
+      .g-circle.has-ring .g-circle-inner svg,
+      .g-circle.has-ring .g-circle-inner ha-icon {
+        width: 16px;
+        height: 16px;
+        --mdc-icon-size: 16px;
       }
 
       .g-text {
@@ -919,13 +935,13 @@ export class M3EStatusBadge extends LitElement {
       }
 
       /* =====================================================================
-         2. SPLIT TONAL PILL (Fitbit-Inspired M3 Telemetry Pill — 44px height)
+         2. SPLIT TONAL PILL (Fitbit Squircle M3 Telemetry — 44px height)
          ===================================================================== */
       .m3e-badge.style-split {
         height: 44px;
         padding: 4px 14px 4px 4px;
         gap: 9px;
-        border-radius: 9999px;
+        border-radius: 14px;
         overflow: hidden;
         background: var(--md-sys-color-surface-container-high, #292a32);
       }
@@ -950,7 +966,7 @@ export class M3EStatusBadge extends LitElement {
         z-index: 1;
         width: 30px;
         height: 36px;
-        border-radius: 9999px;
+        border-radius: 10px;
         display: grid;
         place-items: center;
         flex-shrink: 0;
@@ -1110,100 +1126,6 @@ export class M3EStatusBadge extends LitElement {
         font-size: 13.5px;
         font-weight: 500;
         font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      /* =====================================================================
-         4. SQUIRCLE MORPH BADGE (Alert · Pill Inactive <-> 14px Squircle Active)
-         ===================================================================== */
-      .m3e-badge.style-alert {
-        height: 44px;
-        padding: 4px 14px 4px 5px;
-        gap: 9px;
-        border-radius: 9999px;
-        background: var(--md-sys-color-surface-container-high, #292a32);
-      }
-
-      .style-alert.is-active {
-        border-radius: 14px;
-        background: var(--md-sys-color-primary-container, #2e4379);
-        color: var(--md-sys-color-on-primary-container, #dae2ff);
-      }
-
-      .style-alert.is-alert {
-        border-radius: 14px;
-        background: var(--md-sys-color-error-container, #93000a);
-        color: var(--md-sys-color-on-error-container, #ffdad6);
-      }
-
-      .m3e-badge.style-alert.has-custom-color {
-        background: var(--m3e-badge-container);
-        color: var(--m3e-badge-on-container);
-      }
-
-      .m-ic {
-        position: relative;
-        z-index: 1;
-        width: 34px;
-        height: 34px;
-        border-radius: 9999px;
-        display: grid;
-        place-items: center;
-        flex-shrink: 0;
-        background: var(--md-sys-color-surface-container-highest, #34353e);
-        color: var(--md-sys-color-on-surface-variant, var(--secondary-text-color));
-        transition:
-          border-radius var(--m3e-spring-bouncy),
-          background-color var(--m3e-spring-effects-default);
-      }
-
-      .style-alert.is-active .m-ic {
-        border-radius: 10px;
-        background: var(--md-sys-color-primary, #b1c5ff);
-        color: var(--md-sys-color-on-primary, #142c60);
-      }
-
-      .style-alert.is-alert .m-ic {
-        border-radius: 10px;
-        background: var(--md-sys-color-error, #ffb4ab);
-        color: var(--md-sys-color-on-error, #690005);
-      }
-
-      .style-alert.has-custom-color .m-ic {
-        background: var(--m3e-badge-accent);
-        color: var(--m3e-badge-on-accent);
-      }
-
-      .m-ic svg,
-      .m-ic ha-icon {
-        width: 18px;
-        height: 18px;
-        --mdc-icon-size: 18px;
-      }
-
-      .m-col {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 1px;
-        min-width: 0;
-      }
-
-      .m-val {
-        font-size: 13.5px;
-        font-weight: 600;
-        line-height: 1.15;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-      }
-
-      .m-lbl {
-        font-size: 11px;
-        line-height: 1.15;
-        opacity: 0.8;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
