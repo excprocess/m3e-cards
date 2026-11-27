@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import '../editors/m3e-popup-card-editor';
-import { m3eBaseStyles } from '../styles/m3e-tokens';
+import { m3eBaseStyles, m3eDialogStyles } from '../styles/m3e-tokens';
 import type {
   HassEntity,
   HomeAssistant,
@@ -241,6 +241,7 @@ export class M3EPopupCard extends LitElement {
     }
 
     if (changedProps.has('hass') && this.hass) {
+      if (this._isClosing) return false;
       if (this._isOpen || this._isDialogPreview) {
         for (const el of this._cardElements) el.hass = this.hass;
         for (const em of this._editModeElements) em.hass = this.hass;
@@ -505,9 +506,13 @@ export class M3EPopupCard extends LitElement {
     void this._syncEmbeddedCards();
   }
 
+  private _isClosing = false;
+
   public closePopup(clearUrlHash = true): void {
-    if (!this._isOpen) return;
+    if (!this._isOpen || this._isClosing) return;
+    this._isClosing = true;
     const finish = () => {
+      this._isClosing = false;
       if (this._dialogEl?.open) this._dialogEl.close();
       this._restoreAdoptedSiblings();
       this._isOpen = false;
@@ -996,7 +1001,7 @@ export class M3EPopupCard extends LitElement {
         : nothing}
 
       <dialog
-        class="m3e-popup-dialog"
+        class="m3e-dialog m3e-popup-dialog"
         @click=${(e: MouseEvent) => {
           if (e.target === this._dialogEl) this.closePopup(true);
         }}
@@ -1006,7 +1011,7 @@ export class M3EPopupCard extends LitElement {
         }}
         @touchmove=${guardDialogTouchMove}
       >
-        <div class="dialog-surface">
+        <div class="m3e-dialog-surface dialog-surface">
           ${this._renderHeaderBar(false)}
 
           <div class="popup-body">
@@ -1020,6 +1025,7 @@ export class M3EPopupCard extends LitElement {
 
   static styles = [
     m3eBaseStyles,
+    m3eDialogStyles,
     css`
       :host {
         display: block;
@@ -1050,62 +1056,8 @@ export class M3EPopupCard extends LitElement {
       }
 
       dialog.m3e-popup-dialog {
-        margin: auto;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        overflow: visible;
-        width: min(460px, calc(100vw - 24px));
-        max-width: min(460px, calc(100vw - 24px));
-        max-height: calc(100dvh - 24px);
-        overscroll-behavior: contain;
-        pointer-events: auto;
-        color: var(--md-sys-color-on-surface, #e3e2e6);
-      }
-
-      dialog.m3e-popup-dialog::backdrop {
-        background: color-mix(in srgb, var(--md-sys-color-scrim, #000000) 58%, transparent);
-        transition: opacity 220ms ease;
-      }
-
-      dialog.m3e-popup-dialog.is-closing::backdrop {
-        opacity: 0;
-      }
-
-      .dialog-surface {
-        position: relative;
-        will-change: transform, opacity;
-        contain: layout style;
-        background: var(--md-sys-color-surface, #131316);
-        color: var(--md-sys-color-on-surface, #e3e2e6);
-        border-radius: 32px;
-        padding: 20px 20px 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        max-height: calc(100dvh - 24px);
-        overflow-y: auto;
-        overflow-x: hidden;
-        overscroll-behavior: contain;
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
-      }
-
-      @media (max-width: 600px) {
-        dialog.m3e-popup-dialog {
-          margin: auto 0 0 0;
-          width: 100vw;
-          max-width: 100vw;
-          max-height: 92dvh;
-          border-radius: 28px 28px 0 0;
-          overflow: hidden;
-        }
-
-        .dialog-surface {
-          border-radius: 28px 28px 0 0;
-          max-height: 92dvh;
-          box-shadow: none;
-          padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
-        }
+        --m3e-dialog-max-width: 460px;
+        --m3e-dialog-mobile-max-height: 92dvh;
       }
 
       .dialog-header {

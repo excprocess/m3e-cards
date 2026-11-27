@@ -14,6 +14,7 @@ export function animateDialogOpen(
   if (!surface) return;
   const dialog = surface.closest('dialog');
   dialog?.classList.remove('is-closing');
+  surface.style.pointerEvents = '';
   for (const a of surface.getAnimations()) {
     a.cancel();
   }
@@ -31,12 +32,12 @@ export function animateDialogOpen(
       surface.animate(
         [
           {
-            transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
+            transform: `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`,
             borderRadius: '28px',
             opacity: 0.65,
           },
           {
-            transform: 'translate(0px, 0px) scale(1, 1)',
+            transform: 'translate3d(0, 0, 0) scale(1, 1)',
             borderRadius: '32px',
             opacity: 1,
           },
@@ -57,11 +58,11 @@ export function animateDialogOpen(
           { transform: 'translate3d(0, 0, 0)' },
         ]
       : [
-          { transform: 'scale(0.92) translateY(10px)', opacity: 0 },
-          { transform: 'scale(1) translateY(0px)', opacity: 1 },
+          { transform: 'translate3d(0, 12px, 0) scale(0.94)', opacity: 0 },
+          { transform: 'translate3d(0, 0, 0) scale(1)', opacity: 1 },
         ],
     {
-      duration: isMobile ? 320 : 260,
+      duration: isMobile ? 300 : 260,
       easing: M3_EMPHASIZED_DECEL,
     },
   );
@@ -88,6 +89,7 @@ export function animateDialogClose(
   }
 
   dialog.classList.add('is-closing');
+  surface.style.pointerEvents = 'none';
   for (const a of surface.getAnimations()) {
     a.cancel();
   }
@@ -96,15 +98,15 @@ export function animateDialogClose(
   const anim = surface.animate(
     isMobile
       ? [
-          { transform: 'translate3d(0, 0, 0)' },
-          { transform: 'translate3d(0, 100%, 0)' },
+          { transform: 'translate3d(0, 0, 0)', opacity: 1 },
+          { transform: 'translate3d(0, 100%, 0)', opacity: 0.92 },
         ]
       : [
-          { transform: 'scale(1) translateY(0px)', opacity: 1 },
-          { transform: 'scale(0.92) translateY(12px)', opacity: 0 },
+          { transform: 'translate3d(0, 0, 0) scale(1)', opacity: 1 },
+          { transform: 'translate3d(0, 10px, 0) scale(0.94)', opacity: 0 },
         ],
     {
-      duration: isMobile ? 240 : 200,
+      duration: isMobile ? 220 : 190,
       easing: M3_EMPHASIZED_ACCEL,
       fill: 'forwards',
     },
@@ -116,6 +118,7 @@ export function animateDialogClose(
     finished = true;
     if (dialog.open) dialog.close();
     dialog.classList.remove('is-closing');
+    surface.style.pointerEvents = '';
     anim.cancel();
     onDone();
   };

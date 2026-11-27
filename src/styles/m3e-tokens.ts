@@ -256,3 +256,75 @@ export const m3eBaseStyles = css`
     background-color: transparent !important;
   }
 `;
+
+/**
+ * Universal Material 3 Expressive Dialog & Mobile Bottom-Sheet shell.
+ *
+ * Pair with `animateDialogOpen` / `animateDialogClose` from `src/utils/dialog-motion.ts`
+ * and `guardDialogTouchMove` from `src/utils/scroll-lock.ts` for identical,
+ * GPU-composited desktop modals and bottom-docked mobile sheets across all cards.
+ *
+ * Custom properties:
+ * - `--m3e-dialog-max-width`: desktop modal max-width (default `440px`)
+ * - `--m3e-dialog-mobile-max-height`: mobile sheet max-height (default `92dvh`)
+ */
+export const m3eDialogStyles = css`
+  dialog.m3e-dialog {
+    margin: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    overflow: visible;
+    width: min(var(--m3e-dialog-max-width, 440px), calc(100vw - 24px));
+    max-width: min(var(--m3e-dialog-max-width, 440px), calc(100vw - 24px));
+    max-height: calc(100dvh - 24px);
+    overscroll-behavior: contain;
+    touch-action: none;
+    pointer-events: auto;
+    color: var(--md-sys-color-on-surface, #e3e2e6);
+  }
+
+  dialog.m3e-dialog::backdrop {
+    background: color-mix(in srgb, var(--md-sys-color-scrim, #000000) 56%, transparent);
+  }
+
+  .m3e-dialog-surface {
+    position: relative;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    background: var(--md-sys-color-surface, #131316);
+    color: var(--md-sys-color-on-surface, #e3e2e6);
+    border-radius: 32px;
+    padding: 20px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.36);
+  }
+
+  @media (max-width: 600px) {
+    dialog.m3e-dialog {
+      position: fixed;
+      inset: auto 0 0 0;
+      margin: auto 0 0 0;
+      width: 100vw;
+      max-width: 100vw;
+      max-height: var(--m3e-dialog-mobile-max-height, 92dvh);
+      border-radius: 28px 28px 0 0;
+      overflow: hidden;
+    }
+
+    .m3e-dialog-surface {
+      border-radius: 28px 28px 0 0;
+      max-height: var(--m3e-dialog-mobile-max-height, 92dvh);
+      box-shadow: none;
+      padding: 18px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+`;

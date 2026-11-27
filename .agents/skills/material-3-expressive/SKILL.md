@@ -16,6 +16,33 @@ For the complete list of CSS tokens exposed by `material-you-utilities` and Mate
 
 ---
 
+## 0. MANDATORY Pre-Design & Pre-Implementation Checklist (NEVER SKIP)
+
+Before writing or modifying **any** card, popup, sheet, or control in this repository, verify every single item below:
+
+1. **Full `Nerwyn/material-you-utilities` `card_type` Compatibility (Dashboard Cards):**
+   - Always include `m3eBaseStyles` (`src/styles/m3e-tokens.ts`) and wrap the root in `<ha-card>`.
+   - **NEVER** override `background`, `box-shadow: none`, `border: 0`, or `border-radius` on a dashboard `<ha-card>` — let `--ha-card-background`, `--ha-card-box-shadow`, `--ha-card-border-width`, `--ha-card-border-color`, and `--ha-card-border-radius` flow untouched so `elevated`, `filled`, `outlined`, and `transparent` modes work automatically.
+   - **Explicit Exceptions:** Badges (`m3e-status-badge`) do not need card elevation/outlines; child cards rendered *inside* popups (`m3e-popup-card`, `m3e-light-group-card`, `power_strip` popup) intentionally override `--ha-card-background` to `surface-container-high` (`filled`, no border/shadow) for contrast against the popup `surface`.
+2. **Universal Tactile Press-Rebound & M3 Expressive Springs:**
+   - Every interactive `<ha-card>` MUST implement `.is-pressed` (`--m3e-press-scale-tile: 0.965` on 6-col tiles; `.is-wide-card` with `--m3e-press-scale-card: 0.978` on 12-col wide cards), ignoring nested interactive buttons/sliders/touchpads.
+   - Always use the shared motion tokens from `m3eBaseStyles` (`--m3e-spring-spatial-fast`, `--m3e-spring-spatial-default`, `--m3e-spring-bouncy`, `--m3e-spring-effects-fast`, `--m3e-spring-effects-default`). Never duplicate spring keyframes/variables locally.
+3. **Universal Dialog & Mobile Bottom-Sheet Shell + Motion:**
+   - **NEVER** hand-roll custom `<dialog>` positioning, backdrop fade, or mobile media queries.
+   - Always import and include **`m3eDialogStyles`** (`src/styles/m3e-tokens.ts`) with `class="m3e-dialog ..."` on `<dialog>` and `class="m3e-dialog-surface ..."` on the surface wrapper, paired with **`animateDialogOpen` / `animateDialogClose`** (`src/utils/dialog-motion.ts`) and **`guardDialogTouchMove`** (`src/utils/scroll-lock.ts`).
+   - On mobile (`≤600px`), every dialog and selector sheet MUST dock cleanly to the bottom edge (`28px 28px 0 0` top corners, `100vw`, `env(safe-area-inset-bottom)`).
+   - Popup header order is ALWAYS: **`×` Close on the left**, **Title + Subtitle in the center**, **Primary Entity/Power action on the right**.
+4. **HA Design System Colors, Contrast (`-1.0` to `+1.0`) & Zero Fake Effects:**
+   - Strictly pair `--md-sys-color-*` background and foreground roles (`surface*` ↔ `on-surface*`, `primary-container` ↔ `on-primary-container`, etc.). Never hardcode hex colors without a token first, never use `backdrop-filter: blur(...)` or glassmorphism.
+5. **Performance & Zero-Lag Gates:**
+   - Implement a strict `shouldUpdate(changedProps)` Hass Gate on every card so unrelated `hass` ticks never trigger Lit re-renders.
+   - Pause forwarding `hass` updates to child cards during dialog close animations (`_isClosing`) so exit transitions stay locked at 60/120fps.
+6. **Native HA GUI Editor & Automatic EN/IT Localization:**
+   - Provide `getStubConfig()` and panelized `getConfigForm()` / custom editor (`Content`, `Interactions`, `Features`; `name: ''` + `flatten: true` on `expandable` groups).
+   - Localize all user-facing strings via `src/utils/i18n.ts` (EN default, IT when `hass.language` starts with `'it'`).
+
+---
+
 ## 1. Non-Negotiable Visual Principles
 
 1. **Zero Gloss / Zero Liquid Glass / Zero Fake Effects:**

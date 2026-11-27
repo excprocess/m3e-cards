@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import '../editors/m3e-remote-card-editor';
-import { m3eBaseStyles } from '../styles/m3e-tokens';
+import { m3eBaseStyles, m3eDialogStyles } from '../styles/m3e-tokens';
 import type {
   HassEntity,
   HomeAssistant,
@@ -56,6 +56,7 @@ export class M3ERemoteCard extends LitElement {
   @state() private _padOffsetY = 0;
   @state() private _padActive = false;
   @state() private _padTapPulse = false;
+  @state() private _pressed = false;
   @state() private _selectorSheet: RemoteSelectorRequest | null = null;
 
   @query('dialog.source-dialog') private _sourceDialogEl?: HTMLDialogElement;
@@ -136,6 +137,7 @@ export class M3ERemoteCard extends LitElement {
       changedProps.has('_padOffsetY') ||
       changedProps.has('_padActive') ||
       changedProps.has('_padTapPulse') ||
+      changedProps.has('_pressed') ||
       changedProps.has('_selectorSheet')
     ) {
       return true;
@@ -417,7 +419,24 @@ export class M3ERemoteCard extends LitElement {
     const showPower = this._config.show_power !== false;
 
     return html`
-      <ha-card class="remote-card">
+      <ha-card
+        class="remote-card is-wide-card ${this._pressed ? 'is-pressed' : ''}"
+        @pointerdown=${(e: PointerEvent) => {
+          if (e.button !== 0) return;
+          const target = e.target as HTMLElement | null;
+          if (target?.closest('button, .remote-touchpad, [role="slider"]')) return;
+          this._pressed = true;
+        }}
+        @pointerup=${() => {
+          this._pressed = false;
+        }}
+        @pointerleave=${() => {
+          this._pressed = false;
+        }}
+        @pointercancel=${() => {
+          this._pressed = false;
+        }}
+      >
         <!-- Header -->
         <div class="remote-header">
           <button
@@ -785,7 +804,7 @@ export class M3ERemoteCard extends LitElement {
 
       <!-- Unified Selector Sheet Dialog (Sources, Sound Mode & Custom Selectors) -->
       <dialog
-        class="source-dialog"
+        class="m3e-dialog source-dialog"
         @click=${(e: MouseEvent) => {
           if (e.target === this._sourceDialogEl) this._closeSourceDialog();
         }}
@@ -795,7 +814,7 @@ export class M3ERemoteCard extends LitElement {
         }}
         @touchmove=${guardDialogTouchMove}
       >
-        <div class="source-dialog-surface">
+        <div class="m3e-dialog-surface source-dialog-surface">
           <div class="source-dialog-header">
             <button
               type="button"
@@ -833,6 +852,7 @@ export class M3ERemoteCard extends LitElement {
 
   static styles = [
     m3eBaseStyles,
+    m3eDialogStyles,
     remoteCustomControlStyles,
     css`
       :host {
@@ -844,11 +864,6 @@ export class M3ERemoteCard extends LitElement {
         flex-direction: column;
         gap: 14px;
         padding: 16px;
-        border-radius: var(--m3e-corner-card, 28px);
-        background: var(--md-sys-color-surface-container-low, #1c1d22);
-        color: var(--md-sys-color-on-surface, #e3e2e6);
-        box-shadow: none;
-        border: 0;
         overflow: hidden;
       }
 
@@ -1405,35 +1420,21 @@ export class M3ERemoteCard extends LitElement {
         letter-spacing: 0.04em;
       }
 
-      /* Source Sheet Dialog */
+      /* Source Sheet Dialog (inherits universal desktop modal + mobile bottom sheet) */
       dialog.source-dialog {
-        margin: auto;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        max-width: min(400px, calc(100vw - 24px));
-        width: 100%;
-        overflow: visible;
-      }
-
-      dialog.source-dialog::backdrop {
-        background: rgba(0, 0, 0, 0.52);
-        transition: opacity 220ms ease;
-      }
-
-      dialog.source-dialog.is-closing::backdrop {
-        opacity: 0;
+        --m3e-dialog-max-width: 400px;
+        --m3e-dialog-mobile-max-height: 75dvh;
       }
 
       .source-dialog-surface {
-        border-radius: 28px;
-        background: var(--md-sys-color-surface-container, #22232a);
-        color: var(--md-sys-color-on-surface, #e3e2e6);
         padding: 16px;
-        display: flex;
-        flex-direction: column;
         gap: 12px;
-        max-height: 70dvh;
+      }
+
+      @media (max-width: 600px) {
+        .source-dialog-surface {
+          padding: 18px 16px calc(22px + env(safe-area-inset-bottom, 0px));
+        }
       }
 
       .source-dialog-header {
@@ -1454,6 +1455,17 @@ export class M3ERemoteCard extends LitElement {
         display: grid;
         place-items: center;
         cursor: pointer;
+        transition:
+          background-color var(--m3e-spring-effects-fast),
+          transform var(--m3e-spring-spatial-fast);
+      }
+
+      .dialog-close-btn:hover {
+        background: color-mix(in srgb, currentColor 8%, transparent);
+      }
+
+      .dialog-close-btn:active {
+        transform: scale(0.92);
       }
 
       .dialog-close-btn svg {
@@ -1482,6 +1494,14 @@ export class M3ERemoteCard extends LitElement {
         align-items: center;
         justify-content: space-between;
         cursor: pointer;
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          border-radius var(--m3e-spring-bouncy),
+          background-color var(--m3e-spring-effects-fast);
+      }
+
+      .source-option:active {
+        transform: scale(0.98);
       }
 
       .source-option.is-selected {
