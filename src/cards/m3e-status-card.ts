@@ -30,6 +30,8 @@ import {
 import './m3e-media-player-card';
 import type { M3EMediaPopup } from '../components/m3e-media-popup';
 import '../components/m3e-media-popup';
+import type { HistoryMetricKind } from '../components/m3e-history-chart';
+import '../components/m3e-history-chart';
 
 const ISO_TIMESTAMP_RE = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 const TIME_ONLY_RE = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
@@ -105,12 +107,7 @@ function formatDisplayValue(rawVal: string, format: M3ESubtitleFormat): string {
 
 type ClimateSheetKind = 'mode' | 'preset' | 'fan' | 'swing' | null;
 
-interface HistoryPoint {
-  t: number; // timestamp ms
-  v: number; // numeric value
-}
-
-const NUMERIC_HISTORY_CLASSES = new Set(['temperature', 'humidity']);
+const NUMERIC_HISTORY_CLASSES = new Set(['moisture', 'temperature', 'humidity', 'illuminance']);
 
 const DEFAULT_ACTIVE_STATES = new Set([
   'on',
@@ -171,11 +168,6 @@ export class M3EStatusCard extends LitElement {
   @state() private _volPct: number | null = null;
   private _volPendingTimer: number | null = null;
 
-  // Sensor 24h history chart state
-  @state() private _historyPoints: HistoryPoint[] = [];
-  @state() private _historyLoading = false;
-  @state() private _historyEntityId: string | null = null;
-  @state() private _historyHoverIdx: number | null = null;
   @state() private _featuresLoaded = false;
   @state() private _artPalette: ArtworkPalette | null = null;
   private _lastArtUrl = '';
@@ -319,9 +311,6 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_remoteSelectorSheet') ||
       changedProps.has('_volDragging') ||
       changedProps.has('_volPct') ||
-      changedProps.has('_historyPoints') ||
-      changedProps.has('_historyLoading') ||
-      changedProps.has('_historyHoverIdx') ||
       changedProps.has('_relativeTick') ||
       changedProps.has('_featuresLoaded') ||
       changedProps.has('_artPalette') ||
@@ -692,88 +681,88 @@ export class M3EStatusCard extends LitElement {
     return raw.charAt(0).toUpperCase() + raw.slice(1);
   }
 
-  private _isNumericHistoryEntity(entity?: HassEntity): boolean {
-    if (!entity || !entity.entity_id.startsWith('sensor.')) return false;
+  private _inferMetricKind(entity?: HassEntity): HistoryMetricKind | null {
+    if (!entity || !entity.entity_id.startsWith('sensor.')) return null;
     const dc = String(entity.attributes.device_class ?? '').toLowerCase();
-    if (NUMERIC_HISTORY_CLASSES.has(dc)) return true;
-    const uom = String(entity.attributes.unit_of_measurement ?? '').trim();
-    return uom === '°C' || uom === '°F';
+    const uom = String(entity.attributes.unit_of_measurement ?? '').trim().toLowerCase();
+    const lowId = entity.entity_id.toLowerCase();
+    const lowName = String(entity.attributes.friendly_name ?? '').toLowerCase();
+
+    if (
+      dc === 'moisture' ||
+      ((lowId.includes('moisture') ||
+        lowName.includes('moisture') ||
+        lowName.includes('umidità terreno')) &&
+        uom === '%')
+    ) {
+      return 'moisture';
+    }
+    if (dc === 'temperature' || uom === '°c' || uom === '°f') {
+      return 'temperature';
+    }
+    if (dc === 'humidity') {
+      return 'humidity';
+    }
+    if (dc === 'illuminance' || uom === 'lx' || uom === 'lux') {
+      return 'illuminance';
+    }
+    return NUMERIC_HISTORY_CLASSES.has(dc) ? (dc as HistoryMetricKind) : null;
+  }
+
+  private _isNumericHistoryEntity(entity?: HassEntity): boolean {
+    return this._inferMetricKind(entity) !== null;
   }
 
   private _resolveHistoryEntity(): HassEntity | undefined {
     if (this._isNumericHistoryEntity(this._entity)) return this._entity;
-    return this._getSiblingSensors().find((s) => this._isNumericHistoryEntity(s));
+    const siblings = this._getSiblingSensors();
+    for (const kind of ['moisture', 'temperature', 'humidity', 'illuminance'] as const) {
+      const found = siblings.find((s) => this._inferMetricKind(s) === kind);
+      if (found) return found;
+    }
+    return undefined;
   }
 
-  private async _fetchHistory(): Promise<void> {
-    if (!this.hass) return;
+  private _resolveHistoryTarget(): {
+    entityIds: string[];
+    metricKind: HistoryMetricKind;
+    unit: string;
+  } | null {
+    if (!this.hass) return null;
     const target = this._resolveHistoryEntity();
-    if (!target) {
-      this._historyPoints = [];
-      this._historyEntityId = null;
-      return;
+    if (!target) return null;
+    const metricKind = this._inferMetricKind(target);
+    if (!metricKind) return null;
+
+    const unit = String(target.attributes.unit_of_measurement ?? '').trim();
+    const rawGroupMembers = target.attributes.entity_id;
+    if (Array.isArray(rawGroupMembers)) {
+      const validMembers = rawGroupMembers.filter(
+        (id): id is string =>
+          typeof id === 'string' && id.startsWith('sensor.') && Boolean(this.hass?.states[id]),
+      );
+      if (validMembers.length >= 2) {
+        const firstUnit = String(
+          this.hass.states[validMembers[0]]?.attributes.unit_of_measurement ?? '',
+        ).trim();
+        return {
+          entityIds: validMembers,
+          metricKind,
+          unit: unit || firstUnit,
+        };
+      }
     }
 
-    this._historyEntityId = target.entity_id;
-    this._historyLoading = true;
-    this._historyHoverIdx = null;
-
-    try {
-      const end = new Date();
-      const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-      let rawList: Array<{ s?: string; lu?: number; state?: string; last_updated?: string }> = [];
-
-      if (typeof this.hass.callWS === 'function') {
-        const res = await this.hass.callWS<Record<string, typeof rawList>>({
-          type: 'history/history_during_period',
-          start_time: start.toISOString(),
-          end_time: end.toISOString(),
-          entity_ids: [target.entity_id],
-          minimal_response: true,
-          no_attributes: true,
-          significant_changes_only: false,
-        });
-        rawList = res?.[target.entity_id] ?? [];
-      } else if (typeof this.hass.callApi === 'function') {
-        const res = await this.hass.callApi<Array<typeof rawList>>(
-          'GET',
-          `history/period/${start.toISOString()}?filter_entity_id=${encodeURIComponent(target.entity_id)}&minimal_response&no_attributes`,
-        );
-        rawList = res?.[0] ?? [];
+    const entityIds = [target.entity_id];
+    for (const extraId of this._config?.extra_entities ?? []) {
+      if (!extraId || entityIds.includes(extraId)) continue;
+      const extraEnt = this.hass.states[extraId];
+      if (this._inferMetricKind(extraEnt) === metricKind) {
+        entityIds.push(extraId);
       }
-
-      const parsed: HistoryPoint[] = [];
-      for (const item of rawList) {
-        const val = Number(item.s ?? item.state);
-        if (Number.isNaN(val)) continue;
-        const ts =
-          typeof item.lu === 'number'
-            ? item.lu * 1000
-            : item.last_updated
-              ? Date.parse(item.last_updated)
-              : NaN;
-        if (!Number.isNaN(ts)) {
-          parsed.push({ t: ts, v: val });
-        }
-      }
-
-      // Downsample cleanly to at most 44 points for a smooth, lightweight SVG curve
-      const maxPts = 44;
-      if (parsed.length > maxPts) {
-        const step = (parsed.length - 1) / (maxPts - 1);
-        const sampled: HistoryPoint[] = [];
-        for (let i = 0; i < maxPts; i++) {
-          sampled.push(parsed[Math.round(i * step)]);
-        }
-        this._historyPoints = sampled;
-      } else {
-        this._historyPoints = parsed;
-      }
-    } catch {
-      this._historyPoints = [];
-    } finally {
-      this._historyLoading = false;
     }
+
+    return { entityIds, metricKind, unit };
   }
 
   /* =========================================================================
@@ -796,9 +785,6 @@ export class M3EStatusCard extends LitElement {
     this._activeSheet = null;
     this._remoteSelectorSheet = null;
     this._popupOpen = true;
-    if (this._resolvedPopupType === 'sensor' || this._resolvedPopupType === 'custom') {
-      void this._fetchHistory();
-    }
     await this.updateComplete;
 
     const dialog = this._dialogEl;
@@ -1179,120 +1165,17 @@ export class M3EStatusCard extends LitElement {
   }
 
   private _renderHistoryChart() {
-    const target = this._historyEntityId
-      ? this.hass?.states[this._historyEntityId]
-      : this._resolveHistoryEntity();
-    if (!target) return nothing;
-
-    const unit = String(target.attributes.unit_of_measurement ?? '');
-    const title = this._historyEntityId === this._entity?.entity_id
-      ? 'Last 24 hours'
-      : `${this._cleanSiblingLabel(target)} • 24h`;
-
-    if (this._historyLoading) {
-      return html`
-        <div class="history-card">
-          <div class="history-header">
-            <span class="history-title">${title}</span>
-            <span class="history-range">Loading…</span>
-          </div>
-          <div class="history-skeleton"></div>
-        </div>
-      `;
-    }
-
-    const pts = this._historyPoints;
-    if (pts.length < 2) return nothing;
-
-    const minV = Math.min(...pts.map((p) => p.v));
-    const maxV = Math.max(...pts.map((p) => p.v));
-    const spanV = maxV - minV || 1;
-    const minT = pts[0].t;
-    const maxT = pts[pts.length - 1].t;
-    const spanT = maxT - minT || 1;
-
-    const W = 320;
-    const H = 104;
-    const padX = 6;
-    const padY = 12;
-
-    const coords = pts.map((p) => ({
-      x: padX + ((p.t - minT) / spanT) * (W - padX * 2),
-      y: H - padY - ((p.v - minV) / spanV) * (H - padY * 2),
-      ...p,
-    }));
-
-    // Smooth cubic path
-    let lineD = `M ${coords[0].x.toFixed(1)} ${coords[0].y.toFixed(1)}`;
-    for (let i = 1; i < coords.length; i++) {
-      const prev = coords[i - 1];
-      const curr = coords[i];
-      const midX = ((prev.x + curr.x) / 2).toFixed(1);
-      lineD += ` C ${midX} ${prev.y.toFixed(1)}, ${midX} ${curr.y.toFixed(1)}, ${curr.x.toFixed(1)} ${curr.y.toFixed(1)}`;
-    }
-    const areaD = `${lineD} L ${coords[coords.length - 1].x.toFixed(1)} ${H} L ${coords[0].x.toFixed(1)} ${H} Z`;
-
-    const activeIdx = this._historyHoverIdx;
-    const activePt = activeIdx !== null ? coords[activeIdx] : coords[coords.length - 1];
-    const fmtTime = (ms: number) =>
-      new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    const onChartPointer = (e: PointerEvent) => {
-      const svgEl = e.currentTarget as SVGSVGElement;
-      const rect = svgEl.getBoundingClientRect();
-      if (rect.width <= 0) return;
-      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      this._historyHoverIdx = Math.round(ratio * (coords.length - 1));
-    };
-
-    const gradId = `m3e-hist-${this._historyEntityId?.replace(/[^a-z0-9]/gi, '_') ?? 'g'}`;
+    if (!this._popupOpen) return nothing;
+    const resolved = this._resolveHistoryTarget();
+    if (!resolved) return nothing;
 
     return html`
-      <div class="history-card">
-        <div class="history-header">
-          <span class="history-title">${title}</span>
-          <span class="history-range">
-            ${activeIdx !== null
-              ? `${activePt.v}${unit} · ${fmtTime(activePt.t)}`
-              : `${minV}${unit} – ${maxV}${unit}`}
-          </span>
-        </div>
-
-        <svg
-          class="history-svg"
-          viewBox="0 0 ${W} ${H}"
-          preserveAspectRatio="none"
-          @pointerdown=${onChartPointer}
-          @pointermove=${(e: PointerEvent) => {
-            if (e.buttons > 0 || e.pointerType === 'mouse') onChartPointer(e);
-          }}
-          @pointerleave=${() => (this._historyHoverIdx = null)}
-        >
-          ${svg`
-            <defs>
-              <linearGradient id=${gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.28" />
-                <stop offset="100%" stop-color="var(--md-sys-color-primary, #bac3ff)" stop-opacity="0.0" />
-              </linearGradient>
-            </defs>
-            <line x1=${padX} y1=${padY} x2=${W - padX} y2=${padY} class="history-grid-line" />
-            <line x1=${padX} y1=${H / 2} x2=${W - padX} y2=${H / 2} class="history-grid-line" />
-            <line x1=${padX} y1=${H - padY} x2=${W - padX} y2=${H - padY} class="history-grid-line" />
-            <path d=${areaD} fill="url(#${gradId})" />
-            <path d=${lineD} class="history-line" />
-            ${activeIdx !== null
-              ? svg`<line x1=${activePt.x} y1=${padY} x2=${activePt.x} y2=${H - padY} class="history-cursor-line" />`
-              : nothing}
-            <circle cx=${activePt.x} cy=${activePt.y} r="4.5" class="history-dot" />
-          `}
-        </svg>
-
-        <div class="history-axis">
-          <span>${fmtTime(minT)}</span>
-          <span>${fmtTime((minT + maxT) / 2)}</span>
-          <span>${fmtTime(maxT)}</span>
-        </div>
-      </div>
+      <m3e-history-chart
+        .hass=${this.hass}
+        .entityIds=${resolved.entityIds}
+        .metricKind=${resolved.metricKind}
+        .unit=${resolved.unit}
+      ></m3e-history-chart>
     `;
   }
 
@@ -3458,87 +3341,6 @@ export class M3EStatusCard extends LitElement {
         color: var(--md-sys-color-on-surface-variant, #c4c6d0);
         opacity: 0.7;
         flex-shrink: 0;
-      }
-
-      /* M3 Expressive 24h Sensor History Chart Card */
-      .history-card {
-        background: var(--md-sys-color-surface-container-high, #24252d);
-        border-radius: 24px;
-        padding: 16px 18px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .history-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-      }
-
-      .history-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
-      }
-
-      .history-range {
-        font-size: 13px;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        color: var(--md-sys-color-primary, #bac3ff);
-      }
-
-      .history-svg {
-        width: 100%;
-        height: 104px;
-        display: block;
-        cursor: crosshair;
-        touch-action: none;
-      }
-
-      .history-grid-line {
-        stroke: var(--md-sys-color-outline-variant, #44464f);
-        stroke-width: 1;
-        stroke-dasharray: 3 4;
-        opacity: 0.45;
-      }
-
-      .history-line {
-        fill: none;
-        stroke: var(--md-sys-color-primary, #bac3ff);
-        stroke-width: 2.5;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-      }
-
-      .history-cursor-line {
-        stroke: var(--md-sys-color-primary, #bac3ff);
-        stroke-width: 1;
-        opacity: 0.55;
-      }
-
-      .history-dot {
-        fill: var(--md-sys-color-primary, #bac3ff);
-        stroke: var(--md-sys-color-surface-container-high, #24252d);
-        stroke-width: 2;
-      }
-
-      .history-axis {
-        display: flex;
-        justify-content: space-between;
-        font-size: 11px;
-        font-variant-numeric: tabular-nums;
-        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
-        opacity: 0.75;
-      }
-
-      .history-skeleton {
-        height: 104px;
-        border-radius: 14px;
-        background: var(--md-sys-color-surface-container-highest, #303036);
-        opacity: 0.6;
       }
 
       /* =====================================================================
