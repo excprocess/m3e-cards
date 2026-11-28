@@ -558,3 +558,14 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
   /** Position of Card Features: bottom (stacked sub-row) or inline */
   features_position?: M3EFeaturesPosition;
 }
+
+export interface M3EHistoryCardConfig extends LovelaceCardConfig {
+  entity: string;
+  entities?: string[];
+  chart_style?: 'bar' | 'line';
+  default_range?: 'W' | 'M';
+  aggregation?: 'auto' | 'avg' | 'sum' | 'max';
+  bar_color?: [number, number, number] | string;
+  accent_color?: [number, number, number] | string;
+  metric_label?: string;
+}

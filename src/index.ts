@@ -1,5 +1,6 @@
 import './cards/m3e-assist-card';
 import './cards/m3e-glance-card';
+import './cards/m3e-history-card';
 import './cards/m3e-light-card';
 import './cards/m3e-light-control-card';
 import './cards/m3e-light-group-card';
@@ -21,6 +22,7 @@ initM3ENavigationPickerBridge();
 
 export { M3EAssistCard } from './cards/m3e-assist-card';
 export { M3EGlanceCard } from './cards/m3e-glance-card';
+export { M3EHistoryCard } from './cards/m3e-history-card';
 export { M3ELightCard } from './cards/m3e-light-card';
 export { M3ELightControlCard } from './cards/m3e-light-control-card';
 export { M3ELightGroupCard } from './cards/m3e-light-group-card';
@@ -42,6 +44,7 @@ export type {
   M3EAssistCardConfig,
   M3EGlanceCardConfig,
   M3EGlanceItemConfig,
+  M3EHistoryCardConfig,
   M3ELightCardConfig,
   M3ELightControlCardConfig,
   M3ELightGroupCardConfig,
@@ -409,6 +412,25 @@ registerCard({
     const domain = getDomain(entityId);
     if (domain !== 'remote' && domain !== 'media_player') return null;
     return { config: { type: 'custom:m3e-remote-card', entity: entityId } };
+  },
+});
+
+registerCard({
+  type: 'm3e-history-card',
+  name: 'History Card',
+  description:
+    'Fitbit–style Material 3 Expressive history card with Week/Month capsule bar carousel, cumulative stats, touch swipe, and multi-sensor line/dot analytics.',
+  preview: true,
+  getEntitySuggestion: (hass, entityId) => {
+    if (!isNumericSensor(hass, entityId) && getDomain(entityId) !== 'counter') return null;
+    return {
+      config: {
+        type: 'custom:m3e-history-card',
+        entity: entityId,
+        chart_style: 'bar',
+        default_range: 'M',
+      },
+    };
   },
 });
 
