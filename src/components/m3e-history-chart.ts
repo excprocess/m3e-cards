@@ -293,12 +293,17 @@ export class M3EHistoryChart extends LitElement {
   @state() private _isolatedEntityId: string | null = null;
   @state() private _spec?: WindowSpec;
   @state() private _plotWidth = 340;
+  @state() private _scrubIdx: number | null = null;
 
   @query('.chart-area') private _chartAreaEl?: HTMLElement;
 
   private _fetchSeq = 0;
   private _lastQueryKey = '';
   private _ro?: ResizeObserver;
+  private _scrubPointerId: number | null = null;
+  private _scrubStartX = 0;
+  private _scrubStartY = 0;
+  private _scrubActive = false;
 
   public connectedCallback(): void {
     super.connectedCallback();
@@ -335,6 +340,7 @@ export class M3EHistoryChart extends LitElement {
     ) {
       if (changedProps.has('entityIds')) {
         this._isolatedEntityId = null;
+        this._scrubIdx = null;
       }
       const nextKey = `${this.entityIds.join(',')}|${this._range}|${this._offset}`;
       if (nextKey !== this._lastQueryKey && this.hass && this.entityIds.length > 0) {
@@ -347,6 +353,7 @@ export class M3EHistoryChart extends LitElement {
   private _setRange(next: HistoryRange): void {
     if (this._range === next) return;
     navigator.vibrate?.(6);
+    this._scrubIdx = null;
     this._range = next;
     this._offset = 0;
   }
@@ -355,13 +362,163 @@ export class M3EHistoryChart extends LitElement {
     const next = Math.min(0, this._offset + delta);
     if (next === this._offset) return;
     navigator.vibrate?.(6);
+    this._scrubIdx = null;
     this._offset = next;
   }
 
   private _resetToPresent(): void {
     if (this._offset === 0) return;
     navigator.vibrate?.(6);
+    this._scrubIdx = null;
     this._offset = 0;
+  }
+
+  private _getVisibleSeries(): SeriesData[] {
+    const isCumulative = this._series.length > 1;
+    if (isCumulative && this._isolatedEntityId !== null) {
+      const isolated = this._series.filter((s) => s.entityId === this._isolatedEntityId);
+      if (isolated.length > 0) return isolated;
+    }
+    return this._series;
+  }
+
+  private _snapIndexFromClientX(clientX: number): number | null {
+    if (!this._chartAreaEl || !this._spec) return null;
+    const rect = this._chartAreaEl.getBoundingClientRect();
+    if (rect.width <= 0) return null;
+
+    const W = Math.max(240, this._plotWidth);
+    const padL = 8;
+    const padR = 46;
+    const plotW = W - padL - padR;
+    const nBuckets = Math.max(1, this._spec.bucketStarts.length);
+    const relSvgX = ((clientX - rect.left) / rect.width) * W;
+    const visible = this._getVisibleSeries();
+
+    let bestIdx: number | null = null;
+    let bestDist = Infinity;
+
+    for (let i = 0; i < nBuckets; i++) {
+      const hasVal = visible.some(
+        (s) => s.buckets[i]?.v !== null && s.buckets[i]?.v !== undefined,
+      );
+      if (!hasVal) continue;
+      const cx =
+        nBuckets <= 1 ? padL + plotW / 2 : padL + (i / (nBuckets - 1)) * plotW;
+      const dist = Math.abs(relSvgX - cx);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }
+
+  private _onAreaPointerDown(e: PointerEvent): void {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    this._scrubPointerId = e.pointerId;
+    this._scrubStartX = e.clientX;
+    this._scrubStartY = e.clientY;
+    this._scrubActive = false;
+
+    const snapped = this._snapIndexFromClientX(e.clientX);
+    if (snapped !== null) {
+      if (snapped !== this._scrubIdx) {
+        navigator.vibrate?.(4);
+      }
+      this._scrubIdx = snapped;
+    }
+  }
+
+  private _onAreaPointerMove(e: PointerEvent): void {
+    if (this._scrubPointerId !== e.pointerId) return;
+    const dx = e.clientX - this._scrubStartX;
+    const dy = e.clientY - this._scrubStartY;
+
+    if (!this._scrubActive) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx) * 1.4) {
+        this._scrubPointerId = null;
+        return;
+      }
+      if (Math.abs(dx) > 6 && Math.abs(dx) >= Math.abs(dy)) {
+        this._scrubActive = true;
+        this._chartAreaEl?.setPointerCapture?.(e.pointerId);
+      }
+    }
+
+    if (this._scrubActive || e.pointerType === 'mouse') {
+      const snapped = this._snapIndexFromClientX(e.clientX);
+      if (snapped !== null && snapped !== this._scrubIdx) {
+        navigator.vibrate?.(4);
+        this._scrubIdx = snapped;
+      }
+    }
+  }
+
+  private _onAreaPointerEnd(e: PointerEvent): void {
+    if (this._scrubPointerId !== e.pointerId) return;
+    if (this._chartAreaEl?.hasPointerCapture?.(e.pointerId)) {
+      this._chartAreaEl.releasePointerCapture(e.pointerId);
+    }
+    this._scrubPointerId = null;
+    this._scrubActive = false;
+  }
+
+  private _formatScrubTimestamp(spec: WindowSpec, idx: number): string {
+    const it = isItalian(this.hass);
+    const locale = it ? 'it-IT' : 'en-US';
+    const ts = spec.bucketStarts[idx] ?? spec.start;
+    const dt = new Date(ts);
+    const now = new Date();
+    const startOfDay = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(now) - startOfDay(dt)) / 86400000);
+    const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+    if (this._range === 'D') {
+      const hhmm = `${String(dt.getHours()).padStart(2, '0')}:00`;
+      const dayLabel =
+        diffDays === 0
+          ? it
+            ? 'Oggi'
+            : 'Today'
+          : diffDays === 1
+            ? it
+              ? 'Ieri'
+              : 'Yesterday'
+            : new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(dt);
+      return `${dayLabel}, ${hhmm}`;
+    }
+
+    if (this._range === 'W' || this._range === 'M') {
+      if (diffDays === 0) return it ? 'Oggi' : 'Today';
+      if (diffDays === 1) return it ? 'Ieri' : 'Yesterday';
+      return cap(
+        new Intl.DateTimeFormat(locale, {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+        }).format(dt),
+      );
+    }
+
+    if (this._range === '3M') {
+      const endTs = Math.max(ts, (spec.bucketEnds[idx] ?? ts) - 86400000);
+      const endDt = new Date(endTs);
+      const fmtM = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' });
+      if (dt.getMonth() === endDt.getMonth()) {
+        const m = new Intl.DateTimeFormat(locale, { month: 'short' })
+          .format(dt)
+          .replace(/\.$/, '');
+        return `${dt.getDate()}–${endDt.getDate()} ${m}`;
+      }
+      return `${fmtM.format(dt)}–${fmtM.format(endDt)}`;
+    }
+
+    // Range 'Y'
+    return cap(
+      new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(dt),
+    );
   }
 
   private async _fetchHistoryRaw(
@@ -820,6 +977,27 @@ export class M3EHistoryChart extends LitElement {
     const axisY = H - 22;
     const axisLabelY = H - 5;
 
+    const visibleSeries = this._getVisibleSeries();
+    const scrubPoints: Array<{ cx: number; cy: number; val: number; color: string }> = [];
+    if (this._scrubIdx !== null && this._scrubIdx >= 0 && this._scrubIdx < nBuckets) {
+      const cx = xAt(this._scrubIdx);
+      visibleSeries.forEach((s) => {
+        const sOrigIdx = this._series.indexOf(s);
+        const sColor = isCumulative
+          ? theme.cumulative[(sOrigIdx >= 0 ? sOrigIdx : 0) % theme.cumulative.length]
+          : theme.singleLine;
+        const val = s.buckets[this._scrubIdx as number]?.v;
+        if (val !== null && val !== undefined) {
+          scrubPoints.push({ cx, cy: yAt(val), val, color: sColor });
+        }
+      });
+    }
+    const isScrubbing = scrubPoints.length > 0 && this._scrubIdx !== null;
+    const scrubAvgVal = isScrubbing
+      ? scrubPoints.reduce((acc, p) => acc + p.val, 0) / scrubPoints.length
+      : 0;
+    const scrubNumStr = isScrubbing ? formatNum(scrubAvgVal, this.metricKind, this.hass) : '';
+
     return html`
       <div
         class="m3e-chart-root ${this.compact ? 'is-compact' : ''}"
@@ -843,71 +1021,109 @@ export class M3EHistoryChart extends LitElement {
           })}
         </div>
 
-        <!-- 2. Contextual Header & Chronological Navigation -->
+        <!-- 2. Contextual Header OR Active Scrubber Sample Inspection -->
         <div class="chart-header">
-          <div class="period-row">
-            <span class="period-label">
-              ${this.headerTitle
-                ? this._offset === 0
-                  ? this.headerTitle
-                  : html`${this.headerTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`
-                : spec.periodLabel}
-            </span>
-            <div class="nav-group">
-              <button
-                type="button"
-                class="nav-btn"
-                aria-label=${it ? 'Periodo precedente' : 'Previous period'}
-                @click=${() => this._stepOffset(-1)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59Z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="nav-btn"
-                ?disabled=${this._offset === 0}
-                aria-label=${it ? 'Periodo successivo' : 'Next period'}
-                @click=${() => this._stepOffset(1)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6Z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="nav-btn ${this._offset < 0 ? 'is-highlighted' : 'is-present'}"
-                ?disabled=${this._offset === 0}
-                aria-label=${it ? 'Torna al presente' : 'Jump to present'}
-                @click=${() => this._resetToPresent()}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="currentColor"
-                    d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <div class="hero-row">
-            ${stats.hasData
-              ? html`
-                  <span class="hero-val">
-                    ${formatWithUnit(stats.avg, this.metricKind, this.unit, this.hass)}
+          ${isScrubbing
+            ? html`
+                <div class="scrub-value-row">
+                  <div class="scrub-val-group">
+                    <span class="hero-val">${scrubNumStr}</span>
+                    ${this.unit.trim()
+                      ? html`<span class="hero-lbl">${this.unit.trim()}</span>`
+                      : nothing}
+                  </div>
+                  <button
+                    type="button"
+                    class="scrub-close-btn"
+                    aria-label=${it ? 'Chiudi selezione' : 'Clear selection'}
+                    @click=${() => {
+                      navigator.vibrate?.(4);
+                      this._scrubIdx = null;
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="scrub-date">
+                  ${this._formatScrubTimestamp(spec, this._scrubIdx as number)}
+                </div>
+              `
+            : html`
+                <div class="period-row">
+                  <span class="period-label">
+                    ${this.headerTitle
+                      ? this._offset === 0
+                        ? this.headerTitle
+                        : html`${this.headerTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`
+                      : spec.periodLabel}
                   </span>
-                  <span class="hero-lbl">${avgLabel}</span>
-                `
-              : html`<span class="hero-val">${it ? 'Nessun dato' : 'No data'}</span>`}
-          </div>
+                  <div class="nav-group">
+                    <button
+                      type="button"
+                      class="nav-btn"
+                      aria-label=${it ? 'Periodo precedente' : 'Previous period'}
+                      @click=${() => this._stepOffset(-1)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="nav-btn"
+                      ?disabled=${this._offset === 0}
+                      aria-label=${it ? 'Periodo successivo' : 'Next period'}
+                      @click=${() => this._stepOffset(1)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="nav-btn ${this._offset < 0 ? 'is-highlighted' : 'is-present'}"
+                      ?disabled=${this._offset === 0}
+                      aria-label=${it ? 'Torna al presente' : 'Jump to present'}
+                      @click=${() => this._resetToPresent()}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-          <div class="summary-sub">${subtitleText}</div>
+                <div class="hero-row">
+                  ${stats.hasData
+                    ? html`
+                        <span class="hero-val">
+                          ${formatWithUnit(stats.avg, this.metricKind, this.unit, this.hass)}
+                        </span>
+                        <span class="hero-lbl">${avgLabel}</span>
+                      `
+                    : html`<span class="hero-val">${it ? 'Nessun dato' : 'No data'}</span>`}
+                </div>
+
+                <div class="summary-sub">${subtitleText}</div>
+              `}
         </div>
 
         <!-- 3. Clean Line + Dot SVG Chart -->
-        <div class="chart-area ${this._loading ? 'is-loading' : ''}">
+        <div
+          class="chart-area ${this._loading ? 'is-loading' : ''}"
+          @pointerdown=${this._onAreaPointerDown}
+          @pointermove=${this._onAreaPointerMove}
+          @pointerup=${this._onAreaPointerEnd}
+          @pointercancel=${this._onAreaPointerEnd}
+        >
           <svg
             class="chart-svg"
             viewBox="0 0 ${W} ${H}"
@@ -915,6 +1131,19 @@ export class M3EHistoryChart extends LitElement {
             aria-label=${spec.periodLabel}
           >
             ${svg`
+              <!-- Top max horizontal reference line while scrubbing -->
+              ${isScrubbing
+                ? svg`
+                    <line
+                      x1=${padL}
+                      y1=${padT}
+                      x2=${Math.max(padL + 40, W - padR - 4)}
+                      y2=${padT}
+                      class="scrubber-top-line"
+                    />
+                  `
+                : nothing}
+
               <!-- Right-aligned minimal Y-axis labels (no gridlines) -->
               ${yTicks.map(
                 (t) => svg`
@@ -997,6 +1226,35 @@ export class M3EHistoryChart extends LitElement {
                   </g>
                 `;
               })}
+
+              <!-- Native Vertical Snap Scrubber + Hollow Anchor Circle(s) -->
+              ${isScrubbing
+                ? (() => {
+                    const cx = scrubPoints[0].cx;
+                    const maxY = Math.max(padT + 2, ...scrubPoints.map((p) => p.cy));
+                    return svg`
+                      <g class="scrubber-group" pointer-events="none">
+                        <line
+                          x1=${cx.toFixed(2)}
+                          y1=${padT}
+                          x2=${cx.toFixed(2)}
+                          y2=${maxY.toFixed(2)}
+                          class="scrubber-line"
+                        />
+                        ${scrubPoints.map(
+                          (pt) => svg`
+                            <circle
+                              cx=${pt.cx.toFixed(2)}
+                              cy=${pt.cy.toFixed(2)}
+                              r="4.5"
+                              class="scrubber-anchor"
+                            />
+                          `,
+                        )}
+                      </g>
+                    `;
+                  })()
+                : nothing}
             `}
           </svg>
         </div>
@@ -1094,6 +1352,58 @@ export class M3EHistoryChart extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-height: 92px;
+    }
+
+    .scrub-value-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 2px;
+    }
+
+    .scrub-val-group {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .scrub-close-btn {
+      width: 28px;
+      height: 28px;
+      border: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--md-sys-color-surface-container-high, #23262a);
+      color: var(--md-sys-color-on-surface, #e3e2e6);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background-color 160ms ease,
+        transform var(--m3e-spring-spatial-fast, 200ms ease);
+    }
+
+    .scrub-close-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .scrub-close-btn:active {
+      transform: scale(0.9);
+    }
+
+    .scrub-close-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .scrub-date {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface, #e3e2e6);
+      line-height: 1.3;
     }
 
     .period-row {
@@ -1200,6 +1510,8 @@ export class M3EHistoryChart extends LitElement {
     .chart-area {
       width: 100%;
       height: 224px;
+      touch-action: pan-y;
+      cursor: pointer;
       transition: opacity 180ms ease;
     }
 
@@ -1242,6 +1554,25 @@ export class M3EHistoryChart extends LitElement {
     .series-dot {
       stroke: var(--md-sys-color-surface, #111315);
       stroke-width: 1.5px;
+    }
+
+    /* Vertical Snap Scrubber */
+    .scrubber-top-line {
+      stroke: var(--chart-accent);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    .scrubber-line {
+      stroke: var(--md-sys-color-on-surface, #ffffff);
+      stroke-width: 1.75;
+      stroke-linecap: round;
+    }
+
+    .scrubber-anchor {
+      fill: var(--scrubber-anchor-fill, var(--md-sys-color-surface-container-low, var(--card-background-color, #111315)));
+      stroke: var(--md-sys-color-on-surface, #ffffff);
+      stroke-width: 2;
     }
 
     /* 4. Interactive Legend Footer */
@@ -1299,6 +1630,10 @@ export class M3EHistoryChart extends LitElement {
 
     .m3e-chart-root.is-compact {
       gap: 10px;
+    }
+
+    .m3e-chart-root.is-compact .chart-header {
+      min-height: 82px;
     }
 
     .m3e-chart-root.is-compact .range-btn {

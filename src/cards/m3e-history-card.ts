@@ -231,7 +231,7 @@ export class M3EHistoryCard extends LitElement {
   @state() private _values: Array<number | null> = [];
   @state() private _spec?: BarWindowSpec;
   @state() private _plotWidth = 320;
-  @state() private _hoverIdx: number | null = null;
+  @state() private _scrubIdx: number | null = null;
   @state() private _prevSlide?: SlideSnapshot;
 
   @query('.chart-stage') private _stageEl?: HTMLElement;
@@ -249,12 +249,11 @@ export class M3EHistoryCard extends LitElement {
   private _incomingAnim?: Animation;
   private _animTimer: number | null = null;
 
-  // Touch/pointer swipe state
-  private _swipePointerId: number | null = null;
-  private _swipeStartX = 0;
-  private _swipeStartY = 0;
-  private _swiping = false;
-  private _dragOffsetPx = 0;
+  // Vertical scrubber pointer tracking
+  private _scrubPointerId: number | null = null;
+  private _scrubStartX = 0;
+  private _scrubStartY = 0;
+  private _scrubActive = false;
 
   public setConfig(config: M3EHistoryCardConfig): void {
     if (!config || !config.entity) {
@@ -267,7 +266,7 @@ export class M3EHistoryCard extends LitElement {
       this._lastQueryKey = '';
       this._values = [];
       this._prevSlide = undefined;
-      this._hoverIdx = null;
+      this._scrubIdx = null;
     }
     if (!prev || prev.default_range !== config.default_range) {
       this._range = nextRange;
@@ -483,7 +482,7 @@ export class M3EHistoryCard extends LitElement {
       changedProps.has('_values') ||
       changedProps.has('_spec') ||
       changedProps.has('_plotWidth') ||
-      changedProps.has('_hoverIdx') ||
+      changedProps.has('_scrubIdx') ||
       changedProps.has('_prevSlide')
     ) {
       return true;
@@ -599,7 +598,7 @@ export class M3EHistoryCard extends LitElement {
     if (nextRange === this._range && clampedOffset === this._offset) return;
 
     navigator.vibrate?.(6);
-    this._hoverIdx = null;
+    this._scrubIdx = null;
     this._cancelSlideAnims();
     this._prevSlide = this._captureCurrentSlide();
 
@@ -953,55 +952,103 @@ export class M3EHistoryCard extends LitElement {
   }
 
   /* =========================================================================
-     HORIZONTAL SWIPE GESTURE ON CHART STAGE (touch-action: pan-y)
+     VERTICAL SNAPPING SCRUBBER ON CHART STAGE (touch-action: pan-y)
      ========================================================================= */
+  private _snapIndexFromClientX(clientX: number): number | null {
+    if (!this._stageEl || !this._spec) return null;
+    const rect = this._stageEl.getBoundingClientRect();
+    if (rect.width <= 0) return null;
+
+    const W = Math.max(240, this._plotWidth);
+    const padL = 6;
+    const padR = 46;
+    const plotW = Math.max(120, W - padL - padR);
+    const n = Math.max(1, this._spec.bucketStarts.length);
+    const slotW = plotW / n;
+
+    const relSvgX = ((clientX - rect.left) / rect.width) * W;
+    let bestIdx: number | null = null;
+    let bestDist = Infinity;
+
+    for (let i = 0; i < this._values.length; i++) {
+      const v = this._values[i];
+      if (v === null || v <= 0) continue;
+      const cx = padL + (i + 0.5) * slotW;
+      const dist = Math.abs(relSvgX - cx);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  }
+
   private _onStagePointerDown(e: PointerEvent): void {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
-    this._swipePointerId = e.pointerId;
-    this._swipeStartX = e.clientX;
-    this._swipeStartY = e.clientY;
-    this._swiping = false;
-    this._dragOffsetPx = 0;
+    this._scrubPointerId = e.pointerId;
+    this._scrubStartX = e.clientX;
+    this._scrubStartY = e.clientY;
+    this._scrubActive = false;
+
+    const snapped = this._snapIndexFromClientX(e.clientX);
+    if (snapped !== null) {
+      if (snapped !== this._scrubIdx) {
+        navigator.vibrate?.(4);
+      }
+      this._scrubIdx = snapped;
+    }
   }
 
   private _onStagePointerMove(e: PointerEvent): void {
-    if (this._swipePointerId !== e.pointerId) return;
-    const dx = e.clientX - this._swipeStartX;
-    const dy = e.clientY - this._swipeStartY;
+    if (this._scrubPointerId !== e.pointerId) return;
+    const dx = e.clientX - this._scrubStartX;
+    const dy = e.clientY - this._scrubStartY;
 
-    if (!this._swiping && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.25) {
-      this._swiping = true;
-      this._hoverIdx = null;
-      this._stageEl?.setPointerCapture?.(e.pointerId);
+    if (!this._scrubActive) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx) * 1.4) {
+        this._scrubPointerId = null;
+        return;
+      }
+      if (Math.abs(dx) > 6 && Math.abs(dx) >= Math.abs(dy)) {
+        this._scrubActive = true;
+        this._stageEl?.setPointerCapture?.(e.pointerId);
+      }
     }
 
-    if (this._swiping && this._incomingEl) {
-      const factor = this._offset === 0 && dx < 0 ? 0.1 : 0.3;
-      this._dragOffsetPx = Math.max(-44, Math.min(44, dx * factor));
-      this._incomingEl.style.transform = `translate3d(${this._dragOffsetPx.toFixed(1)}px, 0, 0)`;
+    if (this._scrubActive || e.pointerType === 'mouse') {
+      const snapped = this._snapIndexFromClientX(e.clientX);
+      if (snapped !== null && snapped !== this._scrubIdx) {
+        navigator.vibrate?.(4);
+        this._scrubIdx = snapped;
+      }
     }
   }
 
   private _onStagePointerEnd(e: PointerEvent): void {
-    if (this._swipePointerId !== e.pointerId) return;
-    const dx = e.clientX - this._swipeStartX;
-    const wasSwiping = this._swiping;
-
-    this._swipePointerId = null;
-    this._swiping = false;
-    this._dragOffsetPx = 0;
-
-    if (this._incomingEl) {
-      this._incomingEl.style.transform = '';
+    if (this._scrubPointerId !== e.pointerId) return;
+    if (this._stageEl?.hasPointerCapture?.(e.pointerId)) {
+      this._stageEl.releasePointerCapture(e.pointerId);
     }
+    this._scrubPointerId = null;
+    this._scrubActive = false;
+  }
 
-    if (wasSwiping && Math.abs(dx) >= 42) {
-      if (dx > 0) {
-        this._stepOffset(-1);
-      } else if (this._offset < 0) {
-        this._stepOffset(1);
-      }
-    }
+  private _formatScrubDate(tsMs: number): string {
+    const it = isItalian(this.hass);
+    const locale = it ? 'it-IT' : 'en-US';
+    const dt = new Date(tsMs);
+    const now = new Date();
+    const startOfDay = (d: Date) =>
+      new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const diffDays = Math.round((startOfDay(now) - startOfDay(dt)) / 86400000);
+    if (diffDays === 0) return it ? 'Oggi' : 'Today';
+    if (diffDays === 1) return it ? 'Ieri' : 'Yesterday';
+    const raw = new Intl.DateTimeFormat(locale, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    }).format(dt);
+    return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : raw;
   }
 
   /* =========================================================================
@@ -1141,12 +1188,29 @@ export class M3EHistoryCard extends LitElement {
       : [];
 
     const xCenter = (i: number) => padL + (i + 0.5) * slotW;
-    const it = isItalian(this.hass);
-    const locale = it ? 'it-IT' : 'en-US';
-    const hoverIdx = interactive ? this._hoverIdx : null;
+    const scrubIdx = interactive ? this._scrubIdx : null;
+    const hasScrubPoint =
+      scrubIdx !== null &&
+      scrubIdx >= 0 &&
+      scrubIdx < values.length &&
+      values[scrubIdx] !== null &&
+      (values[scrubIdx] as number) > 0;
 
     return svg`
       <svg class="chart-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label=${spec.periodLabel}>
+        <!-- Top max horizontal reference line while scrubbing -->
+        ${hasScrubPoint && hasPositive
+          ? svg`
+              <line
+                x1=${padL}
+                y1=${padT}
+                x2=${Math.max(padL + 40, W - padR - 4)}
+                y2=${padT}
+                class="scrubber-top-line"
+              />
+            `
+          : nothing}
+
         <!-- Minimal right-aligned Y-axis labels (completely hidden when no data) -->
         ${yTicks.map(
           (tick) => svg`
@@ -1184,18 +1248,10 @@ export class M3EHistoryCard extends LitElement {
           const scaledH = (val / yMax) * plotH;
           const barH = Math.max(barW, Math.min(plotH, scaledH));
           const yTop = barBottomY - barH;
-          const isHovered = hoverIdx === idx;
-          const dimmed = hoverIdx !== null && hoverIdx !== idx;
-          const dayLabel = new Intl.DateTimeFormat(locale, {
-            day: 'numeric',
-            month: 'short',
-          }).format(new Date(spec.bucketStarts[idx]));
-          const valLabel = isDuration
-            ? formatHeroDuration(val)
-            : formatNumericWithUnit(val, unit, this.hass);
+          const isScrubbed = hasScrubPoint && scrubIdx === idx;
 
           return svg`
-            <g class="bar-group ${dimmed ? 'is-dimmed' : ''} ${isHovered ? 'is-hovered' : ''}">
+            <g class="bar-group ${isScrubbed ? 'is-hovered' : ''}">
               <rect
                 class="capsule-bar"
                 x=${(cx - barW / 2).toFixed(2)}
@@ -1206,70 +1262,33 @@ export class M3EHistoryCard extends LitElement {
                 ry=${rx.toFixed(2)}
                 style="transform-origin: ${cx.toFixed(1)}px ${barBottomY}px;"
               />
-              ${interactive
-                ? svg`
-                    <rect
-                      x=${(padL + idx * slotW).toFixed(1)}
-                      y=${padT}
-                      width=${slotW.toFixed(1)}
-                      height=${(dotY - padT).toFixed(1)}
-                      fill="transparent"
-                      class="bar-hit"
-                      @pointerenter=${(ev: PointerEvent) => {
-                        if (ev.pointerType !== 'touch') this._hoverIdx = idx;
-                      }}
-                      @pointerleave=${(ev: PointerEvent) => {
-                        if (ev.pointerType !== 'touch' && this._hoverIdx === idx) {
-                          this._hoverIdx = null;
-                        }
-                      }}
-                      @click=${(ev: Event) => {
-                        ev.stopPropagation();
-                        this._hoverIdx = this._hoverIdx === idx ? null : idx;
-                      }}
-                    >
-                      <title>${dayLabel}: ${valLabel}</title>
-                    </rect>
-                  `
-                : nothing}
             </g>
           `;
         })}
 
-        <!-- Floating Tooltip Pill on Bar Hover/Tap -->
-        ${hoverIdx !== null && values[hoverIdx] !== null && (values[hoverIdx] ?? 0) > 0
+        <!-- Native Vertical Snap Scrubber + Hollow Anchor Circle -->
+        ${hasScrubPoint && scrubIdx !== null
           ? (() => {
-              const v = values[hoverIdx] as number;
-              const cx = xCenter(hoverIdx);
+              const v = values[scrubIdx] as number;
+              const cx = xCenter(scrubIdx);
               const scaledH = (v / yMax) * plotH;
               const barH = Math.max(barW, Math.min(plotH, scaledH));
-              const tipY = Math.max(12, barBottomY - barH - 8);
-              const dLbl = new Intl.DateTimeFormat(locale, {
-                day: 'numeric',
-                month: 'short',
-              }).format(new Date(spec.bucketStarts[hoverIdx]));
-              const vLbl = isDuration
-                ? formatHeroDuration(v)
-                : formatNumericWithUnit(v, unit, this.hass);
-              const txt = `${dLbl} · ${vLbl}`;
-              const estW = Math.max(68, txt.length * 6.5 + 16);
-              const tipX = Math.max(estW / 2 + 2, Math.min(W - padR - estW / 2, cx));
+              const yTop = Math.max(padT + 2, barBottomY - barH);
               return svg`
-                <g class="bar-tooltip" pointer-events="none">
-                  <rect
-                    x=${(tipX - estW / 2).toFixed(1)}
-                    y=${(tipY - 14).toFixed(1)}
-                    width=${estW.toFixed(1)}
-                    height="20"
-                    rx="10"
-                    class="tooltip-bg"
+                <g class="scrubber-group" pointer-events="none">
+                  <line
+                    x1=${cx.toFixed(2)}
+                    y1=${padT}
+                    x2=${cx.toFixed(2)}
+                    y2=${yTop.toFixed(2)}
+                    class="scrubber-line"
                   />
-                  <text
-                    x=${tipX.toFixed(1)}
-                    y=${(tipY - 1).toFixed(1)}
-                    text-anchor="middle"
-                    class="tooltip-txt"
-                  >${txt}</text>
+                  <circle
+                    cx=${cx.toFixed(2)}
+                    cy=${yTop.toFixed(2)}
+                    r="4.5"
+                    class="scrubber-anchor"
+                  />
                 </g>
               `;
             })()
@@ -1310,13 +1329,16 @@ export class M3EHistoryCard extends LitElement {
       this._config?.entity,
     );
 
+    const scrubVal =
+      this._scrubIdx !== null && this._scrubIdx >= 0 && this._scrubIdx < this._values.length
+        ? this._values[this._scrubIdx]
+        : null;
+    const isScrubbing = scrubVal !== null && scrubVal > 0 && this._scrubIdx !== null;
+
     return html`
       <div
         class="history-root"
         style="--history-tab-accent: ${tabAccent}; --history-tab-on-accent: ${tabOnAccent}; --history-bar-color: ${barColor};"
-        @click=${() => {
-          if (this._hoverIdx !== null) this._hoverIdx = null;
-        }}
       >
         <!-- 1. Top Dual Segmented Control (Week | Month) -->
         <div
@@ -1344,61 +1366,95 @@ export class M3EHistoryCard extends LitElement {
           </button>
         </div>
 
-        <!-- 2. Contextual Header & Chronological Navigation -->
+        <!-- 2. Contextual Header OR Active Scrubber Sample Inspection -->
         <div class="header-block">
-          <div class="period-row">
-            <span class="period-title">
-              ${this._offset === 0
-                ? entityTitle
-                : html`${entityTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`}
-            </span>
-            <div class="nav-controls">
-              <button
-                type="button"
-                class="nav-circle"
-                aria-label=${it ? 'Periodo precedente' : 'Previous period'}
-                @click=${() => this._stepOffset(-1)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59Z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="nav-circle"
-                ?disabled=${this._offset === 0}
-                aria-label=${it ? 'Periodo successivo' : 'Next period'}
-                @click=${() => this._stepOffset(1)}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6Z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                class="nav-circle ${this._offset < 0 ? 'is-highlighted' : ''}"
-                ?disabled=${this._offset === 0}
-                aria-label=${it ? 'Torna al presente' : 'Jump to present'}
-                @click=${() => this._resetToPresent()}
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="currentColor"
-                    d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
+          ${isScrubbing
+            ? html`
+                <div class="scrub-value-row">
+                  <div class="scrub-val-group">
+                    ${isDuration
+                      ? html`<span class="hero-val">${formatHeroDuration(scrubVal)}</span>`
+                      : html`
+                          <span class="hero-val">${formatSmartNumber(scrubVal, this.hass)}</span>
+                          ${unit ? html`<span class="hero-lbl">${unit}</span>` : nothing}
+                        `}
+                  </div>
+                  <button
+                    type="button"
+                    class="scrub-close-btn"
+                    aria-label=${it ? 'Chiudi selezione' : 'Clear selection'}
+                    @click=${() => {
+                      navigator.vibrate?.(4);
+                      this._scrubIdx = null;
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        fill="currentColor"
+                        d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="scrub-date">
+                  ${this._formatScrubDate(spec.bucketStarts[this._scrubIdx as number])}
+                </div>
+              `
+            : html`
+                <div class="period-row">
+                  <span class="period-title">
+                    ${this._offset === 0
+                      ? entityTitle
+                      : html`${entityTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`}
+                  </span>
+                  <div class="nav-controls">
+                    <button
+                      type="button"
+                      class="nav-circle"
+                      aria-label=${it ? 'Periodo precedente' : 'Previous period'}
+                      @click=${() => this._stepOffset(-1)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12l4.58-4.59Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="nav-circle"
+                      ?disabled=${this._offset === 0}
+                      aria-label=${it ? 'Periodo successivo' : 'Next period'}
+                      @click=${() => this._stepOffset(1)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill="currentColor" d="M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="nav-circle ${this._offset < 0 ? 'is-highlighted' : ''}"
+                      ?disabled=${this._offset === 0}
+                      aria-label=${it ? 'Torna al presente' : 'Jump to present'}
+                      @click=${() => this._resetToPresent()}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          fill="currentColor"
+                          d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
 
-          <div class="hero-row">
-            <span class="hero-val">${summary.heroText}</span>
-            ${summary.heroLabel
-              ? html`<span class="hero-lbl">${summary.heroLabel}</span>`
-              : nothing}
-          </div>
+                <div class="hero-row">
+                  <span class="hero-val">${summary.heroText}</span>
+                  ${summary.heroLabel
+                    ? html`<span class="hero-lbl">${summary.heroLabel}</span>`
+                    : nothing}
+                </div>
 
-          <div class="hero-subtitle">${summary.subtitleText}</div>
+                <div class="hero-subtitle">${summary.subtitleText}</div>
+              `}
         </div>
 
         <!-- 3. Dual-Layer Carousel Capsule Bar Chart -->
@@ -1492,6 +1548,7 @@ export class M3EHistoryCard extends LitElement {
         --ha-card-box-shadow: none;
         --ha-card-border-width: 0px;
         --ha-card-border-color: transparent;
+        --scrubber-anchor-fill: var(--md-sys-color-background, var(--primary-background-color, #111315));
         background: transparent;
         box-shadow: none;
         border-width: 0;
@@ -1554,6 +1611,58 @@ export class M3EHistoryCard extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 4px;
+        min-height: 92px;
+      }
+
+      .scrub-value-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 2px;
+      }
+
+      .scrub-val-group {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+      }
+
+      .scrub-close-btn {
+        width: 28px;
+        height: 28px;
+        border: 0;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--md-sys-color-surface-container-high, #23262a);
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        display: grid;
+        place-items: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+          background-color 160ms ease,
+          transform var(--m3e-spring-spatial-fast, 200ms ease);
+      }
+
+      .scrub-close-btn:hover {
+        filter: brightness(1.1);
+      }
+
+      .scrub-close-btn:active {
+        transform: scale(0.9);
+      }
+
+      .scrub-close-btn svg {
+        width: 16px;
+        height: 16px;
+      }
+
+      .scrub-date {
+        font-size: 0.9375rem;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface, #e3e2e6);
+        line-height: 1.3;
       }
 
       .period-row {
@@ -1667,6 +1776,7 @@ export class M3EHistoryCard extends LitElement {
         height: 228px;
         overflow: hidden;
         touch-action: pan-y;
+        cursor: pointer;
         transition: opacity 180ms ease;
       }
 
@@ -1734,10 +1844,6 @@ export class M3EHistoryCard extends LitElement {
         transition: opacity 160ms ease;
       }
 
-      .bar-group.is-dimmed {
-        opacity: 0.42;
-      }
-
       .capsule-bar {
         fill: var(--history-bar-color);
         animation: m3e-capsule-rise 360ms var(--m3e-spring-spatial-default, cubic-bezier(0.2, 0, 0, 1)) both;
@@ -1745,22 +1851,26 @@ export class M3EHistoryCard extends LitElement {
       }
 
       .bar-group.is-hovered .capsule-bar {
-        filter: brightness(1.12);
+        filter: brightness(1.08);
       }
 
-      .bar-hit {
-        cursor: pointer;
+      /* Vertical Snap Scrubber */
+      .scrubber-top-line {
+        stroke: var(--history-bar-color);
+        stroke-width: 1.5;
+        stroke-linecap: round;
       }
 
-      .tooltip-bg {
-        fill: var(--md-sys-color-inverse-surface, #e3e2e6);
+      .scrubber-line {
+        stroke: var(--md-sys-color-on-surface, #ffffff);
+        stroke-width: 1.75;
+        stroke-linecap: round;
       }
 
-      .tooltip-txt {
-        font-size: 11px;
-        font-weight: 600;
-        font-variant-numeric: tabular-nums;
-        fill: var(--md-sys-color-inverse-on-surface, #1b1b1f);
+      .scrubber-anchor {
+        fill: var(--scrubber-anchor-fill, var(--md-sys-color-surface-container-low, var(--card-background-color, #111315)));
+        stroke: var(--md-sys-color-on-surface, #ffffff);
+        stroke-width: 2;
       }
 
       /* Compact Mode (shorter bars & tighter vertical rhythm) */
@@ -1770,6 +1880,10 @@ export class M3EHistoryCard extends LitElement {
 
       .history-card.is-compact .history-root {
         gap: 10px;
+      }
+
+      .history-card.is-compact .header-block {
+        min-height: 82px;
       }
 
       .history-card.is-compact .dual-tab {
