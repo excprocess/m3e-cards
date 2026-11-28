@@ -53,6 +53,55 @@ export class M3EStatusCardEditor extends LitElement {
       }
       return 'remote';
     }
+    if (id && this.hass?.entities) {
+      const deviceId = this.hass.entities[id]?.device_id;
+      if (deviceId) {
+        const targetDeviceIds = new Set<string>([deviceId]);
+        if (
+          this.hass.devices &&
+          this.hass.devices[deviceId]?.model?.toLowerCase() !== 'endpoint'
+        ) {
+          for (const dev of Object.values(this.hass.devices)) {
+            if (dev.via_device_id === deviceId) {
+              targetDeviceIds.add(dev.id);
+            }
+          }
+        }
+        let hasRecreateOrKill = false;
+        let hasDockerSig = false;
+        let hasStackContainers = false;
+        for (const [eid, entry] of Object.entries(this.hass.entities)) {
+          if (!entry.device_id || !targetDeviceIds.has(entry.device_id)) continue;
+          const low = eid.toLowerCase();
+          if (
+            low.startsWith('button.') &&
+            (low.includes('recreate') ||
+              low.includes('kill') ||
+              low.includes('ricrea') ||
+              low.includes('update_stack'))
+          ) {
+            hasRecreateOrKill = true;
+          }
+          if (
+            low.includes('image_version') ||
+            low.includes('docker_event') ||
+            low.includes('out_of_memory')
+          ) {
+            hasDockerSig = true;
+          }
+          if (low.startsWith('sensor.') && low.endsWith('_containers')) {
+            hasStackContainers = true;
+          }
+        }
+        if (
+          hasRecreateOrKill ||
+          hasDockerSig ||
+          (hasStackContainers && id.toLowerCase().endsWith('_stack'))
+        ) {
+          return 'container';
+        }
+      }
+    }
     return 'sensor';
   }
 
@@ -66,6 +115,7 @@ export class M3EStatusCardEditor extends LitElement {
             mode: 'dropdown',
             options: [
               { value: 'auto', label: 'Automatico (in base al dispositivo)' },
+              { value: 'container', label: 'Container / Docker (Portainer)' },
               { value: 'power_strip', label: 'Power Strip (Multipresa a 2 colonne)' },
               { value: 'selector', label: 'Selettore (Scelta opzioni M3 Expressive)' },
               { value: 'custom', label: 'Personalizzata (stato/attributi liberi)' },
@@ -230,8 +280,11 @@ export class M3EStatusCardEditor extends LitElement {
         { name: 'secondary_entity', selector: { entity: {} } },
         { name: 'extra_entities', selector: { entity: { multiple: true } } },
       );
-    } else if (type === 'power_strip') {
+    } else if (type === 'power_strip' || type === 'container') {
       schema.push({ name: 'extra_entities', selector: { entity: { multiple: true } } });
+      if (type === 'container') {
+        schema.push({ name: 'status_entity', selector: { entity: {} } });
+      }
     } else if (type === 'climate') {
       schema.push({
         name: 'outdoor_entity',

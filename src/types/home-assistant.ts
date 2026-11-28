@@ -42,6 +42,9 @@ export interface HassDeviceRegistryEntry {
   name?: string | null;
   name_by_user?: string | null;
   area_id?: string | null;
+  via_device_id?: string | null;
+  model?: string | null;
+  manufacturer?: string | null;
 }
 
 export interface HomeAssistant {
@@ -104,6 +107,7 @@ export type M3EStatusPopupType =
   | 'auto'
   | 'selector'
   | 'power_strip'
+  | 'container'
   | 'sensor'
   | 'climate'
   | 'remote'

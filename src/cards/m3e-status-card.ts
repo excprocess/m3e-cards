@@ -18,7 +18,7 @@ import {
   ensureCardFeaturesLoaded,
   stopFeatureEventPropagation,
 } from '../utils/ha-card-features';
-import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
+import { formatRelativeTimestamp, resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import { ArtworkPalette, extractArtworkPalette } from '../utils/artwork-color';
 import { t } from '../utils/i18n';
 import { executeRemoteCommand, type RemoteActionKey } from '../utils/remote-commands';
@@ -124,8 +124,38 @@ const DEFAULT_ACTIVE_STATES = new Set([
   'fan_only',
   'heating',
   'cooling',
+  'running',
   'true',
 ]);
+
+interface ContainerDeviceEntities {
+  powerSwitch?: HassEntity;
+  status?: HassEntity;
+  image?: HassEntity;
+  imageVersion?: HassEntity;
+  imageCreated?: HassEntity;
+  started?: HassEntity;
+  restartCount?: HassEntity;
+  cpuPct?: HassEntity;
+  memPct?: HassEntity;
+  memUsed?: HassEntity;
+  memLimit?: HassEntity;
+  oom?: HassEntity;
+  update?: HassEntity;
+  dockerEvent?: HassEntity;
+  btnRestart?: HassEntity;
+  btnPause?: HassEntity;
+  btnResume?: HassEntity;
+  btnRecreate?: HassEntity;
+  btnKill?: HassEntity;
+  allCpuPct?: HassEntity[];
+  allMemUsed?: HassEntity[];
+  allMemLimit?: HassEntity[];
+  allOom?: HassEntity[];
+  allUpdate?: HassEntity[];
+  allRestartCount?: HassEntity[];
+  allIds: string[];
+}
 
 const CHEVRON_DOWN_SVG = html`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59a1 1 0 0 1 1.41 0L12 11.77l3.18-3.18a1 1 0 1 1 1.41 1.41l-3.88 3.88a1 1 0 0 1-1.42 0L7.41 10a1 1 0 0 1 0-1.41Z"/></svg>`;
 const CHEVRON_UP_SVG = html`<svg viewBox="0 0 24 24" class="m3-chevron" aria-hidden="true"><path fill="currentColor" d="M7.41 15.41a1 1 0 0 1 0-1.41l3.88-3.88a1 1 0 0 1 1.42 0L16.59 14a1 1 0 1 1-1.41 1.41L12 12.23l-3.18 3.18a1 1 0 0 1-1.41 0Z"/></svg>`;
@@ -149,6 +179,28 @@ function describeArc(cx: number, cy: number, r: number, startDeg: number, endDeg
   return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
 }
 
+function buildScallopedCookiePath(
+  cx: number,
+  cy: number,
+  baseR: number,
+  amp: number,
+  lobes = 12,
+  steps = 144,
+): string {
+  let d = '';
+  for (let i = 0; i < steps; i++) {
+    const theta = (i / steps) * Math.PI * 2;
+    const r = baseR + amp * Math.cos(lobes * theta);
+    const x = cx + r * Math.cos(theta);
+    const y = cy + r * Math.sin(theta);
+    d += `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+  }
+  return `${d}Z`;
+}
+
+const COOKIE_OUTER_PATH = buildScallopedCookiePath(68, 68, 60, 4.5, 12, 144);
+const COOKIE_INNER_PATH = buildScallopedCookiePath(34, 34, 30.5, 2.8, 12, 144);
+
 @customElement('m3e-status-card')
 export class M3EStatusCard extends LitElement {
   @property({ attribute: false }) public hass?: HomeAssistant;
@@ -167,6 +219,14 @@ export class M3EStatusCard extends LitElement {
   @state() private _volDragging = false;
   @state() private _volPct: number | null = null;
   private _volPendingTimer: number | null = null;
+
+  // Portainer Container action confirmation, busy feedback, and clipboard state
+  @state() private _armedContainerAction: 'recreate' | 'kill' | null = null;
+  @state() private _busyContainerAction: string | null = null;
+  @state() private _copiedImage = false;
+  private _armedContainerTimer: number | null = null;
+  private _busyContainerTimer: number | null = null;
+  private _copiedImageTimer: number | null = null;
 
   @state() private _featuresLoaded = false;
   @state() private _artPalette: ArtworkPalette | null = null;
@@ -257,10 +317,29 @@ export class M3EStatusCard extends LitElement {
     });
     this._clearLongPress();
     this._clearPadTimers();
+    this._clearContainerTimers();
     if (this._relativeTimer !== null) {
       window.clearInterval(this._relativeTimer);
       this._relativeTimer = null;
     }
+  }
+
+  private _clearContainerTimers(): void {
+    if (this._armedContainerTimer !== null) {
+      window.clearTimeout(this._armedContainerTimer);
+      this._armedContainerTimer = null;
+    }
+    if (this._busyContainerTimer !== null) {
+      window.clearTimeout(this._busyContainerTimer);
+      this._busyContainerTimer = null;
+    }
+    if (this._copiedImageTimer !== null) {
+      window.clearTimeout(this._copiedImageTimer);
+      this._copiedImageTimer = null;
+    }
+    this._armedContainerAction = null;
+    this._busyContainerAction = null;
+    this._copiedImage = false;
   }
 
   private _syncRelativeTimer(): void {
@@ -311,6 +390,9 @@ export class M3EStatusCard extends LitElement {
       changedProps.has('_remoteSelectorSheet') ||
       changedProps.has('_volDragging') ||
       changedProps.has('_volPct') ||
+      changedProps.has('_armedContainerAction') ||
+      changedProps.has('_busyContainerAction') ||
+      changedProps.has('_copiedImage') ||
       changedProps.has('_relativeTick') ||
       changedProps.has('_featuresLoaded') ||
       changedProps.has('_artPalette') ||
@@ -336,6 +418,9 @@ export class M3EStatusCard extends LitElement {
         ...this._getSiblingEntityIds(),
         ...(this._resolvedPopupType === 'power_strip'
           ? this._getPowerStripEntities().map((e) => e.entity_id)
+          : []),
+        ...(this._resolvedPopupType === 'container'
+          ? this._discoverContainerDevice().allIds
           : []),
       ].filter(Boolean) as string[];
 
@@ -477,6 +562,225 @@ export class M3EStatusCard extends LitElement {
     return this.hass.states[this._config.outdoor_entity];
   }
 
+  private _discoverContainerDevice(): ContainerDeviceEntities {
+    const out: ContainerDeviceEntities = { allIds: [] };
+    if (!this.hass || !this._config) return out;
+
+    const seen = new Set<string>();
+    const candidates: HassEntity[] = [];
+    const pushId = (id?: string) => {
+      if (!id || seen.has(id)) return;
+      seen.add(id);
+      const st = this.hass?.states[id];
+      if (st) {
+        candidates.push(st);
+        out.allIds.push(id);
+      }
+    };
+
+    pushId(this._config.entity);
+    pushId(this._config.status_entity);
+    for (const extra of (this._config.extra_entities ?? []).slice(0, 20)) {
+      pushId(extra);
+    }
+
+    const deviceId = this.hass.entities?.[this._config.entity]?.device_id;
+    if (deviceId && this.hass.entities) {
+      for (const [eid, entry] of Object.entries(this.hass.entities)) {
+        if (entry.device_id === deviceId) {
+          pushId(eid);
+        }
+      }
+
+      // Portainer Stack -> child Container devices linked via `via_device_id`
+      if (
+        this.hass.devices &&
+        this.hass.devices[deviceId]?.model?.toLowerCase() !== 'endpoint'
+      ) {
+        const stackDev = this.hass.devices[deviceId];
+        const stackName = String(stackDev?.name_by_user ?? stackDev?.name ?? '')
+          .trim()
+          .toLowerCase();
+        const childDevices = Object.values(this.hass.devices).filter(
+          (dev) => dev.via_device_id === deviceId,
+        );
+        childDevices.sort((a, b) => {
+          const an = String(a.name_by_user ?? a.name ?? '').toLowerCase();
+          const bn = String(b.name_by_user ?? b.name ?? '').toLowerCase();
+          const aExact = stackName && an === stackName ? 0 : stackName && an.startsWith(stackName) ? 1 : 2;
+          const bExact = stackName && bn === stackName ? 0 : stackName && bn.startsWith(stackName) ? 1 : 2;
+          return aExact !== bExact ? aExact - bExact : an.localeCompare(bn);
+        });
+        for (const child of childDevices) {
+          for (const [eid, entry] of Object.entries(this.hass.entities)) {
+            if (entry.device_id === child.id) {
+              pushId(eid);
+            }
+          }
+        }
+      }
+    }
+
+    // Prefix fallback if connected via `switch.*_stack` without linked child device registry metadata
+    const hasContainerCandidate = candidates.some((ent) => {
+      const low = `${ent.entity_id} ${ent.attributes.friendly_name ?? ''}`.toLowerCase();
+      return (
+        low.includes('cpu') ||
+        low.includes('memory_usage') ||
+        low.includes('utilizzo_della_memoria') ||
+        low.includes('recreate') ||
+        low.includes('kill') ||
+        low.includes('restart') ||
+        low.includes('riavvia') ||
+        low.includes('image_version')
+      );
+    });
+    const isStackEntity =
+      /_stack$/i.test(this._config.entity) ||
+      candidates.some((ent) => {
+        const eid = ent.entity_id.toLowerCase();
+        return eid.endsWith('_containers') || eid.endsWith('_update_stack');
+      });
+    if (!hasContainerCandidate && isStackEntity) {
+      const base = this._config.entity
+        .replace(/^[^.]+\./, '')
+        .replace(/_stack$/i, '')
+        .toLowerCase();
+      const allowedDomains = new Set([
+        'sensor',
+        'binary_sensor',
+        'button',
+        'update',
+        'event',
+        'switch',
+      ]);
+      for (const eid of Object.keys(this.hass.states)) {
+        const dot = eid.indexOf('.');
+        if (dot <= 0) continue;
+        const dom = eid.slice(0, dot);
+        const obj = eid.slice(dot + 1).toLowerCase();
+        if (allowedDomains.has(dom) && obj.startsWith(`${base}_`)) {
+          pushId(eid);
+        }
+      }
+    }
+
+    const pickBetterStatus = (cur: HassEntity | undefined, next: HassEntity): HassEntity => {
+      if (!cur) return next;
+      const curLow = String(cur.state ?? '').toLowerCase();
+      const nextLow = String(next.state ?? '').toLowerCase();
+      if ((curLow === 'unknown' || curLow === 'unavailable') && nextLow !== 'unknown' && nextLow !== 'unavailable') {
+        return next;
+      }
+      return cur;
+    };
+
+    for (const ent of candidates) {
+      const eid = ent.entity_id.toLowerCase();
+      const domain = eid.split('.')[0];
+      const fn = String(ent.attributes.friendly_name ?? '').toLowerCase();
+      const hay = `${eid} ${fn}`;
+
+      if (domain === 'switch') {
+        if (ent.entity_id === this._config.entity) {
+          out.powerSwitch = ent;
+        } else if (
+          !out.powerSwitch ||
+          (out.powerSwitch.entity_id !== this._config.entity &&
+            (hay.includes('container') || hay.includes('contenitore')))
+        ) {
+          out.powerSwitch = ent;
+        }
+      } else if (domain === 'update') {
+        out.update ??= ent;
+        (out.allUpdate ??= []).push(ent);
+      } else if (domain === 'event') {
+        if (hay.includes('docker')) {
+          out.dockerEvent ??= ent;
+        }
+      } else if (domain === 'binary_sensor') {
+        if (
+          hay.includes('out_of_memory') ||
+          hay.includes('out of memory') ||
+          hay.includes('oom')
+        ) {
+          out.oom ??= ent;
+          (out.allOom ??= []).push(ent);
+        }
+      } else if (domain === 'button') {
+        if (hay.includes('recreate') || hay.includes('ricrea')) {
+          out.btnRecreate ??= ent;
+        } else if (hay.includes('kill') || hay.includes('termina')) {
+          out.btnKill ??= ent;
+        } else if (hay.includes('resume') || hay.includes('riprendi')) {
+          out.btnResume ??= ent;
+        } else if (hay.includes('pause') || hay.includes('pausa')) {
+          out.btnPause ??= ent;
+        } else if (hay.includes('restart') || hay.includes('riavvia')) {
+          out.btnRestart ??= ent;
+        }
+      } else if (domain === 'sensor') {
+        const uom = String(ent.attributes.unit_of_measurement ?? '').trim().toLowerCase();
+        if (
+          hay.includes('image_version') ||
+          hay.includes('image version') ||
+          hay.includes('versione')
+        ) {
+          out.imageVersion ??= ent;
+        } else if (hay.includes('image_created') || hay.includes('image created')) {
+          out.imageCreated ??= ent;
+        } else if (
+          (hay.includes('image') || hay.includes('immagine')) &&
+          !hay.includes('version') &&
+          !hay.includes('created') &&
+          !hay.includes('update')
+        ) {
+          out.image ??= ent;
+        } else if (
+          hay.includes('restart_count') ||
+          hay.includes('restart count') ||
+          hay.includes('riavvii')
+        ) {
+          out.restartCount ??= ent;
+          (out.allRestartCount ??= []).push(ent);
+        } else if (hay.includes('started') || hay.includes('avviato')) {
+          out.started ??= ent;
+        } else if (hay.includes('cpu')) {
+          out.cpuPct ??= ent;
+          (out.allCpuPct ??= []).push(ent);
+        } else if (
+          hay.includes('memory_limit') ||
+          hay.includes('memory limit') ||
+          hay.includes('limite_di_memoria') ||
+          hay.includes('limite di memoria')
+        ) {
+          out.memLimit ??= ent;
+          (out.allMemLimit ??= []).push(ent);
+        } else if (
+          hay.includes('memory_percentage') ||
+          hay.includes('percentuale di utilizzo della memoria') ||
+          hay.includes('percentuale_di_utilizzo_della_memoria') ||
+          (uom === '%' && (hay.includes('mem') || hay.includes('ram')))
+        ) {
+          out.memPct ??= ent;
+        } else if (
+          (hay.includes('memory_usage') ||
+            hay.includes('memory usage') ||
+            hay.includes('utilizzo_della_memoria') ||
+            hay.includes('utilizzo della memoria')) &&
+          uom !== '%'
+        ) {
+          out.memUsed ??= ent;
+          (out.allMemUsed ??= []).push(ent);
+        } else if (hay.includes('status') || hay.includes('stato')) {
+          out.status = pickBetterStatus(out.status, ent);
+        }
+      }
+    }
+
+    return out;
+  }
+
   private get _resolvedPopupType(): Exclude<M3EStatusPopupType, 'auto'> {
     const cfg = this._config?.popup_type ?? 'auto';
     if (cfg !== 'auto') return cfg;
@@ -489,6 +793,16 @@ export class M3EStatusCard extends LitElement {
       const media = this._mediaEntity;
       if (media && media.entity_id.startsWith('media_player.')) return 'media';
       return 'remote';
+    }
+    const container = this._discoverContainerDevice();
+    if (
+      container.btnRecreate ||
+      container.btnKill ||
+      container.imageVersion ||
+      container.dockerEvent ||
+      (container.cpuPct && container.memUsed && container.btnRestart)
+    ) {
+      return 'container';
     }
     return 'sensor';
   }
@@ -553,6 +867,17 @@ export class M3EStatusCard extends LitElement {
       const outlets = this._getPowerStripEntities();
       if (outlets.length > 0) {
         return outlets.some((o) => o.state === 'on');
+      }
+    }
+
+    if (this._resolvedPopupType === 'container' && !this._config?.active_state?.trim()) {
+      const container = this._discoverContainerDevice();
+      const stLow = String(container.status?.state ?? '').toLowerCase();
+      if (stLow && stLow !== 'unavailable' && stLow !== 'unknown') {
+        return stLow === 'running';
+      }
+      if (container.powerSwitch) {
+        return container.powerSwitch.state === 'on';
       }
     }
 
@@ -784,6 +1109,7 @@ export class M3EStatusCard extends LitElement {
     const tileRect = originRect ?? this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
     this._remoteSelectorSheet = null;
+    this._clearContainerTimers();
     this._popupOpen = true;
     await this.updateComplete;
 
@@ -800,6 +1126,7 @@ export class M3EStatusCard extends LitElement {
         this._popupOpen = false;
         this._activeSheet = null;
         this._remoteSelectorSheet = null;
+        this._clearContainerTimers();
       },
     });
   }
@@ -809,6 +1136,7 @@ export class M3EStatusCard extends LitElement {
       this._popupOpen = false;
       this._activeSheet = null;
       this._remoteSelectorSheet = null;
+      this._clearContainerTimers();
     });
   }
 
@@ -2376,6 +2704,830 @@ export class M3EStatusCard extends LitElement {
     `;
   }
 
+  private _pressContainerButton(
+    ent: HassEntity | undefined,
+    actionKey: string,
+    requiresArm?: 'recreate' | 'kill',
+  ): void {
+    if (!this.hass || !ent) return;
+    const raw = String(ent.state ?? '').toLowerCase();
+    const isButton = ent.entity_id.startsWith('button.');
+    if (raw === 'unavailable' || (!isButton && raw === 'unknown')) return;
+
+    if (requiresArm) {
+      if (this._armedContainerAction !== requiresArm) {
+        navigator.vibrate?.(10);
+        this._armedContainerAction = requiresArm;
+        if (this._armedContainerTimer !== null) {
+          window.clearTimeout(this._armedContainerTimer);
+        }
+        this._armedContainerTimer = window.setTimeout(() => {
+          this._armedContainerAction = null;
+          this._armedContainerTimer = null;
+        }, 3500);
+        return;
+      }
+      if (this._armedContainerTimer !== null) {
+        window.clearTimeout(this._armedContainerTimer);
+        this._armedContainerTimer = null;
+      }
+      this._armedContainerAction = null;
+    }
+
+    navigator.vibrate?.(8);
+    this._busyContainerAction = actionKey;
+    if (this._busyContainerTimer !== null) {
+      window.clearTimeout(this._busyContainerTimer);
+    }
+    this._busyContainerTimer = window.setTimeout(() => {
+      this._busyContainerAction = null;
+      this._busyContainerTimer = null;
+    }, 900);
+
+    const domain = ent.entity_id.split('.')[0] || 'button';
+    if (domain === 'switch') {
+      this.hass.callService('switch', 'turn_off', { entity_id: ent.entity_id });
+    } else {
+      this.hass.callService(domain, 'press', { entity_id: ent.entity_id });
+    }
+  }
+
+  private _copyContainerImage(text: string): void {
+    if (!text) return;
+    const finishCopy = () => {
+      navigator.vibrate?.(6);
+      this._copiedImage = true;
+      if (this._copiedImageTimer !== null) {
+        window.clearTimeout(this._copiedImageTimer);
+      }
+      this._copiedImageTimer = window.setTimeout(() => {
+        this._copiedImage = false;
+        this._copiedImageTimer = null;
+      }, 2000);
+    };
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(finishCopy).catch(() => {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        } catch {
+          // ignore fallback error
+        }
+        finishCopy();
+      });
+    } else {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {
+        // ignore fallback error
+      }
+      finishCopy();
+    }
+  }
+
+  private _renderContainerHeroIcon(iconName?: string) {
+    const resolved =
+      iconName ||
+      this._config?.icon_active ||
+      this._config?.icon ||
+      String(this._entity?.attributes.icon ?? '');
+    if (resolved && typeof customElements !== 'undefined' && customElements.get('ha-icon')) {
+      return html`<ha-icon .icon=${resolved}></ha-icon>`;
+    }
+    if (
+      this._config?.use_entity_icon &&
+      this._entity &&
+      typeof customElements !== 'undefined' &&
+      customElements.get('ha-state-icon')
+    ) {
+      return html`<ha-state-icon .hass=${this.hass} .stateObj=${this._entity}></ha-state-icon>`;
+    }
+    const hint = `${resolved} ${this._entity?.entity_id ?? ''}`.toLowerCase();
+    if (hint.includes('home-assistant') || hint.includes('home_assistant') || hint.includes('hass')) {
+      return html`
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 2.4 2.6 11.4a.8.8 0 0 0 .55 1.38H5v7.42c0 .66.54 1.2 1.2 1.2h4.2v-5.3l-2.3-2.3a1.55 1.55 0 1 1 1.06-1.06L11.2 14.8v-4.95a1.55 1.55 0 1 1 1.6 0v3.5l2.15-2.15a1.55 1.55 0 1 1 1.06 1.06L12.8 15.5v5.9h5a1.2 1.2 0 0 0 1.2-1.2v-7.42h1.85a.8.8 0 0 0 .55-1.38L12 2.4Z"
+          />
+        </svg>
+      `;
+    }
+    return html`
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M21.81 10.25c-.06-.04-.56-.43-1.64-.43-.28 0-.56.03-.84.08-.21-1.4-1.38-2.11-1.43-2.14l-.28-.17-.18.27c-.24.36-.41.77-.51 1.2-.22.92-.09 1.79.35 2.53-.51.29-1.33.36-1.5.37H2.27l-.07.38c-.17.99-.12 2 .27 2.95.67 1.63 1.7 2.86 3.07 3.66 1.37.8 3.04 1.15 4.86 1.04 2.18-.13 4.2-.88 5.83-2.17 1.22-.97 2.2-2.25 2.84-3.71h.25c1.56 0 2.52-.62 3.06-1.15.35-.35.62-.76.8-1.22l.11-.29-.38-.2Zm-16.25.57h1.95V8.93H5.56v1.89Zm2.52 0h1.95V8.93H8.08v1.89Zm2.53 0h1.95V8.93h-1.95v1.89Zm2.53 0h1.95V8.93h-1.95v1.89Zm-2.53-2.46h1.95V6.47h-1.95v1.89ZM8.08 8.36h1.95V6.47H8.08v1.89Zm5.06 0h1.95V6.47h-1.95v1.89ZM10.61 5.9h1.95V4h-1.95v1.9Zm-5.05 9.1c-.45 0-.81.36-.81.81 0 .44.36.8.81.8s.8-.36.8-.8c0-.45-.36-.81-.8-.81Z"
+        />
+      </svg>
+    `;
+  }
+
+  private _formatContainerTimestamp(ent: HassEntity | undefined): string {
+    if (!ent) return '—';
+    const raw = String(ent.state ?? '').trim();
+    const low = raw.toLowerCase();
+    if (!raw || low === 'unavailable' || low === 'unknown') return 'Offline';
+    const rel = formatRelativeTimestamp(raw, this.hass);
+    return rel ?? raw;
+  }
+
+  private _formatContainerNumber(raw: string | undefined, decimals = 1): number | null {
+    if (!raw) return null;
+    const cleaned = raw.replace(/,/g, '').trim();
+    const n = Number(cleaned);
+    if (!Number.isFinite(n)) return null;
+    return Number(n.toFixed(decimals));
+  }
+
+  private _renderContainerPopup(icon?: string) {
+    const c = this._discoverContainerDevice();
+    const isIt = String(this.hass?.language ?? '').toLowerCase().startsWith('it');
+    const containerName = resolveEntityName(
+      this.hass,
+      this._entity,
+      this._config?.name,
+      this._config?.entity,
+    );
+
+    const rawStatus = String(
+      c.status?.state ?? (c.powerSwitch?.state === 'on' ? 'running' : 'stopped'),
+    ).trim();
+    const statusLow = rawStatus.toLowerCase();
+    const isRunning = statusLow === 'running';
+    const isPaused = statusLow === 'paused';
+    const isError =
+      statusLow === 'dead' || statusLow === 'error' || statusLow === 'restarting';
+    const isUnavailable = statusLow === 'unavailable' || statusLow === 'unknown' || !rawStatus;
+
+    const statusTone = isUnavailable
+      ? 'stopped'
+      : isError
+        ? 'error'
+        : isPaused
+          ? 'paused'
+          : isRunning
+            ? 'running'
+            : 'stopped';
+
+    const statusText = isUnavailable
+      ? 'Offline'
+      : isRunning
+        ? isIt
+          ? 'In esecuzione'
+          : 'Running'
+        : isPaused
+          ? isIt
+            ? 'In pausa'
+            : 'Paused'
+          : statusLow === 'exited' || statusLow === 'stopped' || statusLow === 'off'
+            ? isIt
+              ? 'Fermo'
+              : 'Stopped'
+            : rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+
+    const startedRel = c.started ? this._formatContainerTimestamp(c.started) : '';
+    const startedValid = Boolean(startedRel && startedRel !== '—' && startedRel !== 'Offline');
+    const stoppedRelRaw =
+      !isRunning && !isPaused && !isUnavailable && c.status?.last_changed
+        ? formatRelativeTimestamp(c.status.last_changed, this.hass)
+        : null;
+    const syntheticStatusLine = isRunning
+      ? startedValid
+        ? `${statusText} · ${isIt ? 'Avviato' : 'Started'} ${startedRel}`
+        : statusText
+      : !isPaused && !isUnavailable && stoppedRelRaw
+        ? isIt
+          ? `${statusText} · Arrestato ${stoppedRelRaw}`
+          : `${statusText} · ${stoppedRelRaw}`
+        : statusText;
+
+    const updateOn = Boolean(
+      c.allUpdate?.some((e) => e.state === 'on') || c.update?.state === 'on',
+    );
+    const versionStr = String(
+      c.update?.attributes.installed_version ?? c.imageVersion?.state ?? '',
+    ).trim();
+    const latestStr = String(c.update?.attributes.latest_version ?? '').trim();
+    const versionValid =
+      Boolean(versionStr) &&
+      versionStr.toLowerCase() !== 'unknown' &&
+      versionStr.toLowerCase() !== 'unavailable';
+
+    const oomOn = Boolean(c.allOom?.some((e) => e.state === 'on') || c.oom?.state === 'on');
+
+    const sumMetric = (
+      list: HassEntity[] | undefined,
+      single: HassEntity | undefined,
+      decimals = 1,
+    ): number | null => {
+      if ((list?.length ?? 0) > 1) {
+        let total = 0;
+        let count = 0;
+        for (const item of list!) {
+          const val = this._formatContainerNumber(item.state, 3);
+          if (val !== null) {
+            total += val;
+            count++;
+          }
+        }
+        return count > 0 ? Number(total.toFixed(decimals)) : null;
+      }
+      return this._formatContainerNumber(single?.state, decimals);
+    };
+
+    // CPU & RAM percentages + GB/MB subtext (supports single container and multi-container stacks)
+    const rawCpuNum = sumMetric(c.allCpuPct, c.cpuPct, 1);
+    const cpuNum =
+      rawCpuNum !== null ? Number(Math.max(0, Math.min(100, rawCpuNum)).toFixed(1)) : null;
+    const cpuPctClamped = cpuNum !== null ? cpuNum : 0;
+
+    const memUsedNum = sumMetric(c.allMemUsed, c.memUsed, 1);
+    let memLimitNum = this._formatContainerNumber(c.memLimit?.state, 1);
+    if ((c.allMemLimit?.length ?? 0) > 1) {
+      let maxLim = -Infinity;
+      for (const item of c.allMemLimit!) {
+        const val = this._formatContainerNumber(item.state, 1);
+        if (val !== null && val > maxLim) maxLim = val;
+      }
+      if (Number.isFinite(maxLim) && maxLim > -Infinity) memLimitNum = maxLim;
+    }
+
+    let memPctNum =
+      (c.allMemUsed?.length ?? 0) > 1 &&
+      memUsedNum !== null &&
+      memLimitNum !== null &&
+      memLimitNum > 0
+        ? Number(((memUsedNum / memLimitNum) * 100).toFixed(1))
+        : this._formatContainerNumber(c.memPct?.state, 1);
+    if (memPctNum === null && memUsedNum !== null && memLimitNum !== null && memLimitNum > 0) {
+      memPctNum = Number(((memUsedNum / memLimitNum) * 100).toFixed(1));
+    }
+    const memPctClamped = memPctNum !== null ? Math.max(0, Math.min(100, memPctNum)) : 0;
+
+    const rawMemUnit = String(
+      c.memUsed?.attributes.unit_of_measurement ??
+        c.memLimit?.attributes.unit_of_measurement ??
+        'MB',
+    ).trim();
+    const useGb =
+      (rawMemUnit.toUpperCase() === 'MB' || rawMemUnit.toUpperCase() === 'MIB') &&
+      ((memLimitNum ?? 0) >= 1024 || (memUsedNum ?? 0) >= 1024);
+    const fmtMemVal = (n: number) => (useGb ? (n / 1024).toFixed(1) : n.toFixed(n >= 100 ? 0 : 1));
+    const displayMemUnit = useGb ? 'GB' : rawMemUnit;
+    const memSubtext =
+      memUsedNum !== null && memLimitNum !== null
+        ? `${fmtMemVal(memUsedNum)} / ${fmtMemVal(memLimitNum)} ${displayMemUnit}`
+        : memUsedNum !== null
+          ? `${fmtMemVal(memUsedNum)} ${displayMemUnit}`
+          : '';
+
+    const getRingTone = (pct: number, hasVal: boolean, forceError = false) => {
+      if (isUnavailable || !hasVal || (!isRunning && !isPaused && pct === 0)) return 'muted';
+      if (forceError || pct >= 85) return 'error';
+      if (pct >= 60) return 'warn';
+      return 'normal';
+    };
+    const cpuTone = getRingTone(cpuPctClamped, cpuNum !== null);
+    const memTone = getRingTone(memPctClamped, memPctNum !== null || memUsedNum !== null, oomOn);
+
+    const ringCirc = 2 * Math.PI * 40;
+    const ringOffset = (pct: number) => (ringCirc * (1 - pct / 100)).toFixed(2);
+
+    // Actions resolution
+    const btnAvail = (b?: HassEntity) =>
+      Boolean(b && b.state !== 'unavailable' && (b.entity_id.startsWith('button.') || b.state !== 'unknown'));
+    const isStoppedState = !isRunning && !isPaused;
+    const showStart = isStoppedState && btnAvail(c.powerSwitch);
+    const startOrRestartDisabled = isUnavailable || (showStart ? false : !btnAvail(c.btnRestart));
+
+    const useResume = isPaused || (!btnAvail(c.btnPause) && btnAvail(c.btnResume));
+    const pauseResumeEnt = useResume ? c.btnResume ?? c.btnPause : c.btnPause ?? c.btnResume;
+    const pauseResumeDisabled = isUnavailable || !btnAvail(pauseResumeEnt);
+
+    const recreateDisabled = isUnavailable || !btnAvail(c.btnRecreate);
+    const stopKillEnt = btnAvail(c.btnKill) ? c.btnKill : c.powerSwitch;
+    const stopKillDisabled =
+      isUnavailable ||
+      !stopKillEnt ||
+      (stopKillEnt.entity_id.startsWith('switch.')
+        ? stopKillEnt.state !== 'on'
+        : !btnAvail(stopKillEnt));
+
+    const imageStr = String(c.image?.state ?? '').trim();
+    const restartSum = sumMetric(c.allRestartCount, c.restartCount, 0);
+    const restartNum = restartSum !== null ? restartSum : Number(c.restartCount?.state ?? NaN);
+    const restartHigh = Number.isFinite(restartNum) && restartNum > 0;
+    const restartDisplay = Number.isFinite(restartNum)
+      ? String(restartNum)
+      : String(c.restartCount?.state ?? '0');
+    const dockerEventRaw = String(c.dockerEvent?.state ?? '').trim();
+    const showDockerEvent =
+      Boolean(c.dockerEvent) &&
+      dockerEventRaw !== '' &&
+      dockerEventRaw.toLowerCase() !== 'unknown' &&
+      dockerEventRaw.toLowerCase() !== 'unavailable';
+
+    const usedInStructured = new Set<string>(
+      [
+        c.powerSwitch?.entity_id,
+        c.status?.entity_id,
+        c.image?.entity_id,
+        c.imageVersion?.entity_id,
+        c.imageCreated?.entity_id,
+        c.started?.entity_id,
+        c.restartCount?.entity_id,
+        c.cpuPct?.entity_id,
+        c.memPct?.entity_id,
+        c.memUsed?.entity_id,
+        c.memLimit?.entity_id,
+        c.oom?.entity_id,
+        c.update?.entity_id,
+        c.dockerEvent?.entity_id,
+        c.btnRestart?.entity_id,
+        c.btnPause?.entity_id,
+        c.btnResume?.entity_id,
+        c.btnRecreate?.entity_id,
+        c.btnKill?.entity_id,
+      ].filter(Boolean) as string[],
+    );
+
+    const extraRows = (this._config?.extra_entities ?? [])
+      .map((id) => this.hass?.states[id])
+      .filter((st): st is HassEntity => Boolean(st && !usedInStructured.has(st.entity_id)));
+
+    const footerMetaSegments = [
+      c.imageCreated
+        ? html`<span class="c-footer-seg"
+            >${isIt ? 'Immagine creata' : 'Image created'}
+            ${this._formatContainerTimestamp(c.imageCreated)}</span
+          >`
+        : null,
+      c.restartCount
+        ? html`<span class="c-footer-seg ${restartHigh ? 'is-error-txt' : ''}"
+            >${isIt ? 'Riavvii' : 'Restarts'}: ${restartDisplay}</span
+          >`
+        : null,
+      c.oom
+        ? html`<span class="c-footer-seg ${oomOn ? 'is-error-txt' : ''}"
+            >${oomOn
+              ? isIt
+                ? 'OOM rilevato'
+                : 'OOM detected'
+              : isIt
+                ? 'Memoria OK'
+                : 'Memory OK'}</span
+          >`
+        : null,
+      showDockerEvent ? html`<span class="c-footer-seg">${dockerEventRaw}</span>` : null,
+      ...extraRows.map(
+        (ext) => html`
+          <button
+            type="button"
+            class="c-footer-extra-btn"
+            @click=${() => this._openEntityMoreInfo(ext.entity_id)}
+          >
+            ${this._cleanSiblingLabel(ext)}: ${ext.state}${ext.attributes.unit_of_measurement ?? ''}
+          </button>
+        `,
+      ),
+    ].filter((s): s is NonNullable<typeof s> => Boolean(s));
+
+    return html`
+      <div class="container-popup">
+        <!-- 1. Find My Device Style Radar Hero (Cookie-12 Scalloped Rings) -->
+        <div class="c-hero">
+          <button
+            type="button"
+            class="c-radar-stage is-${statusTone}"
+            aria-label=${`${containerName}: ${syntheticStatusLine}`}
+            @click=${() =>
+              (c.status ?? c.powerSwitch) &&
+              this._openEntityMoreInfo((c.status ?? c.powerSwitch)!.entity_id)}
+          >
+            <svg class="c-radar-outer-svg" viewBox="0 0 136 136" aria-hidden="true">
+              <path
+                class="c-radar-outer-path"
+                d=${COOKIE_OUTER_PATH}
+                fill="none"
+                stroke-width="2.5"
+              />
+            </svg>
+
+            <svg class="c-radar-wave-svg" viewBox="0 0 136 136" aria-hidden="true">
+              <path
+                class="c-radar-wave-path"
+                d=${COOKIE_OUTER_PATH}
+                fill="none"
+                stroke-width="2.5"
+              />
+            </svg>
+
+            <div class="c-radar-core-wrap">
+              <svg class="c-radar-core-svg" viewBox="0 0 68 68" aria-hidden="true">
+                <path class="c-radar-core-path" d=${COOKIE_INNER_PATH} />
+              </svg>
+              <div class="c-radar-icon" aria-hidden="true">
+                ${this._renderContainerHeroIcon(icon)}
+              </div>
+            </div>
+          </button>
+
+          <div class="c-hero-text">
+            <h2 class="c-hero-title">${containerName}</h2>
+            <p class="c-hero-subtitle">${syntheticStatusLine}</p>
+          </div>
+        </div>
+
+        <!-- 2. Continuous 360° Load-Colored Telemetry Rings (CPU & RAM) -->
+        ${c.cpuPct || c.memPct || c.memUsed
+          ? html`
+              <div class="c-rings-row">
+                ${c.cpuPct
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-ring-widget is-${cpuTone}"
+                        @click=${() => c.cpuPct && this._openEntityMoreInfo(c.cpuPct.entity_id)}
+                      >
+                        <div class="c-ring-svg-wrap">
+                          <svg class="c-ring-svg" viewBox="0 0 92 92" aria-hidden="true">
+                            <circle
+                              class="c-ring-track"
+                              cx="46"
+                              cy="46"
+                              r="40"
+                              fill="none"
+                              stroke-width="6"
+                            />
+                            <circle
+                              class="c-ring-arc ${cpuPctClamped <= 0 ? 'is-empty' : ''}"
+                              cx="46"
+                              cy="46"
+                              r="40"
+                              fill="none"
+                              stroke-width="6"
+                              stroke-linecap="round"
+                              transform="rotate(-90 46 46)"
+                              stroke-dasharray=${ringCirc.toFixed(2)}
+                              stroke-dashoffset=${ringOffset(cpuPctClamped)}
+                            />
+                          </svg>
+                          <div class="c-ring-center" aria-hidden="true">
+                            <svg class="c-ring-duotone" viewBox="0 0 32 32">
+                              <rect
+                                x="8"
+                                y="8"
+                                width="16"
+                                height="16"
+                                rx="4"
+                                class="c-duo-plate"
+                              />
+                              <path
+                                class="c-duo-pins"
+                                d="M12 4v3m4-3v3m4-3v3M12 25v3m4-3v3m4-3v3M4 12h3m-3 4h3m-3 4h3M25 12h3m-3 4h3m-3 4h3"
+                              />
+                              <rect
+                                x="12.5"
+                                y="12.5"
+                                width="7"
+                                height="7"
+                                rx="1.5"
+                                class="c-duo-core"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <span class="c-ring-label">
+                          CPU: ${cpuNum !== null ? `${cpuNum}%` : '—'}
+                        </span>
+                      </button>
+                    `
+                  : nothing}
+
+                ${c.memPct || c.memUsed
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-ring-widget is-${memTone}"
+                        @click=${() => {
+                          const target = c.memUsed ?? c.memPct;
+                          if (target) this._openEntityMoreInfo(target.entity_id);
+                        }}
+                      >
+                        <div class="c-ring-svg-wrap">
+                          <svg class="c-ring-svg" viewBox="0 0 92 92" aria-hidden="true">
+                            <circle
+                              class="c-ring-track"
+                              cx="46"
+                              cy="46"
+                              r="40"
+                              fill="none"
+                              stroke-width="6"
+                            />
+                            <circle
+                              class="c-ring-arc ${memPctClamped <= 0 ? 'is-empty' : ''}"
+                              cx="46"
+                              cy="46"
+                              r="40"
+                              fill="none"
+                              stroke-width="6"
+                              stroke-linecap="round"
+                              transform="rotate(-90 46 46)"
+                              stroke-dasharray=${ringCirc.toFixed(2)}
+                              stroke-dashoffset=${ringOffset(memPctClamped)}
+                            />
+                          </svg>
+                          <div class="c-ring-center" aria-hidden="true">
+                            <svg class="c-ring-duotone" viewBox="0 0 32 32">
+                              <rect
+                                x="4.5"
+                                y="9"
+                                width="23"
+                                height="12.5"
+                                rx="2.5"
+                                class="c-duo-plate"
+                              />
+                              <rect x="7.5" y="12" width="4" height="6.5" rx="1" class="c-duo-core" />
+                              <rect x="14" y="12" width="4" height="6.5" rx="1" class="c-duo-core" />
+                              <rect x="20.5" y="12" width="4" height="6.5" rx="1" class="c-duo-core" />
+                              <path
+                                class="c-duo-pins"
+                                d="M8 21.5v3m4-3v3m8-3v3m4-3v3"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <span class="c-ring-label">
+                          RAM:
+                          ${memPctNum !== null
+                            ? `${memPctNum}%`
+                            : memUsedNum !== null
+                              ? `${fmtMemVal(memUsedNum)} ${displayMemUnit}`
+                              : '—'}
+                        </span>
+                        ${memSubtext
+                          ? html`<span class="c-ring-sublabel">${memSubtext}</span>`
+                          : nothing}
+                      </button>
+                    `
+                  : nothing}
+              </div>
+            `
+          : nothing}
+
+        <!-- 3. Pixel Buds Compact Oval Action Buttons (4-slot Horizontal Dock) -->
+        ${c.powerSwitch || c.btnRestart || c.btnPause || c.btnResume || c.btnRecreate || c.btnKill
+          ? html`
+              <div class="c-action-dock">
+                ${c.powerSwitch || c.btnRestart
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-act-item ${this._busyContainerAction === 'restart' ? 'is-busy' : ''}"
+                        ?disabled=${startOrRestartDisabled}
+                        @click=${() =>
+                          showStart
+                            ? c.powerSwitch && this._togglePowerEntity(c.powerSwitch)
+                            : this._pressContainerButton(c.btnRestart, 'restart')}
+                      >
+                        <span class="c-act-pill is-primary">
+                          ${showStart
+                            ? html`
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path fill="currentColor" d="M8 5v14l11-7-11-7Z" />
+                                </svg>
+                              `
+                            : html`
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path
+                                    fill="currentColor"
+                                    d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z"
+                                  />
+                                </svg>
+                              `}
+                        </span>
+                        <span class="c-act-label">
+                          ${showStart
+                            ? isIt
+                              ? 'Avvia'
+                              : 'Start'
+                            : isIt
+                              ? 'Riavvia'
+                              : 'Restart'}
+                        </span>
+                      </button>
+                    `
+                  : nothing}
+
+                ${c.btnPause || c.btnResume
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-act-item ${this._busyContainerAction === 'pause_resume' ? 'is-busy' : ''}"
+                        ?disabled=${pauseResumeDisabled}
+                        @click=${() => this._pressContainerButton(pauseResumeEnt, 'pause_resume')}
+                      >
+                        <span class="c-act-pill is-secondary">
+                          ${useResume
+                            ? html`
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path
+                                    fill="currentColor"
+                                    d="M6 19h4V5H6v14Zm6-14v14l9-7-9-7Z"
+                                  />
+                                </svg>
+                              `
+                            : html`
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                  <path fill="currentColor" d="M6 19h4V5H6v14Zm8-14v14h4V5h-4Z" />
+                                </svg>
+                              `}
+                        </span>
+                        <span class="c-act-label">
+                          ${useResume
+                            ? isIt
+                              ? 'Riprendi'
+                              : 'Resume'
+                            : isIt
+                              ? 'Pausa'
+                              : 'Pause'}
+                        </span>
+                      </button>
+                    `
+                  : nothing}
+
+                ${c.btnRecreate
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-act-item ${this._armedContainerAction === 'recreate' ? 'is-armed' : ''} ${this._busyContainerAction === 'recreate' ? 'is-busy' : ''}"
+                        ?disabled=${recreateDisabled}
+                        @click=${() =>
+                          this._pressContainerButton(c.btnRecreate, 'recreate', 'recreate')}
+                      >
+                        <span class="c-act-pill is-tertiary">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              fill="currentColor"
+                              d="m19 9 1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9Zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5Z"
+                            />
+                          </svg>
+                        </span>
+                        <span class="c-act-label">
+                          ${this._armedContainerAction === 'recreate'
+                            ? isIt
+                              ? 'Conferma?'
+                              : 'Confirm?'
+                            : isIt
+                              ? 'Ricrea'
+                              : 'Recreate'}
+                        </span>
+                      </button>
+                    `
+                  : nothing}
+
+                ${c.btnKill || c.powerSwitch
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-act-item ${this._armedContainerAction === 'kill' ? 'is-armed' : ''} ${this._busyContainerAction === 'kill' ? 'is-busy' : ''}"
+                        ?disabled=${stopKillDisabled}
+                        @click=${() => this._pressContainerButton(stopKillEnt, 'kill', 'kill')}
+                      >
+                        <span class="c-act-pill is-danger">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="currentColor" d="M7 7h10v10H7V7Z" />
+                          </svg>
+                        </span>
+                        <span class="c-act-label">
+                          ${this._armedContainerAction === 'kill'
+                            ? isIt
+                              ? 'Conferma?'
+                              : 'Confirm?'
+                            : isIt
+                              ? 'Arresta'
+                              : 'Stop'}
+                        </span>
+                      </button>
+                    `
+                  : nothing}
+              </div>
+            `
+          : nothing}
+
+        <!-- 4. Lightweight Assist Chip (Version / Update) & Minimal Typographic Footer -->
+        ${c.update || versionValid
+          ? html`
+              <div class="c-assist-wrap">
+                <button
+                  type="button"
+                  class="c-assist-chip ${updateOn ? 'is-update-available' : ''}"
+                  @click=${() => {
+                    const target = c.update ?? c.imageVersion;
+                    if (target) this._openEntityMoreInfo(target.entity_id);
+                  }}
+                >
+                  ${updateOn
+                    ? html`
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="currentColor"
+                            d="M11 19V7.83l-4.59 4.58L5 11l7-7 7 7-1.41 1.41L13 7.83V19h-2Z"
+                          />
+                        </svg>
+                      `
+                    : html`
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="currentColor"
+                            d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z"
+                          />
+                        </svg>
+                      `}
+                  <span>
+                    ${updateOn
+                      ? latestStr
+                        ? `${isIt ? 'Aggiornamento disponibile' : 'Update available'} · ${latestStr}`
+                        : isIt
+                          ? 'Aggiornamento disponibile'
+                          : 'Update available'
+                      : versionValid
+                        ? `${versionStr} · ${isIt ? 'Aggiornata' : 'Up-to-date'}`
+                        : isIt
+                          ? 'Aggiornata'
+                          : 'Up-to-date'}
+                  </span>
+                </button>
+              </div>
+            `
+          : nothing}
+
+        ${imageStr || footerMetaSegments.length > 0
+          ? html`
+              <footer class="c-footer">
+                ${imageStr
+                  ? html`
+                      <button
+                        type="button"
+                        class="c-footer-img-btn ${this._copiedImage ? 'is-copied' : ''}"
+                        title=${isIt ? 'Tocca per copiare immagine' : 'Tap to copy image'}
+                        @click=${() => this._copyContainerImage(imageStr)}
+                      >
+                        ${this._copiedImage
+                          ? html`
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z"
+                                />
+                              </svg>
+                              <span>${isIt ? 'Copiato negli appunti' : 'Copied to clipboard'}</span>
+                            `
+                          : html`
+                              <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  fill="currentColor"
+                                  d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"
+                                />
+                              </svg>
+                              <span class="c-footer-img-text">${imageStr}</span>
+                            `}
+                      </button>
+                    `
+                  : nothing}
+                ${footerMetaSegments.length > 0
+                  ? html`
+                      <div class="c-footer-meta">
+                        ${footerMetaSegments.map(
+                          (seg, i) =>
+                            html`${i > 0
+                              ? html`<span class="c-footer-dot" aria-hidden="true">·</span>`
+                              : nothing}${seg}`,
+                        )}
+                      </div>
+                    `
+                  : nothing}
+              </footer>
+            `
+          : nothing}
+      </div>
+    `;
+  }
+
   private _renderSelectorPopup() {
     const entity = this._entity;
     const rawOptions = entity?.attributes.options;
@@ -2591,12 +3743,15 @@ export class M3EStatusCard extends LitElement {
         ${this._popupOpen
           ? (() => {
               const isPowerStrip = popupType === 'power_strip';
+              const isContainer = popupType === 'container';
               const powerEnt =
                 popupType === 'sensor' || popupType === 'custom'
                   ? this._toggleablePowerEntity
                   : undefined;
               const powerStripOutlets = isPowerStrip ? this._getPowerStripEntities() : [];
-              const hasHeaderSwitch = Boolean(powerEnt) || (isPowerStrip && powerStripOutlets.length > 0);
+              const hasHeaderSwitch =
+                (!isContainer && Boolean(powerEnt)) ||
+                (isPowerStrip && powerStripOutlets.length > 0);
               const powerOn = isPowerStrip
                 ? powerStripOutlets.some((o) => o.state === 'on')
                 : powerEnt?.state === 'on';
@@ -2618,67 +3773,73 @@ export class M3EStatusCard extends LitElement {
 
               return html`
                 <div class="dialog-surface">
-                  <header class="dialog-header">
+                  <header class="dialog-header ${isContainer ? 'is-container-header' : ''}">
                     ${closeBtn}
-                    <div class="dialog-title-wrap">
-                      <span class="dialog-title">${name}</span>
-                      ${lastChanged
-                        ? html`<span class="dialog-last-changed">${lastChanged}</span>`
-                        : nothing}
-                    </div>
-                    ${hasHeaderSwitch
-                      ? html`
-                          <button
-                            type="button"
-                            class="m3-header-switch ${powerOn ? 'is-on' : ''}"
-                            role="switch"
-                            aria-checked=${String(powerOn)}
-                            aria-label=${powerOn ? 'Spegni' : 'Accendi'}
-                            @click=${() =>
-                              isPowerStrip
-                                ? this._togglePowerStripAll(!powerOn)
-                                : powerEnt && this._togglePowerEntity(powerEnt)}
-                          >
-                            <span class="m3-header-switch-thumb" aria-hidden="true"></span>
-                          </button>
-                        `
-                      : popupType === 'climate' || popupType === 'media'
-                        ? html`
-                            <button
-                              type="button"
-                              class="icon-btn"
-                              aria-label=${t(this.hass, 'history')}
-                              title=${t(this.hass, 'history_tooltip')}
-                              @click=${() =>
-                                this._openMoreInfo(
-                                  popupType === 'media' && this._mediaEntity
-                                    ? this._mediaEntity.entity_id
-                                    : this._config!.entity,
-                                  'history',
-                                )}
-                            >
-                              <svg viewBox="0 0 24 24" aria-hidden="true">
-                                <path
-                                  fill="currentColor"
-                                  d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
-                                />
-                              </svg>
-                            </button>
-                          `
-                        : nothing}
+                    ${isContainer
+                      ? nothing
+                      : html`
+                          <div class="dialog-title-wrap">
+                            <span class="dialog-title">${name}</span>
+                            ${lastChanged
+                              ? html`<span class="dialog-last-changed">${lastChanged}</span>`
+                              : nothing}
+                          </div>
+                          ${hasHeaderSwitch
+                            ? html`
+                                <button
+                                  type="button"
+                                  class="m3-header-switch ${powerOn ? 'is-on' : ''}"
+                                  role="switch"
+                                  aria-checked=${String(powerOn)}
+                                  aria-label=${powerOn ? 'Spegni' : 'Accendi'}
+                                  @click=${() =>
+                                    isPowerStrip
+                                      ? this._togglePowerStripAll(!powerOn)
+                                      : powerEnt && this._togglePowerEntity(powerEnt)}
+                                >
+                                  <span class="m3-header-switch-thumb" aria-hidden="true"></span>
+                                </button>
+                              `
+                            : popupType === 'climate' || popupType === 'media'
+                              ? html`
+                                  <button
+                                    type="button"
+                                    class="icon-btn"
+                                    aria-label=${t(this.hass, 'history')}
+                                    title=${t(this.hass, 'history_tooltip')}
+                                    @click=${() =>
+                                      this._openMoreInfo(
+                                        popupType === 'media' && this._mediaEntity
+                                          ? this._mediaEntity.entity_id
+                                          : this._config!.entity,
+                                        'history',
+                                      )}
+                                  >
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                      <path
+                                        fill="currentColor"
+                                        d="M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18Zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12Z"
+                                      />
+                                    </svg>
+                                  </button>
+                                `
+                              : nothing}
+                        `}
                   </header>
 
                   ${popupType === 'power_strip'
                     ? this._renderPowerStripPopup()
-                    : popupType === 'selector'
-                      ? this._renderSelectorPopup()
-                      : popupType === 'sensor' || popupType === 'custom'
-                        ? this._renderSensorPopup(icon)
-                        : popupType === 'climate'
-                          ? this._renderClimatePopup()
-                          : popupType === 'remote'
-                            ? this._renderRemotePopup()
-                            : this._renderMediaPopup()}
+                    : popupType === 'container'
+                      ? this._renderContainerPopup(icon)
+                      : popupType === 'selector'
+                        ? this._renderSelectorPopup()
+                        : popupType === 'sensor' || popupType === 'custom'
+                          ? this._renderSensorPopup(icon)
+                          : popupType === 'climate'
+                            ? this._renderClimatePopup()
+                            : popupType === 'remote'
+                              ? this._renderRemotePopup()
+                              : this._renderMediaPopup()}
                 </div>
               `;
             })()
@@ -4247,6 +5408,635 @@ export class M3EStatusCard extends LitElement {
         font-weight: 500;
         line-height: 16px;
         opacity: 0.78;
+      }
+
+      /* =====================================================================
+         PORTAINER / DOCKER CONTAINER POPUP (Material 3 Expressive)
+         ===================================================================== */
+      .dialog-header.is-container-header {
+        padding-bottom: 0;
+        margin-bottom: -4px;
+        min-height: 40px;
+      }
+
+      .container-popup {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 22px;
+        padding-bottom: 4px;
+      }
+
+      /* --- 1. Find My Device Radar Hero (Cookie-12 Scalloped Rings) --- */
+      .c-hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 14px;
+      }
+
+      .c-radar-stage {
+        position: relative;
+        width: 136px;
+        height: 136px;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .c-radar-stage:active {
+        transform: scale(0.96);
+      }
+
+      .c-radar-outer-svg,
+      .c-radar-wave-svg {
+        position: absolute;
+        inset: 0;
+        width: 136px;
+        height: 136px;
+        pointer-events: none;
+        transform-origin: center center;
+      }
+
+      .c-radar-outer-path {
+        stroke: var(--md-sys-color-outline-variant, #44474f);
+        transition: stroke 0.4s cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .c-radar-stage.is-running .c-radar-outer-path {
+        stroke: color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 28%, transparent);
+      }
+
+      .c-radar-stage.is-error .c-radar-outer-path {
+        stroke: color-mix(in srgb, var(--md-sys-color-error, #ffb4ab) 38%, transparent);
+      }
+
+      .c-radar-wave-svg {
+        opacity: 0;
+      }
+
+      .c-radar-wave-path {
+        stroke: color-mix(in srgb, var(--md-sys-color-primary, #b1c5ff) 42%, transparent);
+      }
+
+      .c-radar-stage.is-running .c-radar-wave-svg {
+        animation: m3e-cookie-pulse 3.2s cubic-bezier(0.2, 0, 0, 1) infinite;
+      }
+
+      .c-radar-core-wrap {
+        position: relative;
+        width: 68px;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform-origin: center center;
+        transition: transform 0.4s cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .c-radar-stage.is-running .c-radar-core-wrap {
+        transform: scale(1);
+      }
+
+      .c-radar-stage.is-stopped .c-radar-core-wrap,
+      .c-radar-stage.is-paused .c-radar-core-wrap {
+        transform: scale(0.65);
+      }
+
+      .c-radar-stage.is-error .c-radar-core-wrap {
+        transform: scale(0.88);
+      }
+
+      .c-radar-core-svg {
+        position: absolute;
+        inset: 0;
+        width: 68px;
+        height: 68px;
+        transform-origin: center center;
+        animation: m3e-cookie-spin 18s linear infinite;
+        animation-play-state: paused;
+      }
+
+      .c-radar-stage.is-running .c-radar-core-svg {
+        animation-play-state: running;
+      }
+
+      .c-radar-core-path {
+        fill: var(--md-sys-color-surface-container-highest, #34353e);
+        transition: fill 0.4s cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .c-radar-stage.is-running .c-radar-core-path {
+        fill: var(--md-sys-color-primary, #b1c5ff);
+      }
+
+      .c-radar-stage.is-error .c-radar-core-path {
+        fill: var(--md-sys-color-error-container, #93000a);
+      }
+
+      .c-radar-icon {
+        position: relative;
+        z-index: 1;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        --mdc-icon-size: 30px;
+        color: var(--md-sys-color-outline, #8e9099);
+        transition: color 0.4s cubic-bezier(0.2, 0, 0, 1);
+      }
+
+      .c-radar-icon svg,
+      .c-radar-icon ha-icon,
+      .c-radar-icon ha-state-icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      .c-radar-stage.is-running .c-radar-icon {
+        color: var(--md-sys-color-on-primary, #00285d);
+      }
+
+      .c-radar-stage.is-error .c-radar-icon {
+        color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .c-hero-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .c-hero-title {
+        margin: 0;
+        font-size: 22px;
+        line-height: 28px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+      }
+
+      .c-hero-subtitle {
+        margin: 0;
+        font-size: 14px;
+        line-height: 20px;
+        font-weight: 400;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+      }
+
+      @keyframes m3e-cookie-spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @keyframes m3e-cookie-pulse {
+        0% {
+          transform: scale(0.5);
+          opacity: 0;
+        }
+        25% {
+          opacity: 0.55;
+        }
+        100% {
+          transform: scale(1.04);
+          opacity: 0;
+        }
+      }
+
+      /* --- 2. Continuous 360° Load-Colored Telemetry Rings --- */
+      .c-rings-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 32px;
+        flex-wrap: nowrap;
+        padding: 4px 0 2px;
+      }
+
+      .c-ring-widget {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        min-width: 96px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        --c-ring-color: var(--success-color, #4CAF50);
+        transition: transform var(--m3e-spring-spatial-fast);
+      }
+
+      .c-ring-widget:active {
+        transform: scale(0.95);
+      }
+
+      .c-ring-widget.is-normal {
+        --c-ring-color: var(--success-color, #4CAF50);
+      }
+
+      .c-ring-widget.is-warn {
+        --c-ring-color: var(--warning-color, #FF9800);
+      }
+
+      .c-ring-widget.is-error {
+        --c-ring-color: var(--error-color, var(--md-sys-color-error, #F44336));
+      }
+
+      .c-ring-widget.is-muted {
+        --c-ring-color: var(--md-sys-color-surface-container-highest, #34353e);
+      }
+
+      .c-ring-svg-wrap {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .c-ring-svg {
+        position: absolute;
+        inset: 0;
+        width: 92px;
+        height: 92px;
+        overflow: visible;
+      }
+
+      .c-ring-track {
+        stroke: var(--md-sys-color-surface-container-highest, #34353e);
+      }
+
+      .c-ring-arc {
+        stroke: var(--c-ring-color);
+        transition:
+          stroke 0.35s ease,
+          stroke-dashoffset 0.4s cubic-bezier(0.2, 0, 0, 1),
+          opacity 0.2s ease;
+      }
+
+      .c-ring-arc.is-empty {
+        opacity: 0;
+      }
+
+      .c-ring-center {
+        position: relative;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: var(--md-sys-color-surface-container, #1f2027);
+        border: 1px solid
+          color-mix(in srgb, var(--md-sys-color-outline-variant, #44474f) 45%, transparent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .c-ring-duotone {
+        width: 30px;
+        height: 30px;
+      }
+
+      .c-duo-plate {
+        fill: var(--md-sys-color-primary-container, #2e4379);
+        stroke: var(--md-sys-color-primary, #b1c5ff);
+        stroke-width: 1.5;
+      }
+
+      .c-duo-core {
+        fill: var(--md-sys-color-primary, #b1c5ff);
+      }
+
+      .c-duo-pins {
+        fill: none;
+        stroke: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        stroke-width: 1.6;
+        stroke-linecap: round;
+      }
+
+      .c-ring-widget.is-error .c-duo-plate {
+        fill: var(--md-sys-color-error-container, #93000a);
+        stroke: var(--md-sys-color-error, #ffb4ab);
+      }
+
+      .c-ring-widget.is-error .c-duo-core {
+        fill: var(--md-sys-color-error, #ffb4ab);
+      }
+
+      .c-ring-widget.is-muted .c-duo-plate {
+        fill: var(--md-sys-color-surface-container-highest, #34353e);
+        stroke: var(--md-sys-color-outline, #8e9099);
+      }
+
+      .c-ring-widget.is-muted .c-duo-core {
+        fill: var(--md-sys-color-outline, #8e9099);
+      }
+
+      .c-ring-label {
+        margin-top: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 18px;
+        font-variant-numeric: tabular-nums;
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+      }
+
+      .c-ring-sublabel {
+        margin-top: 2px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
+        font-variant-numeric: tabular-nums;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+        white-space: nowrap;
+      }
+
+      /* --- 3. Pixel Buds 4 Compact Oval Action Buttons --- */
+      .c-action-dock {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 16px;
+        flex-wrap: nowrap;
+        padding: 2px 0;
+      }
+
+      .c-act-item {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        font: inherit;
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex: 0 0 auto;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .c-act-pill {
+        width: 64px;
+        height: 52px;
+        border-radius: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          border-radius var(--m3e-spring-bouncy),
+          transform var(--m3e-spring-spatial-fast),
+          background-color var(--m3e-spring-effects-default),
+          color var(--m3e-spring-effects-default);
+      }
+
+      .c-act-pill svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .c-act-pill.is-primary {
+        background: var(--md-sys-color-primary-container, #2e4379);
+        color: var(--md-sys-color-on-primary-container, #dae2ff);
+      }
+
+      .c-act-pill.is-secondary {
+        background: var(--md-sys-color-secondary-container, #3e4659);
+        color: var(--md-sys-color-on-secondary-container, #dce2f9);
+      }
+
+      .c-act-pill.is-tertiary {
+        background: var(--md-sys-color-tertiary-container, #5a3d58);
+        color: var(--md-sys-color-on-tertiary-container, #ffd7f7);
+      }
+
+      .c-act-pill.is-danger {
+        background: var(--md-sys-color-error-container, #93000a);
+        color: var(--md-sys-color-on-error-container, #ffdad6);
+      }
+
+      .c-act-item.is-armed .c-act-pill.is-tertiary {
+        border-radius: 18px;
+        background: var(--md-sys-color-tertiary, #e2bbdb);
+        color: var(--md-sys-color-on-tertiary, #422741);
+      }
+
+      .c-act-item.is-armed .c-act-pill.is-danger {
+        border-radius: 18px;
+        background: var(--md-sys-color-error, #ffb4ab);
+        color: var(--md-sys-color-on-error, #690005);
+      }
+
+      .c-act-item:active:not(:disabled) .c-act-pill,
+      .c-act-item.is-busy .c-act-pill {
+        border-radius: 16px;
+        transform: scale(0.95);
+      }
+
+      .c-act-item:disabled {
+        opacity: 0.38;
+        cursor: not-allowed;
+      }
+
+      .c-act-label {
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+        text-align: center;
+        white-space: nowrap;
+      }
+
+      .c-act-item.is-armed .c-act-label {
+        font-weight: 600;
+        color: var(--md-sys-color-error, #ffb4ab);
+      }
+
+      .c-act-item.is-armed:has(.c-act-pill.is-tertiary) .c-act-label {
+        color: var(--md-sys-color-tertiary, #e2bbdb);
+      }
+
+      @media (max-width: 360px) {
+        .c-action-dock {
+          gap: 10px;
+        }
+        .c-act-pill {
+          width: 58px;
+          height: 48px;
+        }
+      }
+
+      /* --- 4. Assist Chip & Minimal Typographic Footer --- */
+      .c-assist-wrap {
+        display: flex;
+        justify-content: center;
+      }
+
+      .c-assist-chip {
+        height: 32px;
+        padding: 0 12px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid var(--md-sys-color-outline-variant, #44474f);
+        color: var(--md-sys-color-on-surface, #e3e2e9);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+          transform var(--m3e-spring-spatial-fast),
+          background-color 140ms ease;
+      }
+
+      .c-assist-chip svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+        color: var(--md-sys-color-primary, #b1c5ff);
+      }
+
+      .c-assist-chip span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .c-assist-chip:hover {
+        background: color-mix(in srgb, currentColor 6%, transparent);
+      }
+
+      .c-assist-chip:active {
+        transform: scale(0.96);
+      }
+
+      .c-assist-chip.is-update-available {
+        background: var(--md-sys-color-tertiary-container, #5a3d58);
+        border-color: transparent;
+        color: var(--md-sys-color-on-tertiary-container, #ffd7f7);
+        font-weight: 600;
+      }
+
+      .c-assist-chip.is-update-available svg {
+        color: inherit;
+      }
+
+      .c-assist-chip.is-update-available:hover {
+        background: var(--md-sys-color-tertiary-container, #5a3d58);
+        filter: brightness(1.06);
+      }
+
+      .c-footer {
+        margin-top: -2px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 4px;
+        font-size: 12px;
+        line-height: 17px;
+        color: var(--md-sys-color-on-surface-variant, #c4c6d0);
+      }
+
+      .c-footer-img-btn {
+        border: 0;
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        max-width: 100%;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition:
+          color 160ms ease,
+          background-color 140ms ease;
+      }
+
+      .c-footer-img-btn:hover {
+        background: color-mix(in srgb, currentColor 6%, transparent);
+      }
+
+      .c-footer-img-btn svg {
+        width: 13px;
+        height: 13px;
+        flex-shrink: 0;
+        opacity: 0.78;
+      }
+
+      .c-footer-img-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .c-footer-img-btn.is-copied {
+        color: var(--md-sys-color-primary, #b1c5ff);
+        font-weight: 500;
+      }
+
+      .c-footer-meta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 2px 6px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .c-footer-dot {
+        opacity: 0.55;
+      }
+
+      .c-footer-seg.is-error-txt {
+        color: var(--md-sys-color-error, #ffb4ab);
+        font-weight: 600;
+      }
+
+      .c-footer-extra-btn {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        text-decoration: underline dotted color-mix(in srgb, currentColor 45%, transparent);
+        text-underline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .c-radar-stage.is-running .c-radar-core-svg,
+        .c-radar-stage.is-running .c-radar-wave-svg {
+          animation: none;
+        }
       }
     `,
   ];
