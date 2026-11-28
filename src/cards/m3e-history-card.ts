@@ -401,10 +401,6 @@ export class M3EHistoryCard extends LitElement {
           title: 'Appearance',
           schema: [
             {
-              name: 'bar_color',
-              selector: { ui_color: { default_color: 'state', include_state: true } },
-            },
-            {
               name: 'accent_color',
               selector: { ui_color: { default_color: 'state', include_state: true } },
             },
@@ -421,8 +417,7 @@ export class M3EHistoryCard extends LitElement {
               aggregation: 'Aggregazione giornaliera',
               metric_label: 'Etichetta unità (es. al giorno (media))',
               entities: 'Sensori extra (per modalità Line & Dots multi-sensore)',
-              bar_color: 'Colore barre a pillola (armonizzato Material 3)',
-              accent_color: 'Colore tab attiva (armonizzato Material 3)',
+              accent_color: 'Colore tema (controlli e grafico)',
             }
           : {
               entity: 'Sensor or Counter Entity',
@@ -431,8 +426,7 @@ export class M3EHistoryCard extends LitElement {
               aggregation: 'Daily Aggregation',
               metric_label: 'Metric Label (e.g. per day (avg))',
               entities: 'Extra Sensors (for multi-sensor Line & Dots mode)',
-              bar_color: 'Capsule Bar Color (Material 3 harmonized)',
-              accent_color: 'Active Tab Color (Material 3 harmonized)',
+              accent_color: 'Theme Color (Controls & Chart)',
             };
         return labels[schema.name] ?? schema.name;
       },
@@ -1277,16 +1271,12 @@ export class M3EHistoryCard extends LitElement {
     const summary = this._computeWindowSummary(spec, this._values, isDuration, isAdditive, unit);
     const isDark = this.hass?.themes?.darkMode !== false;
 
-    const accentPal = this._config?.accent_color
-      ? buildM3BadgeTonalPalette(this._config.accent_color, isDark)
-      : null;
-    const barPal = this._config?.bar_color
-      ? buildM3BadgeTonalPalette(this._config.bar_color, isDark)
-      : null;
+    const colorInput = this._config?.accent_color ?? this._config?.bar_color;
+    const themePal = colorInput ? buildM3BadgeTonalPalette(colorInput, isDark) : null;
 
-    const tabAccent = accentPal?.accent ?? (isDark ? '#97D0F9' : '#BFE4FF');
-    const tabOnAccent = accentPal?.onAccent ?? '#003351';
-    const barColor = barPal?.accent ?? (isDark ? '#2CE0D0' : '#00BFA5');
+    const tabAccent = themePal?.accent ?? (isDark ? '#97D0F9' : '#BFE4FF');
+    const tabOnAccent = themePal?.onAccent ?? '#003351';
+    const barColor = themePal?.accent ?? (isDark ? '#2CE0D0' : '#00BFA5');
 
     const activeSlide: SlideSnapshot = {
       spec,
@@ -1428,12 +1418,15 @@ export class M3EHistoryCard extends LitElement {
     const metricKind = inferHistoryMetricKind(firstEnt);
     const unit = String(firstEnt?.attributes.unit_of_measurement ?? '').trim();
 
+    const colorInput = this._config?.accent_color ?? this._config?.bar_color;
+
     return html`
       <m3e-history-chart
         .hass=${this.hass}
         .entityIds=${ids}
         .metricKind=${metricKind}
         .unit=${unit}
+        .customColor=${colorInput}
       ></m3e-history-chart>
     `;
   }
@@ -1480,7 +1473,7 @@ export class M3EHistoryCard extends LitElement {
         height: 40px;
         border: 0;
         padding: 0 12px;
-        border-radius: 14px;
+        border-radius: 12px;
         background: var(--md-sys-color-surface-container-high, #23262a);
         color: var(--md-sys-color-on-surface, #e3e2e6);
         font: inherit;
@@ -1491,9 +1484,9 @@ export class M3EHistoryCard extends LitElement {
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition:
-          border-radius var(--m3e-spring-bouncy, 480ms cubic-bezier(0.34, 1.4, 0.64, 1)),
-          background-color var(--m3e-spring-effects-default, 240ms cubic-bezier(0.2, 0, 0, 1)),
-          color var(--m3e-spring-effects-default, 220ms cubic-bezier(0.2, 0, 0, 1)),
+          border-radius 320ms cubic-bezier(0.2, 0, 0, 1),
+          background-color 240ms cubic-bezier(0.2, 0, 0, 1),
+          color 200ms cubic-bezier(0.2, 0, 0, 1),
           transform var(--m3e-spring-spatial-fast, 200ms cubic-bezier(0.2, 0, 0, 1));
       }
 
@@ -1502,7 +1495,7 @@ export class M3EHistoryCard extends LitElement {
       }
 
       .dual-tab.is-selected {
-        border-radius: 9999px;
+        border-radius: 20px;
         background: var(--history-tab-accent);
         color: var(--history-tab-on-accent);
         font-weight: 600;

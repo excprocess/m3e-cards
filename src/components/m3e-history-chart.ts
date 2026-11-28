@@ -1,6 +1,7 @@
 import { LitElement, css, html, svg, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import type { HassEntity, HomeAssistant } from '../types/home-assistant';
+import { buildM3BadgeTonalPalette, type BadgeColorInput } from '../utils/m3-color-harmony';
 
 export type HistoryRange = 'D' | 'W' | 'M' | '3M' | 'Y';
 export type HistoryMetricKind = 'temperature' | 'humidity' | 'illuminance' | 'moisture';
@@ -30,24 +31,54 @@ interface WindowSpec {
 
 const RANGES: HistoryRange[] = ['D', 'W', 'M', '3M', 'Y'];
 
-const METRIC_THEME: Record<
-  HistoryMetricKind,
-  { accent: string; onAccent: string; line: string }
-> = {
-  temperature: { accent: '#FFAB91', onAccent: '#4E1600', line: '#FF8A65' },
-  humidity: { accent: '#97D0F9', onAccent: '#003351', line: '#56CCF2' },
-  illuminance: { accent: '#FFE082', onAccent: '#3E2E00', line: '#FFD54F' },
-  moisture: { accent: '#80CBC4', onAccent: '#003734', line: '#4DB6AC' },
-};
+interface MetricPalette {
+  accentDark: string;
+  onAccentDark: string;
+  accentLight: string;
+  onAccentLight: string;
+  lineDark: string;
+  lineLight: string;
+  cumulative: string[];
+}
 
-const CUMULATIVE_PALETTE = [
-  '#56CCF2',
-  '#B39DDB',
-  '#81C784',
-  '#FFB74D',
-  '#F48FB1',
-  '#4DD0E1',
-];
+const METRIC_THEME: Record<HistoryMetricKind, MetricPalette> = {
+  illuminance: {
+    accentDark: '#FFD54F',
+    onAccentDark: '#3E2700',
+    accentLight: '#FFE082',
+    onAccentLight: '#3E2700',
+    lineDark: '#FFA726',
+    lineLight: '#EF6C00',
+    cumulative: ['#F57C00', '#FB8C00', '#FFB300', '#FFD54F', '#FF9800', '#FFE082'],
+  },
+  humidity: {
+    accentDark: '#90CAF9',
+    onAccentDark: '#002F54',
+    accentLight: '#90CAF9',
+    onAccentLight: '#002F54',
+    lineDark: '#42A5F5',
+    lineLight: '#1E88E5',
+    cumulative: ['#1565C0', '#1E88E5', '#42A5F5', '#64B5F6', '#81D4FA', '#B3E5FC'],
+  },
+  moisture: {
+    accentDark: '#A5D6A7',
+    onAccentDark: '#0A3818',
+    accentLight: '#A5D6A7',
+    onAccentLight: '#0A3818',
+    lineDark: '#4CAF50',
+    lineLight: '#2E7D32',
+    cumulative: ['#1B5E20', '#2E7D32', '#43A047', '#66BB6A', '#81C784', '#A5D6A7'],
+  },
+  temperature: {
+    accentDark: '#FFAB91',
+    onAccentDark: '#4A1108',
+    accentLight: '#FFAB91',
+    onAccentLight: '#4A1108',
+    lineDark: '#E64A19',
+    lineLight: '#C62828',
+    cumulative: ['#9B1B30', '#C62828', '#E53935', '#E64A19', '#F57C00', '#FF9800'],
+  },
+};
 
 function isItalian(hass?: HomeAssistant): boolean {
   return String(hass?.language ?? '').toLowerCase().startsWith('it');
@@ -249,6 +280,7 @@ export class M3EHistoryChart extends LitElement {
   @property({ attribute: false }) public entityIds: string[] = [];
   @property({ type: String }) public metricKind: HistoryMetricKind = 'temperature';
   @property({ type: String }) public unit = '';
+  @property({ attribute: false }) public customColor?: BadgeColorInput;
 
   @state() private _range: HistoryRange = 'D';
   @state() private _offset = 0;
@@ -515,6 +547,23 @@ export class M3EHistoryChart extends LitElement {
     });
   }
 
+  private _resolveColors() {
+    const isDark = this.hass?.themes?.darkMode !== false;
+    const customPal = this.customColor
+      ? buildM3BadgeTonalPalette(this.customColor, isDark)
+      : null;
+    const m = METRIC_THEME[this.metricKind];
+
+    const accent = customPal?.accent ?? (isDark ? m.accentDark : m.accentLight);
+    const onAccent = customPal?.onAccent ?? (isDark ? m.onAccentDark : m.onAccentLight);
+    const singleLine = customPal?.accent ?? (isDark ? m.lineDark : m.lineLight);
+    const cumulative = customPal
+      ? [customPal.accent, ...m.cumulative.filter((c) => c !== customPal.accent)]
+      : m.cumulative;
+
+    return { accent, onAccent, singleLine, cumulative };
+  }
+
   private async _fetchData(): Promise<void> {
     if (!this.hass || this.entityIds.length === 0) return;
 
@@ -528,7 +577,7 @@ export class M3EHistoryChart extends LitElement {
     const startIso = new Date(spec.start).toISOString();
     const endIso = new Date(Math.min(spec.end, nowMs)).toISOString();
     const isCumulative = ids.length > 1;
-    const singleLineColor = METRIC_THEME[this.metricKind].line;
+    const palette = this._resolveColors();
 
     try {
       const emptyWindow = spec.start > nowMs;
@@ -576,8 +625,8 @@ export class M3EHistoryChart extends LitElement {
       this._series = ids.map((eid, idx) => {
         const ent = this.hass?.states[eid];
         const color = isCumulative
-          ? CUMULATIVE_PALETTE[idx % CUMULATIVE_PALETTE.length]
-          : singleLineColor;
+          ? palette.cumulative[idx % palette.cumulative.length]
+          : palette.singleLine;
         const buckets =
           perEntityBuckets.get(eid) ??
           spec.bucketStarts.map((bs) => ({ t: bs, v: null, min: null, max: null }));
@@ -594,8 +643,8 @@ export class M3EHistoryChart extends LitElement {
         entityId: eid,
         label: cleanSensorLabel(this.hass?.states[eid], eid),
         color: isCumulative
-          ? CUMULATIVE_PALETTE[idx % CUMULATIVE_PALETTE.length]
-          : singleLineColor,
+          ? palette.cumulative[idx % palette.cumulative.length]
+          : palette.singleLine,
         buckets: spec.bucketStarts.map((bs) => ({ t: bs, v: null, min: null, max: null })),
       }));
     } finally {
@@ -693,7 +742,7 @@ export class M3EHistoryChart extends LitElement {
     if (!this.hass || this.entityIds.length === 0) return nothing;
     const spec = this._spec ?? buildWindowSpec(this._range, this._offset, this.hass);
     const it = isItalian(this.hass);
-    const theme = METRIC_THEME[this.metricKind];
+    const theme = this._resolveColors();
     const stats = this._computeStats();
     const { avgLabel, noun } = this._metricDescriptor();
     const isCumulative = this._series.length > 1;
@@ -886,7 +935,10 @@ export class M3EHistoryChart extends LitElement {
               })}
 
               <!-- Single or Cumulative Sensor Series -->
-              ${this._series.map((s) => {
+              ${this._series.map((s, sIdx) => {
+                const sColor = isCumulative
+                  ? theme.cumulative[sIdx % theme.cumulative.length]
+                  : theme.singleLine;
                 const dimmed =
                   isCumulative &&
                   this._isolatedEntityId !== null &&
@@ -913,7 +965,7 @@ export class M3EHistoryChart extends LitElement {
                 return svg`
                   <g style="opacity: ${opacity}; transition: opacity 200ms ease;">
                     ${pathD
-                      ? svg`<path d=${pathD.trim()} stroke=${s.color} class="series-line" />`
+                      ? svg`<path d=${pathD.trim()} stroke=${sColor} class="series-line" />`
                       : nothing}
                     ${dots.map(
                       (pt) => svg`
@@ -921,7 +973,7 @@ export class M3EHistoryChart extends LitElement {
                           cx=${pt.cx.toFixed(1)}
                           cy=${pt.cy.toFixed(1)}
                           r="3.5"
-                          fill=${s.color}
+                          fill=${sColor}
                           class="series-dot"
                         />
                       `,
@@ -935,7 +987,10 @@ export class M3EHistoryChart extends LitElement {
 
         <!-- 4. Interactive Legend Footer -->
         <div class="legend-row">
-          ${this._series.map((s) => {
+          ${this._series.map((s, sIdx) => {
+            const sColor = isCumulative
+              ? theme.cumulative[sIdx % theme.cumulative.length]
+              : theme.singleLine;
             const dimmed =
               isCumulative &&
               this._isolatedEntityId !== null &&
@@ -951,7 +1006,7 @@ export class M3EHistoryChart extends LitElement {
                     this._isolatedEntityId === s.entityId ? null : s.entityId;
                 }}
               >
-                <span class="legend-dot" style="background: ${s.color};"></span>
+                <span class="legend-dot" style="background: ${sColor};"></span>
                 <span class="legend-lbl">${s.label}</span>
               </button>
             `;
@@ -986,7 +1041,7 @@ export class M3EHistoryChart extends LitElement {
       height: 38px;
       border: 0;
       padding: 0;
-      border-radius: 14px;
+      border-radius: 12px;
       background: var(--md-sys-color-surface-container-high, #23262a);
       color: var(--md-sys-color-on-surface, #e3e2e6);
       font: inherit;
@@ -997,9 +1052,9 @@ export class M3EHistoryChart extends LitElement {
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       transition:
-        border-radius var(--m3e-spring-bouncy, 420ms cubic-bezier(0.34, 1.4, 0.64, 1)),
-        background-color var(--m3e-spring-effects-default, 220ms cubic-bezier(0.2, 0, 0, 1)),
-        color var(--m3e-spring-effects-default, 220ms cubic-bezier(0.2, 0, 0, 1)),
+        border-radius 320ms cubic-bezier(0.2, 0, 0, 1),
+        background-color 240ms cubic-bezier(0.2, 0, 0, 1),
+        color 200ms cubic-bezier(0.2, 0, 0, 1),
         transform var(--m3e-spring-spatial-fast, 200ms cubic-bezier(0.2, 0, 0, 1));
     }
 
@@ -1008,7 +1063,7 @@ export class M3EHistoryChart extends LitElement {
     }
 
     .range-btn.is-selected {
-      border-radius: 9999px;
+      border-radius: 19px;
       background: var(--chart-accent);
       color: var(--chart-on-accent);
       font-weight: 600;
