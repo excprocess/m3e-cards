@@ -282,6 +282,7 @@ export class M3EHistoryChart extends LitElement {
   @property({ type: String }) public unit = '';
   @property({ attribute: false }) public customColor?: BadgeColorInput;
   @property({ type: String }) public headerTitle = '';
+  @property({ type: Boolean }) public compact = false;
 
   @state() private _range: HistoryRange = 'D';
   @state() private _offset = 0;
@@ -769,7 +770,7 @@ export class M3EHistoryChart extends LitElement {
 
     // SVG Geometry
     const W = Math.max(240, this._plotWidth);
-    const H = 224;
+    const H = this.compact ? 152 : 224;
     const padL = 8;
     const padR = 46;
     const padT = 12;
@@ -813,7 +814,7 @@ export class M3EHistoryChart extends LitElement {
 
     return html`
       <div
-        class="m3e-chart-root"
+        class="m3e-chart-root ${this.compact ? 'is-compact' : ''}"
         style="--chart-accent: ${theme.accent}; --chart-on-accent: ${theme.onAccent};"
       >
         <!-- 1. Top Segmented Time Selector -->
@@ -1286,6 +1287,26 @@ export class M3EHistoryChart extends LitElement {
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 180px;
+    }
+
+    .m3e-chart-root.is-compact {
+      gap: 10px;
+    }
+
+    .m3e-chart-root.is-compact .range-btn {
+      height: 34px;
+    }
+
+    .m3e-chart-root.is-compact .range-btn.is-selected {
+      border-radius: 17px;
+    }
+
+    .m3e-chart-root.is-compact .hero-val {
+      font-size: 1.95rem;
+    }
+
+    .m3e-chart-root.is-compact .chart-area {
+      height: 152px;
     }
   `;
 }

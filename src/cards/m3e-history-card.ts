@@ -282,7 +282,7 @@ export class M3EHistoryCard extends LitElement {
   }
 
   public getCardSize(): number {
-    return 6;
+    return this._config?.compact ? 4 : 6;
   }
 
   public getGridOptions() {
@@ -411,6 +411,7 @@ export class M3EHistoryCard extends LitElement {
               selector: { ui_color: { default_color: 'state', include_state: true } },
             },
             { name: 'transparent', selector: { boolean: {} } },
+            { name: 'compact', selector: { boolean: {} } },
           ],
         },
       ],
@@ -427,6 +428,7 @@ export class M3EHistoryCard extends LitElement {
               entities: 'Sensori extra (per modalità Line & Dots multi-sensore)',
               accent_color: 'Colore tema (controlli e grafico)',
               transparent: 'Sfondo trasparente (ignora stile Material You)',
+              compact: 'Modalità compatta (barre più basse)',
             }
           : {
               entity: 'Sensor or Counter Entity',
@@ -438,6 +440,7 @@ export class M3EHistoryCard extends LitElement {
               entities: 'Extra Sensors (for multi-sensor Line & Dots mode)',
               accent_color: 'Theme Color (Controls & Chart)',
               transparent: 'Transparent background (bypass Material You card style)',
+              compact: 'Compact mode (shorter bars)',
             };
         return labels[schema.name] ?? schema.name;
       },
@@ -1101,17 +1104,18 @@ export class M3EHistoryCard extends LitElement {
 
   private _renderCapsuleSvg(slide: SlideSnapshot, interactive: boolean) {
     const { spec, values, isDuration, unit } = slide;
+    const isCompact = Boolean(this._config?.compact);
     const n = Math.max(1, spec.bucketStarts.length);
     const W = Math.max(240, this._plotWidth);
-    const H = 228;
+    const H = isCompact ? 152 : 228;
     const padL = 6;
     const padR = 46;
-    const padT = 18;
-    const dotY = H - 22;
+    const padT = isCompact ? 14 : 18;
+    const dotY = H - (isCompact ? 20 : 22);
     const xLabelY = H - 4;
-    const barBottomY = dotY - 7;
+    const barBottomY = dotY - (isCompact ? 6 : 7);
     const plotW = Math.max(120, W - padL - padR);
-    const plotH = Math.max(60, barBottomY - padT);
+    const plotH = Math.max(48, barBottomY - padT);
     const slotW = plotW / n;
 
     const barW =
@@ -1450,6 +1454,7 @@ export class M3EHistoryCard extends LitElement {
         .unit=${unit}
         .customColor=${colorInput}
         .headerTitle=${entityTitle}
+        .compact=${Boolean(this._config?.compact)}
       ></m3e-history-chart>
     `;
   }
@@ -1457,7 +1462,9 @@ export class M3EHistoryCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     return html`
-      <ha-card class="history-card ${this._config.transparent ? 'is-transparent' : ''}">
+      <ha-card
+        class="history-card ${this._config.transparent ? 'is-transparent' : ''} ${this._config.compact ? 'is-compact' : ''}"
+      >
         ${this._config.chart_style === 'line' ? this._renderLineMode() : this._renderBarMode()}
       </ha-card>
     `;
@@ -1752,6 +1759,31 @@ export class M3EHistoryCard extends LitElement {
         font-weight: 600;
         font-variant-numeric: tabular-nums;
         fill: var(--md-sys-color-inverse-on-surface, #1b1b1f);
+      }
+
+      /* Compact Mode (shorter bars & tighter vertical rhythm) */
+      .history-card.is-compact:not(.is-transparent) {
+        padding: 14px 16px 12px;
+      }
+
+      .history-card.is-compact .history-root {
+        gap: 10px;
+      }
+
+      .history-card.is-compact .dual-tab {
+        height: 36px;
+      }
+
+      .history-card.is-compact .dual-tab.is-selected {
+        border-radius: 18px;
+      }
+
+      .history-card.is-compact .hero-val {
+        font-size: 2rem;
+      }
+
+      .history-card.is-compact .chart-stage {
+        height: 152px;
       }
     `,
   ];
