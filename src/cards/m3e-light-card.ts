@@ -4,7 +4,7 @@ import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightCardConfig } from '../types/home-assistant';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import { t } from '../utils/i18n';
 
@@ -230,6 +230,10 @@ export class M3ELightCard extends LitElement {
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
+    forceCloseDialog(this._dialogEl, this._dialogSurfaceEl, () => {
+      this._popupOpen = false;
+      this._scenesSheetOpen = false;
+    });
     this._clearLongPress();
   }
 
@@ -588,7 +592,17 @@ export class M3ELightCard extends LitElement {
      POPUP OPEN / CLOSE (Container Transform from Tile)
      ========================================================================= */
   public async openPopup(): Promise<void> {
-    if (this._isUnavailable || this._popupOpen) return;
+    if (this._isUnavailable) return;
+    if (this._popupOpen && this._dialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._dialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
+      this._popupOpen = false;
+    }
     window.getSelection()?.removeAllRanges();
     const tileRect = this._tileEl?.getBoundingClientRect();
     this._scenesSheetOpen = false;
@@ -597,17 +611,23 @@ export class M3ELightCard extends LitElement {
 
     const dialog = this._dialogEl;
     const surface = this._dialogSurfaceEl;
-    if (!dialog) return;
-
-    if (!dialog.open) {
-      dialog.showModal();
+    if (!dialog) {
+      this._popupOpen = false;
+      return;
     }
 
-    animateDialogOpen(surface, tileRect);
+    openModalDialog(dialog, surface, {
+      originRect: tileRect,
+      onRequestClose: () => this.closePopup(),
+      onForceReset: () => {
+        this._popupOpen = false;
+        this._scenesSheetOpen = false;
+      },
+    });
   }
 
   public closePopup(): void {
-    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
+    closeModalDialog(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
       this._scenesSheetOpen = false;
     });

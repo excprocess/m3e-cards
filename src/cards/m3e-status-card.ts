@@ -13,7 +13,7 @@ import { renderM3EntityIcon } from '../utils/icons';
 import { executeNavigationTarget } from '../utils/navigation';
 import { formatLastChanged } from '../utils/time';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import {
   ensureCardFeaturesLoaded,
   stopFeatureEventPropagation,
@@ -258,6 +258,11 @@ export class M3EStatusCard extends LitElement {
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
+    forceCloseDialog(this._dialogEl, this._dialogSurfaceEl, () => {
+      this._popupOpen = false;
+      this._activeSheet = null;
+      this._remoteSelectorSheet = null;
+    });
     this._clearLongPress();
     this._clearPadTimers();
     if (this._relativeTimer !== null) {
@@ -775,7 +780,17 @@ export class M3EStatusCard extends LitElement {
      POPUP OPEN / CLOSE (Material You Container Transform / Bottom Sheet)
      ========================================================================= */
   public async openPopup(originRect?: DOMRect): Promise<void> {
-    if (this._resolvedPopupType === 'none' || this._popupOpen) return;
+    if (this._resolvedPopupType === 'none') return;
+    if (this._popupOpen && this._dialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._dialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
+      this._popupOpen = false;
+    }
     window.getSelection()?.removeAllRanges();
     const tileRect = originRect ?? this._tileEl?.getBoundingClientRect();
     this._activeSheet = null;
@@ -788,14 +803,23 @@ export class M3EStatusCard extends LitElement {
 
     const dialog = this._dialogEl;
     const surface = this._dialogSurfaceEl;
-    if (!dialog) return;
-    if (!dialog.open) dialog.showModal();
-
-    animateDialogOpen(surface, tileRect);
+    if (!dialog) {
+      this._popupOpen = false;
+      return;
+    }
+    openModalDialog(dialog, surface, {
+      originRect: tileRect,
+      onRequestClose: () => this.closePopup(),
+      onForceReset: () => {
+        this._popupOpen = false;
+        this._activeSheet = null;
+        this._remoteSelectorSheet = null;
+      },
+    });
   }
 
   public closePopup(): void {
-    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
+    closeModalDialog(this._dialogEl, this._dialogSurfaceEl, () => {
       this._popupOpen = false;
       this._activeSheet = null;
       this._remoteSelectorSheet = null;
@@ -1338,12 +1362,11 @@ export class M3EStatusCard extends LitElement {
   }
 
   private _openEntityMoreInfo(entityId: string): void {
-    const dialog = this._dialogEl;
-    if (dialog?.open) {
-      dialog.close();
-    }
-    this._popupOpen = false;
-    this._activeSheet = null;
+    forceCloseDialog(this._dialogEl, this._dialogSurfaceEl, () => {
+      this._popupOpen = false;
+      this._activeSheet = null;
+      this._remoteSelectorSheet = null;
+    });
     this.dispatchEvent(
       new CustomEvent('hass-more-info', {
         detail: { entityId },

@@ -2,7 +2,7 @@ import { LitElement, css, html, nothing, PropertyValues } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import type { HassEntity, HomeAssistant, M3EAssistCardConfig } from '../types/home-assistant';
 
 @customElement('m3e-assist-card')
@@ -146,22 +146,46 @@ export class M3EAssistCard extends LitElement {
     );
   }
 
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    forceCloseDialog(this._dialogEl, this._dialogSurfaceEl, () => {
+      this._selectorOpen = false;
+    });
+  }
+
   public async openModeSelector(e?: Event): Promise<void> {
     e?.stopPropagation();
-    if (!this._modeEntity || this._options.length === 0 || this._selectorOpen) return;
+    if (!this._modeEntity || this._options.length === 0) return;
+    if (this._selectorOpen && this._dialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._dialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
+      this._selectorOpen = false;
+    }
     window.getSelection()?.removeAllRanges();
     this._selectorOpen = true;
     await this.updateComplete;
 
     const dialog = this._dialogEl;
     const surface = this._dialogSurfaceEl;
-    if (!dialog) return;
-    if (!dialog.open) dialog.showModal();
-    animateDialogOpen(surface);
+    if (!dialog) {
+      this._selectorOpen = false;
+      return;
+    }
+    openModalDialog(dialog, surface, {
+      onRequestClose: () => this.closeModeSelector(),
+      onForceReset: () => {
+        this._selectorOpen = false;
+      },
+    });
   }
 
   public closeModeSelector(): void {
-    animateDialogClose(this._dialogEl, this._dialogSurfaceEl, () => {
+    closeModalDialog(this._dialogEl, this._dialogSurfaceEl, () => {
       this._selectorOpen = false;
     });
   }

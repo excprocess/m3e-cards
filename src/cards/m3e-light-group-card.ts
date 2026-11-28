@@ -4,7 +4,7 @@ import { ref } from 'lit/directives/ref.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3ELightGroupCardConfig } from '../types/home-assistant';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import { resolveEntityName, resolveStateContent } from '../utils/entity-display';
 import './m3e-light-card';
 
@@ -21,6 +21,7 @@ export class M3ELightGroupCard extends LitElement {
   @state() private _dragPct: number | null = null;
 
   @query('dialog.group-dialog') private _dialogEl?: HTMLDialogElement;
+  @query('.dialog-surface') private _dialogSurfaceEl?: HTMLElement;
   @query('.group-header') private _headerEl?: HTMLElement;
 
   private _pointerId: number | null = null;
@@ -316,20 +317,52 @@ export class M3ELightGroupCard extends LitElement {
     this._expanded = !this._expanded;
   };
 
+  public disconnectedCallback(): void {
+    super.disconnectedCallback();
+    const surface =
+      this._dialogSurfaceEl ??
+      (this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null);
+    forceCloseDialog(this._dialogEl, surface, () => {
+      this._popupOpen = false;
+    });
+  }
+
   private async _openPopup(): Promise<void> {
+    if (this._popupOpen && this._dialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._dialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
+      this._popupOpen = false;
+    }
     const tileRect = this._headerEl?.getBoundingClientRect() ?? null;
     this._popupOpen = true;
     await this.updateComplete;
-    if (this._dialogEl && !this._dialogEl.open) {
-      this._dialogEl.showModal();
+    const dialog = this._dialogEl;
+    if (!dialog) {
+      this._popupOpen = false;
+      return;
     }
-    const surface = this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null;
-    animateDialogOpen(surface, tileRect);
+    const surface =
+      this._dialogSurfaceEl ??
+      (this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null);
+    openModalDialog(dialog, surface, {
+      originRect: tileRect,
+      onRequestClose: () => this._closePopup(),
+      onForceReset: () => {
+        this._popupOpen = false;
+      },
+    });
   }
 
   private _closePopup(): void {
-    const surface = this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null;
-    animateDialogClose(this._dialogEl, surface, () => {
+    const surface =
+      this._dialogSurfaceEl ??
+      (this.shadowRoot?.querySelector('.dialog-surface') as HTMLElement | null);
+    closeModalDialog(this._dialogEl, surface, () => {
       this._popupOpen = false;
     });
   }

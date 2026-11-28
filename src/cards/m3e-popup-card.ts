@@ -10,7 +10,7 @@ import type {
 } from '../types/home-assistant';
 import { renderM3EntityIcon } from '../utils/icons';
 import { resolveEntityName } from '../utils/entity-display';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import {
   normalizePopupTarget,
@@ -203,6 +203,10 @@ export class M3EPopupCard extends LitElement {
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
+    forceCloseDialog(this._dialogEl, this._surfaceEl, () => {
+      this._isClosing = false;
+      this._isOpen = false;
+    });
     if (this._prewarmHandle !== null) {
       if ('cancelIdleCallback' in window) {
         window.cancelIdleCallback(this._prewarmHandle);
@@ -489,17 +493,37 @@ export class M3EPopupCard extends LitElement {
   }
 
   public async openPopup(): Promise<void> {
-    if (this._isOpen || this._isDialogPreview) return;
+    if (this._isDialogPreview) return;
+    if (this._isOpen && this._dialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._dialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
+      this._isOpen = false;
+      this._isClosing = false;
+    }
     this._isOpen = true;
     await this.updateComplete;
 
     // Show & animate dialog immediately on frame 1 (zero blocking lag!)
     const dlg = this._dialogEl;
-    if (dlg && !dlg.open) {
-      dlg.showModal();
-    }
-    if (this._surfaceEl) {
-      animateDialogOpen(this._surfaceEl);
+    if (dlg) {
+      const mine = normalizePopupTarget(this._config?.hash);
+      const hasOwnHashEntry =
+        mine.startsWith('#') && window.location.hash.trim().toLowerCase() === mine;
+      openModalDialog(dlg, this._surfaceEl, {
+        pushHistory: !hasOwnHashEntry,
+        onRequestClose: () => this.closePopup(true),
+        onForceReset: () => {
+          this._isClosing = false;
+          this._restoreAdoptedSiblings();
+          this._isOpen = false;
+          this._syncContainerLayout();
+        },
+      });
     }
 
     this._adoptContainerSiblings();
@@ -525,8 +549,8 @@ export class M3EPopupCard extends LitElement {
       }
     };
 
-    if (this._dialogEl && this._surfaceEl) {
-      animateDialogClose(this._dialogEl, this._surfaceEl, finish);
+    if (this._dialogEl) {
+      closeModalDialog(this._dialogEl, this._surfaceEl, finish);
     } else {
       finish();
     }

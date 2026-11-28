@@ -10,7 +10,7 @@ import type {
 import { renderM3EntityIcon } from '../utils/icons';
 import { resolveEntityName } from '../utils/entity-display';
 import { t } from '../utils/i18n';
-import { animateDialogClose, animateDialogOpen } from '../utils/dialog-motion';
+import { closeModalDialog, forceCloseDialog, openModalDialog } from '../utils/dialog-motion';
 import { guardDialogTouchMove } from '../utils/scroll-lock';
 import {
   executeRemoteCommand,
@@ -113,6 +113,9 @@ export class M3ERemoteCard extends LitElement {
 
   public disconnectedCallback(): void {
     super.disconnectedCallback();
+    forceCloseDialog(this._sourceDialogEl, this._sourceSurfaceEl ?? null, () => {
+      this._selectorSheet = null;
+    });
     this._clearPadTimers();
   }
 
@@ -214,21 +217,34 @@ export class M3ERemoteCard extends LitElement {
     );
   }
 
-  private _openSelectorDialog(req: RemoteSelectorRequest): void {
-    this._selectorSheet = req;
-    const dlg = this._sourceDialogEl;
-    if (!dlg || dlg.open) return;
-    dlg.showModal();
-    if (this._sourceSurfaceEl) {
-      animateDialogOpen(this._sourceSurfaceEl);
+  private async _openSelectorDialog(req: RemoteSelectorRequest): Promise<void> {
+    if (this._sourceDialogEl?.open) {
+      let isModal = true;
+      try {
+        isModal = this._sourceDialogEl.matches(':modal');
+      } catch {
+        // ignore
+      }
+      if (isModal) return;
     }
+    this._selectorSheet = req;
+    await this.updateComplete;
+    const dlg = this._sourceDialogEl;
+    if (!dlg) {
+      this._selectorSheet = null;
+      return;
+    }
+    openModalDialog(dlg, this._sourceSurfaceEl ?? null, {
+      onRequestClose: () => this._closeSourceDialog(),
+      onForceReset: () => {
+        this._selectorSheet = null;
+      },
+    });
   }
 
   private _closeSourceDialog(): void {
     const dlg = this._sourceDialogEl;
-    if (!dlg || !dlg.open) return;
-    animateDialogClose(dlg, this._sourceSurfaceEl ?? null, () => {
-      if (dlg.open) dlg.close();
+    closeModalDialog(dlg, this._sourceSurfaceEl ?? null, () => {
       this._selectorSheet = null;
     });
   }
