@@ -283,6 +283,8 @@ export class M3EHistoryChart extends LitElement {
   @property({ attribute: false }) public customColor?: BadgeColorInput;
   @property({ type: String }) public headerTitle = '';
   @property({ type: Boolean }) public compact = false;
+  @property({ type: Boolean }) public genericLabels = false;
+  @property({ type: String }) public metricLabel = '';
 
   @state() private _range: HistoryRange = 'D';
   @state() private _offset = 0;
@@ -704,6 +706,12 @@ export class M3EHistoryChart extends LitElement {
 
   private _metricDescriptor(): { avgLabel: string; noun: string } {
     const it = isItalian(this.hass);
+    if (this.genericLabels) {
+      return {
+        avgLabel: this.metricLabel.trim() || (it ? 'media' : 'avg'),
+        noun: it ? 'La media è stata di' : 'Average was',
+      };
+    }
     switch (this.metricKind) {
       case 'humidity':
         return {

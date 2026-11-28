@@ -1455,6 +1455,8 @@ export class M3EHistoryCard extends LitElement {
         .customColor=${colorInput}
         .headerTitle=${entityTitle}
         .compact=${Boolean(this._config?.compact)}
+        .genericLabels=${true}
+        .metricLabel=${this._config?.metric_label ?? ''}
       ></m3e-history-chart>
     `;
   }
