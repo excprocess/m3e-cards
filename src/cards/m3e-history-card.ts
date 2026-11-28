@@ -3,6 +3,7 @@ import { customElement, property, query, state } from 'lit/decorators.js';
 import { m3eBaseStyles } from '../styles/m3e-tokens';
 import type { HassEntity, HomeAssistant, M3EHistoryCardConfig } from '../types/home-assistant';
 import { buildM3BadgeTonalPalette } from '../utils/m3-color-harmony';
+import { resolveEntityName } from '../utils/entity-display';
 import type { HistoryMetricKind } from '../components/m3e-history-chart';
 import '../components/m3e-history-chart';
 
@@ -355,6 +356,11 @@ export class M3EHistoryCard extends LitElement {
           title: 'Content & Data',
           schema: [
             {
+              name: 'name',
+              selector: { entity_name: {} },
+              context: { entity: 'entity' },
+            },
+            {
               type: 'grid',
               name: '',
               schema: [
@@ -404,6 +410,7 @@ export class M3EHistoryCard extends LitElement {
               name: 'accent_color',
               selector: { ui_color: { default_color: 'state', include_state: true } },
             },
+            { name: 'transparent', selector: { boolean: {} } },
           ],
         },
       ],
@@ -413,20 +420,24 @@ export class M3EHistoryCard extends LitElement {
           ? {
               entity: 'Entità sensore o contatore',
               chart_style: 'Stile grafico',
+              name: 'Nome entità',
               default_range: 'Vista predefinita (Settimana / Mese)',
               aggregation: 'Aggregazione giornaliera',
               metric_label: 'Etichetta unità (es. al giorno (media))',
               entities: 'Sensori extra (per modalità Line & Dots multi-sensore)',
               accent_color: 'Colore tema (controlli e grafico)',
+              transparent: 'Sfondo trasparente (ignora stile Material You)',
             }
           : {
               entity: 'Sensor or Counter Entity',
               chart_style: 'Chart Style',
+              name: 'Entity Name',
               default_range: 'Default View (Week / Month)',
               aggregation: 'Daily Aggregation',
               metric_label: 'Metric Label (e.g. per day (avg))',
               entities: 'Extra Sensors (for multi-sensor Line & Dots mode)',
               accent_color: 'Theme Color (Controls & Chart)',
+              transparent: 'Transparent background (bypass Material You card style)',
             };
         return labels[schema.name] ?? schema.name;
       },
@@ -1288,6 +1299,12 @@ export class M3EHistoryCard extends LitElement {
 
     const weekLabel = it ? 'Settimana' : 'Week';
     const monthLabel = it ? 'Mese' : 'Month';
+    const entityTitle = resolveEntityName(
+      this.hass,
+      entity,
+      this._config?.name,
+      this._config?.entity,
+    );
 
     return html`
       <div
@@ -1326,7 +1343,11 @@ export class M3EHistoryCard extends LitElement {
         <!-- 2. Contextual Header & Chronological Navigation -->
         <div class="header-block">
           <div class="period-row">
-            <span class="period-title">${spec.periodLabel}</span>
+            <span class="period-title">
+              ${this._offset === 0
+                ? entityTitle
+                : html`${entityTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`}
+            </span>
             <div class="nav-controls">
               <button
                 type="button"
@@ -1419,6 +1440,7 @@ export class M3EHistoryCard extends LitElement {
     const unit = String(firstEnt?.attributes.unit_of_measurement ?? '').trim();
 
     const colorInput = this._config?.accent_color ?? this._config?.bar_color;
+    const entityTitle = resolveEntityName(this.hass, ent, this._config?.name, primary);
 
     return html`
       <m3e-history-chart
@@ -1427,6 +1449,7 @@ export class M3EHistoryCard extends LitElement {
         .metricKind=${metricKind}
         .unit=${unit}
         .customColor=${colorInput}
+        .headerTitle=${entityTitle}
       ></m3e-history-chart>
     `;
   }
@@ -1434,7 +1457,7 @@ export class M3EHistoryCard extends LitElement {
   protected render() {
     if (!this._config) return nothing;
     return html`
-      <ha-card class="history-card">
+      <ha-card class="history-card ${this._config.transparent ? 'is-transparent' : ''}">
         ${this._config.chart_style === 'line' ? this._renderLineMode() : this._renderBarMode()}
       </ha-card>
     `;
@@ -1448,11 +1471,23 @@ export class M3EHistoryCard extends LitElement {
         width: 100%;
       }
 
-      /* Strictly preserve M3Y --ha-card-* tokens (no background/border/box-shadow override) */
+      /* Strictly preserve M3Y --ha-card-* tokens unless user explicitly opts into transparent */
       .history-card {
         padding: 18px 18px 16px;
         display: flex;
         flex-direction: column;
+      }
+
+      ha-card.history-card.is-transparent {
+        --ha-card-background: transparent;
+        --ha-card-box-shadow: none;
+        --ha-card-border-width: 0px;
+        --ha-card-border-color: transparent;
+        background: transparent;
+        box-shadow: none;
+        border-width: 0;
+        border-color: transparent;
+        padding: 6px 4px 4px;
       }
 
       .history-root {
@@ -1527,6 +1562,11 @@ export class M3EHistoryCard extends LitElement {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .period-suffix {
+        font-weight: 400;
+        color: var(--md-sys-color-on-surface-variant, #c4c7c5);
       }
 
       .nav-controls {

@@ -281,6 +281,7 @@ export class M3EHistoryChart extends LitElement {
   @property({ type: String }) public metricKind: HistoryMetricKind = 'temperature';
   @property({ type: String }) public unit = '';
   @property({ attribute: false }) public customColor?: BadgeColorInput;
+  @property({ type: String }) public headerTitle = '';
 
   @state() private _range: HistoryRange = 'D';
   @state() private _offset = 0;
@@ -836,7 +837,13 @@ export class M3EHistoryChart extends LitElement {
         <!-- 2. Contextual Header & Chronological Navigation -->
         <div class="chart-header">
           <div class="period-row">
-            <span class="period-label">${spec.periodLabel}</span>
+            <span class="period-label">
+              ${this.headerTitle
+                ? this._offset === 0
+                  ? this.headerTitle
+                  : html`${this.headerTitle}<span class="period-suffix"> · ${spec.periodLabel}</span>`
+                : spec.periodLabel}
+            </span>
             <div class="nav-group">
               <button
                 type="button"
@@ -1095,6 +1102,11 @@ export class M3EHistoryChart extends LitElement {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .period-suffix {
+      font-weight: 400;
+      color: var(--md-sys-color-on-surface-variant, #c4c7c5);
     }
 
     .nav-group {

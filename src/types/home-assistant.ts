@@ -562,6 +562,8 @@ export interface M3EStatusCardConfig extends LovelaceCardConfig {
 export interface M3EHistoryCardConfig extends LovelaceCardConfig {
   entity: string;
   entities?: string[];
+  name?: EntityNameConfig;
+  transparent?: boolean;
   chart_style?: 'bar' | 'line';
   default_range?: 'W' | 'M';
   aggregation?: 'auto' | 'avg' | 'sum' | 'max';
